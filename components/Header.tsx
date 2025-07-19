@@ -1,53 +1,55 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Settings } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
-export default function Header() {
+interface HeaderProps {
+  title: string;
+  subtitle?: string;
+}
+
+export default function Header({ title, subtitle }: HeaderProps) {
+  const router = useRouter();
+
   return (
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <Image 
-          source={require('../assets/images/CrushNic Logo (1).png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <TouchableOpacity style={styles.settingsButton}>
-          <Settings size={20} color="#8E8E93" />
-        </TouchableOpacity>
+    <View style={styles.pageHeader}>
+      <View style={styles.titleContainer}>
+        <Text style={styles.pageTitle}>{title}</Text>
+        {subtitle && (
+          <Text style={styles.pageSubtitle}>{subtitle}</Text>
+        )}
       </View>
+      <TouchableOpacity 
+        style={styles.settingsButton}
+        onPress={() => router.push('/settings')}
+      >
+        <Settings size={20} color="#8E8E93" />
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 44,
-    paddingBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
-  },
-  headerContent: {
+  pageHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 30,
   },
-  logo: {
-    width: 140,
-    height: 40,
+  titleContainer: {
+    flex: 1,
+  },
+  pageTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#1C1C1E',
+  },
+  pageSubtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+    marginTop: 4,
   },
   settingsButton: {
     width: 32,

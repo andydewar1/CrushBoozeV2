@@ -1,22 +1,17 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
-import { DollarSign, Heart, Settings, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
+import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
+import Header from '../../components/Header';
 
 export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Page Header */}
-        <View style={styles.pageHeader}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>Home</Text>
-            <Text style={styles.pageSubtitle}>Your future self is proud of you.</Text>
-          </View>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Settings size={20} color="#8E8E93" />
-          </TouchableOpacity>
-        </View>
+        <Header 
+          title="Home" 
+          subtitle="Your future self is proud of you."
+        />
 
         {/* Main Progress Card */}
         <View style={styles.progressCard}>
@@ -289,36 +284,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
   },
   scrollContent: {
-    paddingTop: 30,
     paddingBottom: 90,
-  },
-  pageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  titleContainer: {
-    flex: 1,
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#1C1C1E',
-  },
-  pageSubtitle: {
-    fontSize: 16,
-    color: '#8E8E93',
-    marginTop: 4,
-  },
-  settingsButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   progressCard: {
     backgroundColor: '#35998D',
