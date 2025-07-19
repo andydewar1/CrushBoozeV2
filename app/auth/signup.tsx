@@ -1,95 +1,154 @@
-import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { supabase } from '../../lib/supabase';
-import { AuthError } from '@supabase/supabase-js';
+import { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { Link, useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
+import { Eye, EyeOff } from 'lucide-react-native';
 
-export default function SignupScreen() {
+export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { signUp } = useAuth();
   const router = useRouter();
 
-  async function handleSignup() {
+  const handleSignUp = async () => {
     if (loading) return;
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Please enter both email and password');
       return;
     }
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
+      const { error } = await signUp(email, password);
       if (error) throw error;
-      router.replace('/(tabs)' as any);
-    } catch (error) {
-      Alert.alert('Error', (error as AuthError).message);
+      router.replace('/onboarding/quit-date');
+    } catch (error: any) {
+      console.error('Error signing up:', error);
+      Alert.alert(
+        'Sign Up Failed',
+        error.message || 'Please check your internet connection and try again'
+      );
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text.trim());
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text.trim());
+  };
+
+  const navigateToLogin = () => {
+    if (!loading) {
+      router.push('/auth/login');
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.formContainer}>
-        <Text style={styles.title}>Sign Up</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#666666"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#666666"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor="#666666"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSignup}
-          disabled={loading}
+      <KeyboardAvoidingView 
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
+      >
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
         >
-          <Text style={styles.buttonText}>
-            {loading ? 'Loading...' : 'Sign Up'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.linkButton}
-          onPress={() => router.push('/auth/login' as any)}
-        >
-          <Text style={styles.linkText}>
-            Already have an account? Login
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.content}>
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('@/assets/images/CrushNic Logo (1).png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>
+              The last quit vaping app you'll ever download
+            </Text>
+            
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  placeholder="Enter your email"
+                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                  returnKeyType="next"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                  editable={!loading}
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={handlePasswordChange}
+                    secureTextEntry={!showPassword}
+                    placeholder="Create a password"
+                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
+                    returnKeyType="go"
+                    textContentType="newPassword"
+                    autoComplete="password-new"
+                    editable={!loading}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color="#FFFFFF" />
+                    ) : (
+                      <Eye size={20} color="#FFFFFF" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#35998d" />
+              ) : (
+                <Text style={styles.buttonText}>Create Account</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.linkButton}
+              onPress={navigateToLogin}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.linkText}>
+                Already have an account? <Text style={styles.linkTextBold}>Sign in</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -97,50 +156,113 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#35998d',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
   },
-  formContainer: {
+  content: {
     width: '100%',
     maxWidth: 400,
     alignSelf: 'center',
   },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    tintColor: '#FFFFFF',
+  },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 34,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  subtitle: {
+    fontSize: 17,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginBottom: 32,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  form: {
+    marginBottom: 24,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 15,
-    fontSize: 16,
-    color: '#1C1C1E',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    fontSize: 17,
+    color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 20,
+    fontSize: 17,
+    color: '#FFFFFF',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  eyeButton: {
+    padding: 20,
   },
   button: {
-    backgroundColor: '#000',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 100,
+    height: 56,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#35998d',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   linkButton: {
-    marginTop: 15,
     alignItems: 'center',
+    padding: 8,
   },
   linkText: {
-    color: '#000',
-    fontSize: 14,
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  linkTextBold: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 }); 

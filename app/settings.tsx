@@ -1,53 +1,41 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { supabase } from '../lib/supabase';
 import { X } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { signOut } = useAuth();
 
-  const handleLogout = async () => {
-    if (isLoggingOut) return;
-    
-    setIsLoggingOut(true);
+  const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      // The AuthContext will handle the redirect
+      await signOut();
+      router.replace('/auth/login');
     } catch (error) {
-      Alert.alert('Error', 'Failed to logout');
-      setIsLoggingOut(false);
+      console.error('Error signing out:', error);
+      // Handle error (show message to user)
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.closeButton}
           onPress={() => router.back()}
-          disabled={isLoggingOut}
         >
-          <X size={24} color="#8E8E93" />
+          <X size={20} color="#8E8E93" />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity 
-        style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
-        onPress={handleLogout}
-        disabled={isLoggingOut}
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={handleSignOut}
       >
-        {isLoggingOut ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.logoutText}>Logout</Text>
-        )}
+        <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -83,9 +71,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
-  },
-  logoutButtonDisabled: {
-    opacity: 0.7,
   },
   logoutText: {
     color: '#FFFFFF',
