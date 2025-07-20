@@ -2,12 +2,22 @@ import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Im
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LandingScreen() {
   const router = useRouter();
+  const { session } = useAuth();
 
   const handleGetStarted = () => {
-    router.push('/onboarding/quit-date');
+    if (session) {
+      router.replace('/(tabs)');
+    } else {
+      router.push('/auth/signup');
+    }
+  };
+
+  const handleSignIn = () => {
+    router.push('/auth/login');
   };
 
   return (
@@ -36,12 +46,23 @@ export default function LandingScreen() {
                 <Text style={styles.subtitle}>Let's Crush This.</Text>
               </View>
 
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleGetStarted}
-              >
-                <Text style={styles.buttonText}>Get Started</Text>
-              </TouchableOpacity>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleGetStarted}
+                >
+                  <Text style={styles.buttonText}>Get Started</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.linkButton}
+                  onPress={handleSignIn}
+                >
+                  <Text style={styles.linkText}>
+                    Already have an account? <Text style={styles.linkTextBold}>Sign in</Text>
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </SafeAreaView>
@@ -100,6 +121,10 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
     letterSpacing: 0.5,
   },
+  buttonContainer: {
+    width: '100%',
+    gap: 16,
+  },
   button: {
     backgroundColor: '#35998D',
     paddingVertical: 16,
@@ -122,5 +147,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
     letterSpacing: 0.5,
+  },
+  linkButton: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  linkText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  linkTextBold: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
 }); 

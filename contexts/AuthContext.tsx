@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { useRouter, useSegments } from 'expo-router';
 
 interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
@@ -12,9 +13,40 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// This hook will protect the route access based on user authentication
+function useProtectedRoute(session: Session | null, loading: boolean) {
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === 'auth';
+    const inOnboardingGroup = segments[0] === 'onboarding';
+    const inProtectedGroup = !inAuthGroup && !inOnboardingGroup && segments[0] !== undefined;
+
+    if (!session) {
+      // Not signed in
+      if (!inAuthGroup && segments[0] !== undefined) {
+        // If not on auth pages or landing page, redirect to login
+        router.replace('/auth/login');
+      }
+    } else {
+      // Signed in
+      if (inAuthGroup) {
+        // Don't allow access to auth pages when signed in
+        router.replace('/(tabs)');
+      }
+    }
+  }, [session, loading, segments]);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Use the useProtectedRoute hook here
+  useProtectedRoute(session, loading);
 
   useEffect(() => {
     // Check active sessions and subscribe to auth changes
@@ -92,24 +124,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
-
-// This hook will protect the route access based on user authentication
-function useProtectedRoute(session: Session | null, loading: boolean) {
-  const segments = useSegments();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (loading) return;
-
-    const inAuthGroup = segments[0] === 'auth';
-    
-    if (!session && !inAuthGroup) {
-      // If not authenticated and not in auth group, redirect to login
-      router.replace('/auth/login');
-    } else if (session && inAuthGroup) {
-      // If authenticated and in auth group, redirect to home
-      router.replace('/(tabs)');
-    }
-  }, [session, loading, segments]);
 } 
