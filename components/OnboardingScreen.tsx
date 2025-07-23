@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { saveOnboardingData } from '@/lib/onboarding';
 
 type OnboardingScreenPath = 
   | '/onboarding/quit-date'
@@ -47,18 +49,26 @@ export default function OnboardingScreen({
 }: OnboardingScreenProps) {
   const router = useRouter();
   const { session } = useAuth();
+  const { data } = useOnboarding();
 
   const handleNext = async () => {
     if (onNext) {
       onNext();
     }
     
-    // Mark onboarding as completed if this is the last screen
-    if (isLastScreen && session?.user?.email) {
+    // Save onboarding data if this is the last screen
+    if (isLastScreen && session?.user?.id) {
       try {
-        await AsyncStorage.setItem(`onboarding_completed_${session.user.email}`, 'true');
+        // Save onboarding completion status
+        await AsyncStorage.setItem(`onboarding_completed_${session.user.id}`, 'true');
+
+        // Save the actual onboarding data to the database
+        await saveOnboardingData(session.user.id, data);
+
+        console.log('Onboarding data saved successfully');
       } catch (error) {
-        console.log('Failed to save onboarding status:', error);
+        console.error('Failed to save onboarding data:', error);
+        // Continue anyway - don't block the user
       }
     }
     

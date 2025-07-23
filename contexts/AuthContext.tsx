@@ -88,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
+      // Profile will be created during onboarding completion
       return { error: undefined };
     } catch (error) {
       return { error: error as Error };

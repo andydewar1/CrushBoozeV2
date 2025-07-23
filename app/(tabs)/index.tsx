@@ -3,8 +3,44 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
 import Header from '../../components/Header';
+import { useQuitTimer } from '@/hooks/useQuitTimer';
+import { format } from 'date-fns';
 
 export default function HomeScreen() {
+  const { days, hours, minutes, quitDate, loading, error } = useQuitTimer();
+
+  // Show loading state
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <Header 
+            title="Home" 
+            subtitle="Your future self is proud of you."
+          />
+          <View style={styles.progressCard}>
+            <View style={styles.circularProgress}>
+              <View style={styles.progressRing}>
+                <View style={styles.progressContent}>
+                  <Text style={styles.daysNumber}>...</Text>
+                  <Text style={styles.daysText}>loading</Text>
+                  <Text style={styles.timeText}>...</Text>
+                </View>
+              </View>
+            </View>
+            <Text style={styles.sinceText}>Loading your progress...</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state or fallback
+  const displayDays = error ? 0 : days;
+  const displayHours = error ? 0 : hours;
+  const displayMinutes = error ? 0 : minutes;
+  const displayText = error ? 'Complete onboarding to start tracking' : 'days strong';
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -18,13 +54,20 @@ export default function HomeScreen() {
           <View style={styles.circularProgress}>
             <View style={styles.progressRing}>
               <View style={styles.progressContent}>
-                <Text style={styles.daysNumber}>67</Text>
-                <Text style={styles.daysText}>days strong</Text>
-                <Text style={styles.timeText}>2h 59m</Text>
+                <Text style={styles.daysNumber}>{displayDays}</Text>
+                <Text style={styles.daysText}>{displayText}</Text>
+                <Text style={styles.timeText}>{displayHours}h {displayMinutes}m</Text>
               </View>
             </View>
           </View>
-          <Text style={styles.sinceText}>Since May 1, 2025</Text>
+          <Text style={styles.sinceText}>
+            {error 
+              ? 'Set up your quit date in settings' 
+              : quitDate 
+                ? `Since ${format(quitDate, 'MMMM d, yyyy')}` 
+                : 'Since you quit'
+            }
+          </Text>
           
           {/* Stats Row */}
           <View style={styles.statsRow}>
@@ -641,68 +684,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
-  },
-  achievementStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-    backgroundColor: '#F8F9FA',
-    borderRadius: 16,
-    padding: 20,
-  },
-  achievementStatItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  achievementStatNumber: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1C1C1E',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  achievementStatLabel: {
-    fontSize: 14,
-    color: '#8E8E93',
-    fontWeight: '500',
-  },
-  achievementTitle: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#35998d',
-    marginBottom: 20,
-  },
-  achievementDetailsContainer: {
-    marginBottom: 20,
-  },
-  achievementDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  achievementDetailLabel: {
-    fontSize: 16,
-    color: '#8E8E93',
-  },
-  achievementDetailValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#35998d',
-  },
-  motivationMessage: {
-    backgroundColor: '#E8F5E8',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  motivationIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  motivationText: {
-    fontSize: 16,
-    color: '#35998d',
-    fontWeight: '500',
   },
 });
