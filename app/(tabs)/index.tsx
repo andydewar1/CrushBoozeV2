@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
-import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
+import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Header from '../../components/Header';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
+import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
@@ -14,9 +15,10 @@ export default function HomeScreen() {
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
+  const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
 
   // Show loading state if any data is loading
-  if (timerLoading || savingsLoading || goalLoading) {
+  if (timerLoading || savingsLoading || goalLoading || motivationLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -194,6 +196,59 @@ export default function HomeScreen() {
           >
             <Text style={styles.viewAllText}>View All Goals</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Remember Your Why Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MessageCircle size={20} color="#35998d" />
+            <Text style={styles.sectionTitle}>Remember Your Why</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
+          
+          {motivationError || !motivation ? (
+            <View style={styles.motivationContainer}>
+              <Text style={styles.motivationText}>
+                {motivationError ? 'Complete onboarding to see your motivation' : 'No motivation set yet'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.motivationContainer}>
+              {/* Custom Quit Reason */}
+              <View style={styles.customReasonContainer}>
+                <Text style={styles.customReasonTitle}>Your Personal Why</Text>
+                <Text style={styles.customReasonText}>"{motivation.quitReason}"</Text>
+              </View>
+
+              {/* Personal Goals */}
+              {motivation.personalGoals.length > 0 && (
+                <View style={styles.goalsContainer}>
+                  <Text style={styles.goalsTitle}>Your Goals</Text>
+                  <View style={styles.goalsList}>
+                    {motivation.personalGoals.map((goal, index) => (
+                      <View key={index} style={styles.goalTag}>
+                        <Text style={styles.goalTagText}>{goal}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Quit Reasons */}
+              {motivation.quitReasons.length > 0 && (
+                <View style={styles.reasonsContainer}>
+                  <Text style={styles.reasonsTitle}>Your Reasons</Text>
+                  <View style={styles.reasonsList}>
+                    {motivation.quitReasons.map((reason, index) => (
+                      <View key={index} style={styles.reasonItem}>
+                        <Text style={styles.reasonText}>• {reason}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Health Recovery Timeline */}
@@ -738,6 +793,73 @@ const styles = StyleSheet.create({
   timelineDescription: {
     fontSize: 14,
     color: '#8E8E93',
+    lineHeight: 20,
+  },
+  // Remember Your Why section styles
+  motivationContainer: {
+    marginTop: 0,
+  },
+  customReasonContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  customReasonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  customReasonText: {
+    fontSize: 16,
+    color: '#1C1C1E',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  goalsContainer: {
+    marginBottom: 16,
+  },
+  goalsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 12,
+  },
+  goalsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  goalTag: {
+    backgroundColor: '#35998d',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  goalTagText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  reasonsContainer: {
+    marginBottom: 8,
+  },
+  reasonsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 12,
+  },
+  reasonsList: {
+    gap: 8,
+  },
+  reasonItem: {
+    paddingVertical: 4,
+  },
+  reasonText: {
+    fontSize: 14,
+    color: '#1C1C1E',
     lineHeight: 20,
   },
 });
