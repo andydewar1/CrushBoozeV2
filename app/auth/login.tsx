@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -23,6 +24,19 @@ export default function LoginScreen() {
     try {
       const { error } = await signIn(email, password);
       if (error) throw error;
+      
+      // Check if user has completed onboarding
+      try {
+        const onboardingCompleted = await AsyncStorage.getItem(`onboarding_completed_${email}`);
+        if (onboardingCompleted !== 'true') {
+          router.replace('/onboarding/quit-date');
+          return;
+        }
+      } catch (storageError) {
+        console.log('Storage check failed, proceeding to main app:', storageError);
+      }
+      
+      // Default: go to main app
       router.replace('/(tabs)');
     } catch (error: any) {
       console.error('Error logging in:', error);

@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platfor
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 type OnboardingScreenPath = 
   | '/onboarding/quit-date'
@@ -22,8 +24,8 @@ interface OnboardingScreenProps {
   totalSteps: number;
   nextScreen: OnboardingScreenPath;
   previousScreen?: OnboardingScreenPath;
-  isLastScreen?: boolean;
   canProgress?: boolean;
+  isLastScreen?: boolean;
   onNext?: () => void;
   hideProgress?: boolean;
   scrollEnabled?: boolean;
@@ -44,11 +46,22 @@ export default function OnboardingScreen({
   scrollEnabled = true,
 }: OnboardingScreenProps) {
   const router = useRouter();
+  const { session } = useAuth();
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (onNext) {
       onNext();
     }
+    
+    // Mark onboarding as completed if this is the last screen
+    if (isLastScreen && session?.user?.email) {
+      try {
+        await AsyncStorage.setItem(`onboarding_completed_${session.user.email}`, 'true');
+      } catch (error) {
+        console.log('Failed to save onboarding status:', error);
+      }
+    }
+    
     if (canProgress) {
       router.push(nextScreen as any);
     }
