@@ -8,6 +8,7 @@ import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
+import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
@@ -16,9 +17,10 @@ export default function HomeScreen() {
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
+  const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
 
   // Show loading state if any data is loading
-  if (timerLoading || savingsLoading || goalLoading || motivationLoading) {
+  if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -259,132 +261,75 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.sectionSubtitle}>Based on WHO medical research</Text>
           
-          <View style={styles.timelineContainer}>
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Heart size={16} color="#FF69B4" />
-                </View>
-                <View style={styles.timelineLine} />
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>20 MINUTES</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
+          {healthError ? (
+            <View style={styles.timelineContainer}>
+              <Text style={styles.timelineDescription}>
+                Complete onboarding to see your health recovery progress
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.timelineContainer}>
+              {healthMilestones.map((milestone, index) => (
+                <View key={milestone.id} style={styles.timelineItem}>
+                  <View style={styles.timelineIconContainer}>
+                    <View style={[
+                      styles.timelineIcon,
+                      !milestone.achieved && styles.timelineIconInactive
+                    ]}>
+                      {milestone.iconType === 'heart' ? (
+                        <Heart 
+                          size={16} 
+                          color={milestone.achieved ? (milestone.iconColor || '#FF69B4') : '#8E8E93'} 
+                        />
+                      ) : (
+                        <Text style={[
+                          styles.timelineEmoji,
+                          !milestone.achieved && styles.timelineEmojiInactive
+                        ]}>
+                          {milestone.icon}
+                        </Text>
+                      )}
+                    </View>
+                    {index < healthMilestones.length - 1 && (
+                      <View style={[
+                        styles.timelineLine,
+                        !milestone.achieved && styles.timelineLineInactive
+                      ]} />
+                    )}
+                  </View>
+                  <View style={styles.timelineContent}>
+                    <View style={styles.timelineHeader}>
+                      <Text style={[
+                        styles.timelineTime,
+                        !milestone.achieved && styles.timelineTimeInactive
+                      ]}>
+                        {milestone.timeDisplay}
+                      </Text>
+                      {milestone.achieved ? (
+                        <View style={styles.checkmark}>
+                          <Check size={16} color="#FFFFFF" />
+                        </View>
+                      ) : (
+                        <View style={styles.checkmarkInactive} />
+                      )}
+                    </View>
+                    <Text style={[
+                      styles.timelineTitle,
+                      !milestone.achieved && styles.timelineTitleInactive
+                    ]}>
+                      {milestone.title}
+                    </Text>
+                    <Text style={[
+                      styles.timelineDescription,
+                      !milestone.achieved && styles.timelineDescriptionInactive
+                    ]}>
+                      {milestone.description}
+                    </Text>
                   </View>
                 </View>
-                <Text style={styles.timelineTitle}>Heart rate normalizes</Text>
-                <Text style={styles.timelineDescription}>
-                  Heart rate and blood pressure drop to normal levels
-                </Text>
-              </View>
+              ))}
             </View>
-
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Text style={styles.timelineEmoji}>🫁</Text>
-                </View>
-                <View style={styles.timelineLine} />
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>12 HOURS</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                </View>
-                <Text style={styles.timelineTitle}>Carbon monoxide clears</Text>
-                <Text style={styles.timelineDescription}>
-                  Carbon monoxide level in blood normalizes, oxygen levels increase
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Heart size={16} color="#FF4757" />
-                </View>
-                <View style={styles.timelineLine} />
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>1 DAY</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                </View>
-                <Text style={styles.timelineTitle}>Heart attack risk drops</Text>
-                <Text style={styles.timelineDescription}>
-                  Risk of heart attack begins to decrease
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Text style={styles.timelineEmoji}>🔔</Text>
-                </View>
-                <View style={styles.timelineLine} />
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>2 DAYS</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                </View>
-                <Text style={styles.timelineTitle}>Nerve endings regrow</Text>
-                <Text style={styles.timelineDescription}>
-                  Damaged nerve endings start to regrow, taste and smell improve
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Text style={styles.timelineEmoji}>🧠</Text>
-                </View>
-                <View style={styles.timelineLine} />
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>3 DAYS</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                </View>
-                <Text style={styles.timelineTitle}>Nicotine withdrawal peaks</Text>
-                <Text style={styles.timelineDescription}>
-                  Nicotine is completely out of your system, lung capacity increases
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.timelineItem}>
-              <View style={styles.timelineIconContainer}>
-                <View style={styles.timelineIcon}>
-                  <Text style={styles.timelineEmoji}>🩸</Text>
-                </View>
-              </View>
-              <View style={styles.timelineContent}>
-                <View style={styles.timelineHeader}>
-                  <Text style={styles.timelineTime}>1 WEEK</Text>
-                  <View style={styles.checkmark}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                </View>
-                <Text style={styles.timelineTitle}>Circulation improves</Text>
-                <Text style={styles.timelineDescription}>
-                  Blood circulation improves significantly
-                </Text>
-              </View>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Next Achievement Section */}
@@ -794,6 +739,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
+  },
+  // Inactive timeline styles
+  timelineIconInactive: {
+    borderColor: '#E5E5EA',
+  },
+  timelineEmojiInactive: {
+    opacity: 0.4,
+  },
+  timelineLineInactive: {
+    backgroundColor: '#E5E5EA',
+  },
+  timelineTimeInactive: {
+    color: '#C7C7CC',
+  },
+  checkmarkInactive: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#E5E5EA',
+  },
+  timelineTitleInactive: {
+    color: '#C7C7CC',
+  },
+  timelineDescriptionInactive: {
+    color: '#C7C7CC',
   },
   // Remember Your Why section styles
   motivationContainer: {
