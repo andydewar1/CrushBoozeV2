@@ -9,6 +9,7 @@ import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
+import { useAchievements } from '@/hooks/useAchievements';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
@@ -18,9 +19,10 @@ export default function HomeScreen() {
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
+  const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
   // Show loading state if any data is loading
-  if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading) {
+  if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -146,6 +148,100 @@ export default function HomeScreen() {
               }
             </Text>
           </View>
+        </View>
+
+        {/* Current Achievement Section */}
+        {!achievementsLoading && !achievementsError && achievementStats.currentAchievement && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Trophy size={20} color="#35998d" />
+              <Text style={styles.sectionTitle}>Current Achievement</Text>
+            </View>
+            <Text style={styles.sectionSubtitle}>Your latest milestone conquered!</Text>
+            
+            <View style={styles.achievementInfo}>
+              <View style={styles.achievementContainer}>
+                <Text style={styles.achievementBadge}>{achievementStats.currentAchievement.emoji}</Text>
+                <View style={styles.achievementText}>
+                  <Text style={styles.achievementName}>{achievementStats.currentAchievement.title}</Text>
+                  <Text style={styles.achievementDescription}>{achievementStats.currentAchievement.description}</Text>
+                </View>
+              </View>
+            </View>
+            
+            <View style={styles.celebrationBanner}>
+              <Text style={styles.celebrationEmoji}>🎉</Text>
+              <Text style={styles.celebrationText}>
+                Congratulations! You've achieved {achievementStats.currentAchievement.title}!
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* Next Achievement Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Crosshair size={20} color="#FF6B47" />
+            <Text style={styles.sectionTitle}>Next Achievement</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Your next milestone is within reach.</Text>
+          
+          {achievementsLoading ? (
+            <View style={styles.achievementInfo}>
+              <Text style={styles.achievementName}>Loading...</Text>
+              <Text style={styles.achievementDescription}>Please wait</Text>
+            </View>
+          ) : achievementsError || !achievementStats.nextAchievement ? (
+            <View style={styles.achievementInfo}>
+              <Text style={styles.achievementName}>
+                {achievementsError ? 'Complete onboarding' : 'All achievements unlocked!'}
+              </Text>
+              <Text style={styles.achievementDescription}>
+                {achievementsError ? 'Set your quit date to track progress' : 'Congratulations on your journey!'}
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.achievementInfo}>
+                <View style={styles.achievementContainer}>
+                  <Text style={styles.achievementBadge}>{achievementStats.nextAchievement.emoji}</Text>
+                  <View style={styles.achievementText}>
+                    <Text style={styles.achievementName}>{achievementStats.nextAchievement.title}</Text>
+                    <Text style={styles.achievementDescription}>{achievementStats.nextAchievement.description}</Text>
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.achievementProgressContainer}>
+                <View style={styles.daysToGoBox}>
+                  <Text style={styles.daysToGoNumber}>{achievementStats.daysToNext}</Text>
+                  <Text style={styles.daysToGoLabel}>Days to go</Text>
+                </View>
+                
+                <View style={styles.progressSection}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Progress</Text>
+                    <Text style={styles.progressPercentage}>{achievementStats.progressToNext}%</Text>
+                  </View>
+                  <View style={styles.achievementProgressBar}>
+                    <View style={[styles.achievementProgressFill, { width: `${achievementStats.progressToNext}%` }]} />
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.motivationBanner}>
+                <Text style={styles.motivationEmoji}>🎯</Text>
+                <Text style={styles.motivationText}>
+                  {achievementStats.progressToNext >= 75 
+                    ? `You're ${achievementStats.progressToNext}% there! Keep going strong!`
+                    : achievementStats.progressToNext >= 50
+                    ? `Halfway there! ${achievementStats.daysToNext} days to go!`
+                    : `Every day counts! ${achievementStats.daysToNext} days to your next milestone!`
+                  }
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Financial Goals Section */}
@@ -331,42 +427,6 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-
-        {/* Next Achievement Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Crosshair size={20} color="#FF6B47" />
-            <Text style={styles.sectionTitle}>Next Achievement</Text>
-          </View>
-          <Text style={styles.sectionSubtitle}>Your next milestone is within reach.</Text>
-          
-          <View style={styles.achievementInfo}>
-            <Text style={styles.achievementName}>3 Month Titan</Text>
-            <Text style={styles.achievementDescription}>Heart attack risk dropping</Text>
-          </View>
-          
-          <View style={styles.achievementProgressContainer}>
-            <View style={styles.daysToGoBox}>
-              <Text style={styles.daysToGoNumber}>23</Text>
-              <Text style={styles.daysToGoLabel}>Days to go</Text>
-            </View>
-            
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Progress</Text>
-                <Text style={styles.progressPercentage}>75%</Text>
-              </View>
-              <View style={styles.achievementProgressBar}>
-                <View style={[styles.achievementProgressFill, { width: '75%' }]} />
-              </View>
-            </View>
-          </View>
-          
-          <View style={styles.motivationBanner}>
-            <Text style={styles.motivationEmoji}>🎯</Text>
-            <Text style={styles.motivationText}>You're 75% there! Keep going strong!</Text>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -546,6 +606,37 @@ const styles = StyleSheet.create({
   },
   achievementInfo: {
     marginBottom: 20,
+  },
+  achievementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  achievementBadge: {
+    fontSize: 48,
+    marginRight: 16,
+  },
+  achievementText: {
+    flex: 1,
+  },
+  celebrationBanner: {
+    backgroundColor: 'rgba(53, 153, 141, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(53, 153, 141, 0.3)',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  celebrationEmoji: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  celebrationText: {
+    fontSize: 16,
+    color: '#35998d',
+    fontWeight: '600',
+    flex: 1,
   },
   achievementName: {
     fontSize: 24,

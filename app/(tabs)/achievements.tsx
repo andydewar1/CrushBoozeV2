@@ -2,8 +2,10 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { Trophy, Target, TrendingUp, Crosshair, Settings } from 'lucide-react-native';
+import { useAchievements } from '@/hooks/useAchievements';
 
 export default function AchievementsScreen() {
+  const { achievements, stats, loading, error } = useAchievements();
   return (
     <>
       <SafeAreaView style={styles.container}>
@@ -23,20 +25,54 @@ export default function AchievementsScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Trophy size={24} color="#35998d" />
-            <Text style={styles.statNumber}>6</Text>
+            <Text style={styles.statNumber}>
+              {loading ? '...' : error ? '0' : stats.totalEarned}
+            </Text>
             <Text style={styles.statLabel}>Earned</Text>
           </View>
           <View style={styles.statBox}>
             <Target size={24} color="#FF6B47" />
-            <Text style={styles.statNumber}>67</Text>
+            <Text style={styles.statNumber}>
+              {loading ? '...' : error ? '0' : stats.daysFree}
+            </Text>
             <Text style={styles.statLabel}>Days Free</Text>
           </View>
           <View style={styles.statBox}>
             <TrendingUp size={24} color="#35998d" />
-            <Text style={styles.statNumber}>13</Text>
+            <Text style={styles.statNumber}>
+              {loading ? '...' : error ? '0' : stats.totalToGo}
+            </Text>
             <Text style={styles.statLabel}>To Go</Text>
           </View>
         </View>
+
+        {/* Current Achievement Section */}
+        {!loading && !error && stats.currentAchievement && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Trophy size={20} color="#35998d" />
+              <Text style={styles.sectionTitle}>Current Achievement</Text>
+            </View>
+            <Text style={styles.sectionSubtitle}>Your latest milestone conquered!</Text>
+            
+                          <View style={styles.achievementInfo}>
+                <View style={styles.achievementContainer}>
+                  <Text style={styles.achievementBadge}>{stats.currentAchievement.emoji}</Text>
+                  <View style={styles.achievementText}>
+                    <Text style={styles.achievementName}>{stats.currentAchievement.title}</Text>
+                    <Text style={styles.achievementDescription}>{stats.currentAchievement.description}</Text>
+                  </View>
+                </View>
+              </View>
+            
+            <View style={styles.celebrationBanner}>
+              <Text style={styles.celebrationEmoji}>🎉</Text>
+              <Text style={styles.celebrationText}>
+                Congratulations! You've achieved {stats.currentAchievement.title}!
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Next Achievement Section */}
         <View style={styles.section}>
@@ -46,212 +82,116 @@ export default function AchievementsScreen() {
           </View>
           <Text style={styles.sectionSubtitle}>Your next milestone is within reach.</Text>
           
-          <View style={styles.achievementInfo}>
-            <Text style={styles.achievementName}>3 Month Titan</Text>
-            <Text style={styles.achievementDescription}>Heart attack risk dropping</Text>
-          </View>
-          
-          <View style={styles.achievementProgressContainer}>
-            <View style={styles.daysToGoBox}>
-              <Text style={styles.daysToGoNumber}>23</Text>
-              <Text style={styles.daysToGoLabel}>Days to go</Text>
+          {loading ? (
+            <View style={styles.achievementInfo}>
+              <Text style={styles.achievementName}>Loading...</Text>
+              <Text style={styles.achievementDescription}>Please wait</Text>
             </View>
-            
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Progress</Text>
-                <Text style={styles.progressPercentage}>75%</Text>
-              </View>
-              <View style={styles.achievementProgressBar}>
-                <View style={[styles.achievementProgressFill, { width: '75%' }]} />
-              </View>
+          ) : error || !stats.nextAchievement ? (
+            <View style={styles.achievementInfo}>
+              <Text style={styles.achievementName}>
+                {error ? 'Complete onboarding' : 'All achievements unlocked!'}
+              </Text>
+              <Text style={styles.achievementDescription}>
+                {error ? 'Set your quit date to track progress' : 'Congratulations on your journey!'}
+              </Text>
             </View>
-          </View>
-          
-          <View style={styles.motivationBanner}>
-            <Text style={styles.motivationEmoji}>🎯</Text>
-            <Text style={styles.motivationText}>You're 75% there! Keep going strong!</Text>
-          </View>
+          ) : (
+            <>
+                              <View style={styles.achievementInfo}>
+                  <View style={styles.achievementContainer}>
+                    <Text style={styles.achievementBadge}>{stats.nextAchievement.emoji}</Text>
+                    <View style={styles.achievementText}>
+                      <Text style={styles.achievementName}>{stats.nextAchievement.title}</Text>
+                      <Text style={styles.achievementDescription}>{stats.nextAchievement.description}</Text>
+                    </View>
+                  </View>
+                </View>
+              
+              <View style={styles.achievementProgressContainer}>
+                <View style={styles.daysToGoBox}>
+                  <Text style={styles.daysToGoNumber}>{stats.daysToNext}</Text>
+                  <Text style={styles.daysToGoLabel}>Days to go</Text>
+                </View>
+                
+                <View style={styles.progressSection}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Progress</Text>
+                    <Text style={styles.progressPercentage}>{stats.progressToNext}%</Text>
+                  </View>
+                  <View style={styles.achievementProgressBar}>
+                    <View style={[styles.achievementProgressFill, { width: `${stats.progressToNext}%` }]} />
+                  </View>
+                </View>
+              </View>
+              
+              <View style={styles.motivationBanner}>
+                <Text style={styles.motivationEmoji}>🎯</Text>
+                <Text style={styles.motivationText}>
+                  {stats.progressToNext >= 75 
+                    ? `You're ${stats.progressToNext}% there! Keep going strong!`
+                    : stats.progressToNext >= 50
+                    ? `Halfway there! ${stats.daysToNext} days to go!`
+                    : `Every day counts! ${stats.daysToNext} days to your next milestone!`
+                  }
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
-        {/* Early Milestones Section */}
+        {/* Milestones Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Early Milestones</Text>
+          <Text style={styles.sectionTitle}>Achievement Milestones</Text>
           <Text style={styles.sectionSubtitle}>Your journey milestones and badges.</Text>
           
-          <View style={styles.milestonesGrid}>
-            {/* First Day Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>🎯</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>First Day</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                You took the first step
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading achievements...</Text>
             </View>
-
-            {/* First Week Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>🌟</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>First Week</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                7 days smoke-free
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
+          ) : error ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.errorText}>Complete onboarding to see achievements</Text>
             </View>
-
-            {/* $100 Saved Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>💰</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>$100 Saved</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                First savings milestone
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
+          ) : (
+            <View style={styles.milestonesGrid}>
+              {achievements.map((achievement) => (
+                <View 
+                  key={achievement.id}
+                  style={[
+                    styles.milestoneCard, 
+                    achievement.achieved ? styles.milestoneUnlocked : styles.milestoneLocked
+                  ]}
+                >
+                  <View style={styles.milestoneBadge}>
+                    <Text style={achievement.achieved ? styles.badgeEmoji : styles.badgeEmojiLocked}>
+                      {achievement.emoji}
+                    </Text>
+                  </View>
+                  <Text style={[
+                    styles.milestoneTitle, 
+                    achievement.achieved ? styles.titleUnlocked : styles.titleLocked
+                  ]}>
+                    {achievement.title}
+                  </Text>
+                  <Text style={[
+                    styles.milestoneDescription, 
+                    achievement.achieved ? styles.descriptionUnlocked : styles.descriptionLocked
+                  ]}>
+                    {achievement.achieved 
+                      ? achievement.description 
+                      : `${achievement.daysToGo} days to go`
+                    }
+                  </Text>
+                  {achievement.achieved && (
+                    <View style={styles.checkmarkContainer}>
+                      <Text style={styles.checkmark}>✓</Text>
+                    </View>
+                  )}
+                </View>
+              ))}
             </View>
-
-            {/* First Month Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>🏆</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>First Month</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                30 days of freedom
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
-            </View>
-
-            {/* $500 Saved Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>💎</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>$500 Saved</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                Major savings achieved
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
-            </View>
-
-            {/* 2 Month Warrior Badge - Unlocked */}
-            <View style={[styles.milestoneCard, styles.milestoneUnlocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmoji}>⚔️</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleUnlocked]}>2 Month Warrior</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionUnlocked]}>
-                60 days of strength
-              </Text>
-              <View style={styles.checkmarkContainer}>
-                <Text style={styles.checkmark}>✓</Text>
-              </View>
-            </View>
-
-            {/* $1000 Saved Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>🎖️</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>$1000 Saved</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                $26 to go
-              </Text>
-            </View>
-
-            {/* 3 Month Titan Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>🛡️</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>3 Month Titan</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                23 days to go
-              </Text>
-            </View>
-
-            {/* 6 Month Champion Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>👑</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>6 Month Champion</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                113 days to go
-              </Text>
-            </View>
-
-            {/* 1 Year Legend Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>🌟</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>1 Year Legend</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                298 days to go
-              </Text>
-            </View>
-
-            {/* 2 Year Legend Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>🏅</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>2 Year Legend</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                663 days to go
-              </Text>
-            </View>
-
-            {/* 3 Year Master Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>🎖️</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>3 Year Master</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                1028 days to go
-              </Text>
-            </View>
-
-            {/* 4 Year Elite Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>💫</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>4 Year Elite</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                1393 days to go
-              </Text>
-            </View>
-
-            {/* 5 Year Immortal Badge - Locked */}
-            <View style={[styles.milestoneCard, styles.milestoneLocked]}>
-              <View style={styles.milestoneBadge}>
-                <Text style={styles.badgeEmojiLocked}>👑</Text>
-              </View>
-              <Text style={[styles.milestoneTitle, styles.titleLocked]}>5 Year Immortal</Text>
-              <Text style={[styles.milestoneDescription, styles.descriptionLocked]}>
-                1758 days to go
-              </Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Bottom spacing for tab bar */}
@@ -549,5 +489,51 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 100,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    textAlign: 'center',
+  },
+  achievementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  achievementBadge: {
+    fontSize: 48,
+    marginRight: 16,
+  },
+  achievementText: {
+    flex: 1,
+  },
+  celebrationBanner: {
+    backgroundColor: 'rgba(53, 153, 141, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(53, 153, 141, 0.3)',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  celebrationEmoji: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  celebrationText: {
+    fontSize: 16,
+    color: '#35998d',
+    fontWeight: '600',
+    flex: 1,
   },
 });

@@ -1,111 +1,246 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useQuitTimer } from './useQuitTimer';
 
-interface Achievement {
-  id: number;
+export interface Achievement {
+  id: string;
   title: string;
   description: string;
-  badge_emoji: string;
-  days_required: number;
-  money_required: number | null;
-  category: string;
+  emoji: string;
+  daysRequired: number;
+  achieved: boolean;
+  daysToGo: number;
 }
 
-interface UserAchievement {
-  id: string;
-  user_id: string;
-  achievement_id: number;
-  unlocked_at: string | null;
+export interface AchievementStats {
+  totalEarned: number;
+  daysFree: number;
+  totalToGo: number;
+  currentAchievement: Achievement | null;
+  nextAchievement: Achievement | null;
+  progressToNext: number; // percentage
+  daysToNext: number;
 }
 
-interface AchievementWithProgress extends Achievement {
-  unlocked: boolean;
-  unlocked_at: string | null;
-  days_to_go: number | null;
-}
+// Complete achievement milestones from 1 day to 5 years
+const ACHIEVEMENTS: Omit<Achievement, 'achieved' | 'daysToGo'>[] = [
+  {
+    id: 'day1',
+    title: 'First Day',
+    description: 'You took the first step',
+    emoji: '🎯',
+    daysRequired: 1,
+  },
+  {
+    id: 'day3',
+    title: '3 Day Warrior',
+    description: 'Nicotine withdrawal peaks',
+    emoji: '⚡',
+    daysRequired: 3,
+  },
+  {
+    id: 'week1',
+    title: 'First Week',
+    description: '7 days smoke-free',
+    emoji: '🌟',
+    daysRequired: 7,
+  },
+  {
+    id: 'week2',
+    title: '2 Week Champion',
+    description: 'Lung function improving',
+    emoji: '🏃',
+    daysRequired: 14,
+  },
+  {
+    id: 'week3',
+    title: '3 Week Hero',
+    description: 'Building strong habits',
+    emoji: '🦸',
+    daysRequired: 21,
+  },
+  {
+    id: 'month1',
+    title: 'First Month',
+    description: '30 days of freedom',
+    emoji: '🏆',
+    daysRequired: 30,
+  },
+  {
+    id: 'month2',
+    title: '2 Month Warrior',
+    description: '60 days of strength',
+    emoji: '⚔️',
+    daysRequired: 60,
+  },
+  {
+    id: 'month3',
+    title: '3 Month Titan',
+    description: 'Heart attack risk dropping',
+    emoji: '🛡️',
+    daysRequired: 90,
+  },
+  {
+    id: 'month4',
+    title: '4 Month Guardian',
+    description: 'Circulation normalizing',
+    emoji: '🌿',
+    daysRequired: 120,
+  },
+  {
+    id: 'month5',
+    title: '5 Month Master',
+    description: 'Major health improvements',
+    emoji: '💪',
+    daysRequired: 150,
+  },
+  {
+    id: 'month6',
+    title: '6 Month Champion',
+    description: 'Half year milestone',
+    emoji: '👑',
+    daysRequired: 180,
+  },
+  {
+    id: 'month7',
+    title: '7 Month Legend',
+    description: 'Lung healing accelerates',
+    emoji: '🌊',
+    daysRequired: 210,
+  },
+  {
+    id: 'month8',
+    title: '8 Month Elite',
+    description: 'Breathing easier',
+    emoji: '💨',
+    daysRequired: 240,
+  },
+  {
+    id: 'month9',
+    title: '9 Month Sage',
+    description: 'Lung capacity increased',
+    emoji: '🌱',
+    daysRequired: 270,
+  },
+  {
+    id: 'month10',
+    title: '10 Month Veteran',
+    description: 'Almost a full year',
+    emoji: '🎖️',
+    daysRequired: 300,
+  },
+  {
+    id: 'month11',
+    title: '11 Month Pioneer',
+    description: 'Final stretch to one year',
+    emoji: '🚀',
+    daysRequired: 330,
+  },
+  {
+    id: 'year1',
+    title: '1 Year Legend',
+    description: 'Heart disease risk halved',
+    emoji: '🏅',
+    daysRequired: 365,
+  },
+  {
+    id: 'year2',
+    title: '2 Year Master',
+    description: 'Major health milestone',
+    emoji: '💎',
+    daysRequired: 730,
+  },
+  {
+    id: 'year3',
+    title: '3 Year Sage',
+    description: 'Stroke risk normalized',
+    emoji: '🌟',
+    daysRequired: 1095,
+  },
+  {
+    id: 'year4',
+    title: '4 Year Elite',
+    description: 'Cancer risk reduced',
+    emoji: '💫',
+    daysRequired: 1460,
+  },
+  {
+    id: 'year5',
+    title: '5 Year Immortal',
+    description: 'Ultimate health achievement',
+    emoji: '👑',
+    daysRequired: 1825,
+  },
+];
 
 export function useAchievements() {
-  const { session } = useAuth();
-  const [achievements, setAchievements] = useState<AchievementWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [totalAchieved, setTotalAchieved] = useState(0);
-  const [daysToNextAchievement, setDaysToNextAchievement] = useState(0);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [stats, setStats] = useState<AchievementStats>({
+    totalEarned: 0,
+    daysFree: 0,
+    totalToGo: 0,
+    currentAchievement: null,
+    nextAchievement: null,
+    progressToNext: 0,
+    daysToNext: 0,
+  });
+  const { days, loading: timerLoading, error: timerError } = useQuitTimer();
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (timerLoading || timerError) return;
 
-    async function fetchAchievements() {
-      try {
-        setLoading(true);
-        
-        if (!session?.user?.id) {
-          throw new Error('User not authenticated');
-        }
-        
-        // First get the user's quit date
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('quit_date')
-          .eq('id', session.user.id)
-          .single();
+    const daysFree = days;
 
-        if (userError) throw userError;
-        if (!userData?.quit_date) throw new Error('No quit date found');
+    // Calculate achievements with their status
+    const processedAchievements = ACHIEVEMENTS.map(achievement => ({
+      ...achievement,
+      achieved: daysFree >= achievement.daysRequired,
+      daysToGo: Math.max(0, achievement.daysRequired - daysFree),
+    }));
 
-        const quitDate = new Date(userData.quit_date);
-        const daysSinceQuit = Math.floor((Date.now() - quitDate.getTime()) / (1000 * 60 * 60 * 24));
+    setAchievements(processedAchievements);
 
-        // Get all achievements and user's unlocked achievements
-        const [{ data: achievementsData, error: achievementsError }, { data: userAchievements, error: userAchievementsError }] = await Promise.all([
-          supabase.from('achievements').select('*').order('days_required', { ascending: true }),
-          supabase.from('user_achievements').select('*').eq('user_id', session.user.id)
-        ]);
-
-        if (achievementsError) throw achievementsError;
-        if (userAchievementsError) throw userAchievementsError;
-
-        const userAchievementsMap = new Map(
-          (userAchievements || []).map(ua => [ua.achievement_id, ua])
-        );
-
-        // Combine and calculate progress
-        const achievementsWithProgress = (achievementsData || []).map(achievement => {
-          const userAchievement = userAchievementsMap.get(achievement.id);
-          const daysToGo = Math.max(0, achievement.days_required - daysSinceQuit);
-          
-          return {
-            ...achievement,
-            unlocked: !!userAchievement?.unlocked_at,
-            unlocked_at: userAchievement?.unlocked_at || null,
-            days_to_go: daysToGo
-          };
-        });
-
-        // Calculate totals
-        const achieved = achievementsWithProgress.filter(a => a.unlocked).length;
-        const nextUnlocked = achievementsWithProgress.find(a => !a.unlocked);
-
-        setAchievements(achievementsWithProgress);
-        setTotalAchieved(achieved);
-        setDaysToNextAchievement(nextUnlocked?.days_to_go || 0);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
+    // Calculate stats
+    const earnedAchievements = processedAchievements.filter(a => a.achieved);
+    const unlockedAchievements = processedAchievements.filter(a => !a.achieved);
+    
+    // Find current achievement (last earned one)
+    const currentAchievement = earnedAchievements.length > 0 ? earnedAchievements[earnedAchievements.length - 1] : null;
+    
+    // Find next achievement (first unlocked one)
+    const nextAchievement = unlockedAchievements[0] || null;
+    
+    // Calculate progress to next achievement
+    let progressToNext = 0;
+    let daysToNext = 0;
+    
+    if (nextAchievement) {
+      const targetDays = nextAchievement.daysRequired;
+      const currentDays = daysFree;
+      
+      // Calculate progress as percentage towards the target achievement
+      progressToNext = targetDays > 0 ? Math.min(100, (currentDays / targetDays) * 100) : 0;
+      daysToNext = Math.max(0, targetDays - currentDays);
+    } else {
+      // All achievements unlocked
+      progressToNext = 100;
+      daysToNext = 0;
     }
 
-    fetchAchievements();
-  }, [session?.user?.id]);
+    setStats({
+      totalEarned: earnedAchievements.length,
+      daysFree: daysFree,
+      totalToGo: unlockedAchievements.length,
+      currentAchievement,
+      nextAchievement,
+      progressToNext: Math.round(progressToNext),
+      daysToNext,
+    });
+  }, [days, timerLoading, timerError]);
 
   return {
     achievements,
-    loading,
-    error,
-    totalAchieved,
-    daysToNextAchievement
+    stats,
+    loading: timerLoading,
+    error: timerError,
   };
 } 
