@@ -2,17 +2,21 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import Header from '../../components/Header';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
+import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
+  const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
 
-  // Show loading state if either timer or savings are loading
-  if (timerLoading || savingsLoading) {
+  // Show loading state if any data is loading
+  if (timerLoading || savingsLoading || goalLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -148,22 +152,48 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.sectionSubtitle}>Your savings goals</Text>
           
-          <View style={styles.goalItem}>
-            <View style={styles.goalHeader}>
-              <Text style={styles.goalName}>Holiday to Dubai</Text>
-              <Text style={styles.goalAmount}>$2000</Text>
-            </View>
-            <View style={styles.progressBarContainer}>
-              <View style={styles.progressBar}>
-                <View style={[styles.progressFill, { width: '54%' }]} />
+          {goalError || !financialGoal ? (
+            <View style={styles.goalItem}>
+              <View style={styles.goalHeader}>
+                <Text style={styles.goalName}>
+                  {goalError ? 'Complete onboarding to set goals' : 'No financial goal set'}
+                </Text>
+                <Text style={styles.goalAmount}>--</Text>
               </View>
-              <Text style={styles.progressPercent}>54%</Text>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { width: '0%' }]} />
+                </View>
+                <Text style={styles.progressPercent}>0%</Text>
+              </View>
             </View>
-          </View>
+          ) : (
+            <View style={styles.goalItem}>
+              <View style={styles.goalHeader}>
+                <Text style={styles.goalName}>{financialGoal.description}</Text>
+                <Text style={styles.goalAmount}>
+                  {getCurrencySymbol(financialGoal.currency)}{financialGoal.amount.toFixed(0)}
+                </Text>
+              </View>
+              <View style={styles.progressBarContainer}>
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { 
+                    width: `${Math.min((displayTotalSaved / financialGoal.amount) * 100, 100)}%` 
+                  }]} />
+                </View>
+                <Text style={styles.progressPercent}>
+                  {Math.min((displayTotalSaved / financialGoal.amount) * 100, 100).toFixed(0)}%
+                </Text>
+              </View>
+            </View>
+          )}
 
-          <View style={styles.viewAllButton}>
+          <TouchableOpacity 
+            style={styles.viewAllButton}
+            onPress={() => router.push('/goals')}
+          >
             <Text style={styles.viewAllText}>View All Goals</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Health Recovery Timeline */}
