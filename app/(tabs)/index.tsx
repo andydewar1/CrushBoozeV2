@@ -4,13 +4,15 @@ import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp } from 'lucide-react-native';
 import Header from '../../components/Header';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
+import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
-  const { days, hours, minutes, quitDate, loading, error } = useQuitTimer();
+  const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
+  const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
 
-  // Show loading state
-  if (loading) {
+  // Show loading state if either timer or savings are loading
+  if (timerLoading || savingsLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -35,11 +37,27 @@ export default function HomeScreen() {
     );
   }
 
-  // Show error state or fallback
-  const displayDays = error ? 0 : days;
-  const displayHours = error ? 0 : hours;
-  const displayMinutes = error ? 0 : minutes;
-  const displayText = error ? 'Complete onboarding to start tracking' : 'days strong';
+  // Show error state or fallback for timer
+  const displayDays = timerError ? 0 : days;
+  const displayHours = timerError ? 0 : hours;
+  const displayMinutes = timerError ? 0 : minutes;
+  const displayText = timerError ? 'Complete onboarding to start tracking' : 'days strong';
+
+  // Show error state or fallback for savings
+  const displayTotalSaved = savingsError ? 0 : totalSaved;
+  const displayDailyRate = savingsError ? 0 : dailyRate;
+  const displayHourlyRate = savingsError ? 0 : hourlyRate;
+  const displayCurrency = currency || '$';
+
+  // Format money without decimals for the main display
+  const formatMoney = (amount: number): string => {
+    return Math.floor(amount).toLocaleString();
+  };
+
+  // Format money with decimals for detailed views
+  const formatMoneyDetailed = (amount: number): string => {
+    return amount.toFixed(2);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -61,7 +79,7 @@ export default function HomeScreen() {
             </View>
           </View>
           <Text style={styles.sinceText}>
-            {error 
+            {timerError 
               ? 'Set up your quit date in settings' 
               : quitDate 
                 ? `Since ${format(quitDate, 'MMMM d, yyyy')}` 
@@ -73,7 +91,7 @@ export default function HomeScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>💰</Text>
-              <Text style={styles.statValue}>$1074</Text>
+              <Text style={styles.statValue}>{displayCurrency}{formatMoney(displayTotalSaved)}</Text>
               <Text style={styles.statLabel}>Saved</Text>
             </View>
             <View style={styles.statItem}>
@@ -96,22 +114,29 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>Money Saved</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Total savings so far</Text>
-          <Text style={styles.moneyAmount}>$1074.04</Text>
+          <Text style={styles.moneyAmount}>{displayCurrency}{formatMoneyDetailed(displayTotalSaved)}</Text>
           
           <View style={styles.ratesContainer}>
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Daily rate:</Text>
-              <Text style={styles.rateValue}>$16.00</Text>
+              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayDailyRate)}</Text>
             </View>
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Hourly rate:</Text>
-              <Text style={styles.rateValue}>$0.67</Text>
+              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayHourlyRate)}</Text>
             </View>
           </View>
 
           <View style={styles.motivationBanner}>
             <Text style={styles.motivationEmoji}>💰</Text>
-            <Text style={styles.motivationText}>Every hour counts! Keep it up!</Text>
+            <Text style={styles.motivationText}>
+              {savingsError 
+                ? 'Complete onboarding to track savings!' 
+                : displayTotalSaved > 0 
+                  ? 'Every minute counts! Keep it up!' 
+                  : 'Your savings will start growing once you quit!'
+              }
+            </Text>
           </View>
         </View>
 
@@ -423,7 +448,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 12,
     },
     shadowOpacity: 0.12,
     shadowRadius: 24,
