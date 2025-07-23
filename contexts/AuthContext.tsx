@@ -23,19 +23,19 @@ function useProtectedRoute(session: Session | null, loading: boolean) {
 
     const inAuthGroup = segments[0] === 'auth';
     const inOnboardingGroup = segments[0] === 'onboarding';
-    const inProtectedGroup = !inAuthGroup && !inOnboardingGroup && segments[0] !== undefined;
 
     if (!session) {
       // Not signed in
-      if (!inAuthGroup && segments[0] !== undefined) {
-        // If not on auth pages or landing page, redirect to login
+      if (!inAuthGroup && !inOnboardingGroup && segments[0] !== undefined) {
+        // If not on auth pages, onboarding, or landing page, redirect to login
         router.replace('/auth/login');
       }
     } else {
       // Signed in
-      if (inAuthGroup) {
-        // Don't allow access to auth pages when signed in
-        router.replace('/(tabs)');
+      if (inAuthGroup && !inOnboardingGroup) {
+        // Only redirect from auth pages if not going to onboarding
+        // Let the signup screen handle its own navigation to onboarding
+        // router.replace('/(tabs)');
       }
     }
   }, [session, loading, segments]);
