@@ -46,96 +46,92 @@ export default function AchievementsScreen() {
           </View>
         </View>
 
-        {/* Current Achievement Section */}
-        {!loading && !error && stats.currentAchievement && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Trophy size={20} color="#35998d" />
-              <Text style={styles.sectionTitle}>Current Achievement</Text>
-            </View>
-            <Text style={styles.sectionSubtitle}>Your latest milestone conquered!</Text>
-            
-                          <View style={styles.achievementInfo}>
-                <View style={styles.achievementContainer}>
-                  <Text style={styles.achievementBadge}>{stats.currentAchievement.emoji}</Text>
-                  <View style={styles.achievementText}>
-                    <Text style={styles.achievementName}>{stats.currentAchievement.title}</Text>
-                    <Text style={styles.achievementDescription}>{stats.currentAchievement.description}</Text>
-                  </View>
-                </View>
-              </View>
-            
-            <View style={styles.celebrationBanner}>
-              <Text style={styles.celebrationEmoji}>🎉</Text>
-              <Text style={styles.celebrationText}>
-                Congratulations! You've achieved {stats.currentAchievement.title}!
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Next Achievement Section */}
+                {/* Achievements Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Crosshair size={20} color="#FF6B47" />
-            <Text style={styles.sectionTitle}>Next Achievement</Text>
+            <Trophy size={20} color="#35998d" />
+            <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your next milestone is within reach.</Text>
+          <Text style={styles.sectionSubtitle}>Your progress milestones</Text>
           
           {loading ? (
             <View style={styles.achievementInfo}>
               <Text style={styles.achievementName}>Loading...</Text>
               <Text style={styles.achievementDescription}>Please wait</Text>
             </View>
-          ) : error || !stats.nextAchievement ? (
+          ) : error ? (
             <View style={styles.achievementInfo}>
-              <Text style={styles.achievementName}>
-                {error ? 'Complete onboarding' : 'All achievements unlocked!'}
-              </Text>
-              <Text style={styles.achievementDescription}>
-                {error ? 'Set your quit date to track progress' : 'Congratulations on your journey!'}
-              </Text>
+              <Text style={styles.achievementName}>Complete onboarding</Text>
+              <Text style={styles.achievementDescription}>Set your quit date to track progress</Text>
             </View>
           ) : (
             <>
-                              <View style={styles.achievementInfo}>
-                  <View style={styles.achievementContainer}>
-                    <Text style={styles.achievementBadge}>{stats.nextAchievement.emoji}</Text>
-                    <View style={styles.achievementText}>
-                      <Text style={styles.achievementName}>{stats.nextAchievement.title}</Text>
-                      <Text style={styles.achievementDescription}>{stats.nextAchievement.description}</Text>
+              {/* Current Achievement */}
+              {stats.currentAchievement && (
+                <>
+                  <View style={styles.achievementInfo}>
+                    <View style={styles.achievementContainer}>
+                      <Text style={styles.achievementBadge}>{stats.currentAchievement.emoji}</Text>
+                      <View style={styles.achievementText}>
+                        <Text style={styles.achievementName}>{stats.currentAchievement.title}</Text>
+                        <Text style={styles.achievementDescription}>{stats.currentAchievement.description}</Text>
+                      </View>
                     </View>
                   </View>
-                </View>
-              
-              <View style={styles.achievementProgressContainer}>
-                <View style={styles.daysToGoBox}>
-                  <Text style={styles.daysToGoNumber}>{stats.daysToNext}</Text>
-                  <Text style={styles.daysToGoLabel}>Days to go</Text>
-                </View>
-                
-                <View style={styles.progressSection}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Progress</Text>
-                    <Text style={styles.progressPercentage}>{stats.progressToNext}%</Text>
+                  
+                  <View style={styles.celebrationBanner}>
+                    <Text style={styles.celebrationEmoji}>🎉</Text>
+                    <Text style={styles.celebrationText}>
+                      Congratulations! You've achieved {stats.currentAchievement.title}!
+                    </Text>
                   </View>
-                  <View style={styles.achievementProgressBar}>
-                    <View style={[styles.achievementProgressFill, { width: `${stats.progressToNext}%` }]} />
+                </>
+              )}
+
+              {/* Upcoming Achievement */}
+              {stats.nextAchievement ? (
+                <>
+                  <View style={styles.upcomingSection}>
+                    <Text style={styles.upcomingTitle}>Upcoming Achievement</Text>
+                    
+                    <View style={styles.achievementProgressContainer}>
+                      <View style={styles.daysToGoBox}>
+                        <Text style={styles.daysToGoNumber}>{stats.daysToNext}</Text>
+                        <Text style={styles.daysToGoLabel}>Days to go</Text>
+                      </View>
+                      
+                      <View style={styles.progressSection}>
+                        <Text style={styles.upcomingAchievementName}>{stats.nextAchievement.title}</Text>
+                        <Text style={styles.upcomingAchievementDescription}>{stats.nextAchievement.description}</Text>
+                        <View style={styles.progressHeader}>
+                          <Text style={styles.progressLabel}>Progress</Text>
+                          <Text style={styles.progressPercentage}>{stats.progressToNext}%</Text>
+                        </View>
+                        <View style={styles.achievementProgressBar}>
+                          <View style={[styles.achievementProgressFill, { width: `${stats.progressToNext}%` }]} />
+                        </View>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.motivationBanner}>
+                      <Text style={styles.motivationEmoji}>🎯</Text>
+                      <Text style={styles.motivationText}>
+                        {stats.progressToNext >= 75 
+                          ? `You're ${stats.progressToNext}% there! Keep going strong!`
+                          : stats.progressToNext >= 50
+                          ? `Halfway there! ${stats.daysToNext} days to go!`
+                          : `Every day counts! ${stats.daysToNext} days to your next milestone!`
+                        }
+                      </Text>
+                    </View>
                   </View>
+                </>
+              ) : (
+                <View style={styles.achievementInfo}>
+                  <Text style={styles.achievementName}>All achievements unlocked!</Text>
+                  <Text style={styles.achievementDescription}>Congratulations on your journey!</Text>
                 </View>
-              </View>
-              
-              <View style={styles.motivationBanner}>
-                <Text style={styles.motivationEmoji}>🎯</Text>
-                <Text style={styles.motivationText}>
-                  {stats.progressToNext >= 75 
-                    ? `You're ${stats.progressToNext}% there! Keep going strong!`
-                    : stats.progressToNext >= 50
-                    ? `Halfway there! ${stats.daysToNext} days to go!`
-                    : `Every day counts! ${stats.daysToNext} days to your next milestone!`
-                  }
-                </Text>
-              </View>
+              )}
             </>
           )}
         </View>
@@ -314,7 +310,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   achievementInfo: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   achievementName: {
     fontSize: 24,
@@ -355,6 +351,17 @@ const styles = StyleSheet.create({
   },
   progressSection: {
     flex: 1,
+  },
+  upcomingAchievementName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 2,
+  },
+  upcomingAchievementDescription: {
+    fontSize: 13,
+    color: '#8E8E93',
+    marginBottom: 8,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -508,7 +515,7 @@ const styles = StyleSheet.create({
   achievementContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   achievementBadge: {
     fontSize: 48,
@@ -535,5 +542,17 @@ const styles = StyleSheet.create({
     color: '#35998d',
     fontWeight: '600',
     flex: 1,
+  },
+  upcomingSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5EA',
+  },
+  upcomingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#8E8E93',
+    marginBottom: 12,
   },
 });
