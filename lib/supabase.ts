@@ -12,5 +12,32 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    storageKey: 'crushnic-auth-token', // Custom storage key
   },
-}); 
+});
+
+// Function to check if user should be logged out due to inactivity
+export const checkInactivityLogout = async () => {
+  try {
+    const lastActivity = await AsyncStorage.getItem('last_activity');
+    const now = Date.now();
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    
+    if (lastActivity) {
+      const timeSinceActivity = now - parseInt(lastActivity);
+      if (timeSinceActivity > thirtyDaysInMs) {
+        // User has been inactive for 30+ days, log them out
+        await supabase.auth.signOut();
+        await AsyncStorage.removeItem('last_activity');
+        return true; // Should log out
+      }
+    }
+    
+    // Update last activity
+    await AsyncStorage.setItem('last_activity', now.toString());
+    return false; // Don't log out
+  } catch (error) {
+    console.log('Error checking inactivity:', error);
+    return false; // Don't log out on error
+  }
+}; 

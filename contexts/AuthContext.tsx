@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, checkInactivityLogout } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { useRouter, useSegments } from 'expo-router';
 
@@ -49,11 +49,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useProtectedRoute(session, loading);
 
   useEffect(() => {
-    // Check active sessions and subscribe to auth changes
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // Check for inactivity logout first
+    const initializeAuth = async () => {
+      const shouldLogout = await checkInactivityLogout();
+      if (shouldLogout) {
+        setSession(null);
+        setLoading(false);
+        return;
+      }
+
+      // Then check active sessions and subscribe to auth changes
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session);
+        setLoading(false);
+      });
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
