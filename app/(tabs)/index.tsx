@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
+import { useGoals } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
+  const { activeGoals, calculateGoalProgress } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
@@ -67,6 +69,17 @@ export default function HomeScreen() {
   // Format money with decimals for detailed views
   const formatMoneyDetailed = (amount: number): string => {
     return amount.toFixed(2);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return `${currency}${amount.toLocaleString()}`;
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress >= 100) return '#35998d';
+    if (progress >= 75) return '#35998d';
+    if (progress >= 50) return '#FF9500';
+    return '#FF6B47';
   };
 
   return (
@@ -248,47 +261,84 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.sectionSubtitle}>Your savings goals</Text>
           
-          {goalError || !financialGoal ? (
-            <View style={styles.goalItem}>
+          {activeGoals.length === 0 ? (
+            <View style={styles.goalCard}>
               <View style={styles.goalHeader}>
-                <Text style={styles.goalName}>
-                  {goalError ? 'Complete onboarding to set goals' : 'No financial goal set'}
-                </Text>
-                <Text style={styles.goalAmount}>--</Text>
-              </View>
-              <View style={styles.progressBarContainer}>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: '0%' }]} />
+                <View style={styles.goalInfo}>
+                  <Text style={styles.goalName}>
+                    {goalError ? 'Complete onboarding to set goals' : 'No financial goals set'}
+                  </Text>
+                  <Text style={styles.goalTarget}>--</Text>
                 </View>
-                <Text style={styles.progressPercent}>0%</Text>
+              </View>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressInfo}>
+                  <Text style={styles.progressLabel}>Progress</Text>
+                  <Text style={styles.goalProgressPercentage}>0%</Text>
+                </View>
+                <View style={styles.progressBarContainer}>
+                  <View style={styles.progressBar}>
+                    <View style={[styles.progressFill, { width: '0%' }]} />
+                  </View>
+                </View>
               </View>
             </View>
           ) : (
-            <View style={styles.goalItem}>
-              <View style={styles.goalHeader}>
-                <Text style={styles.goalName}>{financialGoal.description}</Text>
-                <Text style={styles.goalAmount}>
-                  {getCurrencySymbol(financialGoal.currency)}{financialGoal.amount.toFixed(0)}
-                </Text>
-              </View>
-              <View style={styles.progressBarContainer}>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { 
-                    width: `${Math.min((displayTotalSaved / financialGoal.amount) * 100, 100)}%` 
-                  }]} />
+            activeGoals.slice(0, 2).map((goal) => {
+              const progress = calculateGoalProgress(goal, totalSaved);
+              const remaining = Math.max(0, goal.target_amount - totalSaved);
+              
+              return (
+                <View key={goal.id} style={styles.goalCard}>
+                  <View style={styles.goalHeader}>
+                    <View style={styles.goalInfo}>
+                      <Text style={styles.goalName}>{goal.name}</Text>
+                      <Text style={styles.goalTarget}>{formatCurrency(goal.target_amount)}</Text>
+                    </View>
+                  </View>
+
+                  {goal.description && (
+                    <Text style={styles.goalDescription}>{goal.description}</Text>
+                  )}
+
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressInfo}>
+                      <Text style={styles.progressLabel}>Progress</Text>
+                      <Text style={styles.goalProgressPercentage}>{Math.round(progress)}%</Text>
+                    </View>
+                    <View style={styles.progressBarContainer}>
+                      <View style={styles.progressBar}>
+                        <View style={[
+                          styles.progressFill, 
+                          { 
+                            width: `${progress}%`,
+                            backgroundColor: getProgressColor(progress)
+                          }
+                        ]} />
+                      </View>
+                    </View>
+                    {remaining > 0 && progress < 100 && (
+                      <Text style={styles.remainingText}>
+                        {formatCurrency(remaining)} to go
+                      </Text>
+                    )}
+                    {progress >= 100 && (
+                      <View style={styles.achievedBanner}>
+                        <Text style={styles.achievedEmoji}>🎯</Text>
+                        <Text style={styles.achievedText}>Ready to mark complete!</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
-                <Text style={styles.progressPercent}>
-                  {Math.min((displayTotalSaved / financialGoal.amount) * 100, 100).toFixed(0)}%
-                </Text>
-              </View>
-            </View>
+              );
+            })
           )}
 
           <TouchableOpacity 
             style={styles.viewAllButton}
             onPress={() => router.push('/goals')}
           >
-            <Text style={styles.viewAllText}>View All Goals</Text>
+            <Text style={styles.viewAllText}>{activeGoals.length > 2 ? `View All ${activeGoals.length} Goals` : 'View All Goals'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -944,5 +994,81 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1C1C1E',
     lineHeight: 20,
+  },
+  goalCard: {
+    backgroundColor: '#F8FBFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 6,
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  goalInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  goalTarget: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#35998d',
+  },
+
+  goalDescription: {
+    fontSize: 14,
+    color: '#8E8E93',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  progressContainer: {
+    marginTop: 8,
+  },
+  progressInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressLabel: {
+    fontSize: 14,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  goalProgressPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#35998d',
+  },
+  remainingText: {
+    fontSize: 12,
+    color: '#8E8E93',
+    textAlign: 'center',
+  },
+  achievedBanner: {
+    backgroundColor: 'rgba(53, 153, 141, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(53, 153, 141, 0.2)',
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  achievedEmoji: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  achievedText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#35998d',
   },
 });
