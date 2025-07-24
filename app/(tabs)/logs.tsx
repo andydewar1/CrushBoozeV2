@@ -1,8 +1,15 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, CreditCard as Edit, Trash2, Clock, TrendingDown, Star, Settings } from 'lucide-react-native';
+import { Plus, Pencil, Trash2, Clock, TrendingDown, Star, Settings } from 'lucide-react-native';
+import { useState } from 'react';
+import { useCravingLogs, CravingLog } from '@/hooks/useCravingLogs';
+import LogModal from '@/components/LogModal';
 
 export default function LogsScreen() {
+  const { logs, stats, loading, error, addCravingLog, updateCravingLog, deleteCravingLog } = useCravingLogs();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingLog, setEditingLog] = useState<CravingLog | null>(null);
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
       month: 'short',
@@ -13,83 +20,100 @@ export default function LogsScreen() {
   };
 
   const getIntensityColor = (intensity: number) => {
-    if (intensity <= 2) return '#35998d';
-    if (intensity <= 3) return '#FF9500';
-    return '#FF6B47';
+    if (intensity <= 3) return '#35998d';    // Green for low
+    if (intensity <= 6) return '#FF9500';    // Orange for medium
+    return '#FF6B47';                        // Red for high
   };
 
   const getEmojiForIntensity = (intensity: number) => {
     switch (intensity) {
-      case 1: return '😊';
-      case 2: return '😐';
-      case 3: return '😟';
-      case 4: return '😠';
-      case 5: return '😡';
+      case 1: return '😊';  // Happy
+      case 2: return '🙂';  // Slightly happy
+      case 3: return '😐';  // Neutral/middle
+      case 4: return '😕';  // Slightly concerned
+      case 5: return '😟';  // Slightly annoyed
+      case 6: return '😠';  // Annoyed
+      case 7: return '😡';  // Angry
+      case 8: return '🤬';  // Very angry
+      case 9: return '😤';  // Furious
+      case 10: return '🔥'; // Overwhelming
       default: return '😐';
     }
   };
 
-  const renderStars = (intensity: number) => {
-    return (
-      <View style={styles.starsContainer}>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((star) => (
-          <TouchableOpacity key={star}>
-            <Star
-              size={20}
-              color={star <= intensity ? getIntensityColor(intensity) : '#E5E5EA'}
-              fill={star <= intensity ? getIntensityColor(intensity) : 'transparent'}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+  const handleAddLog = () => {
+    setEditingLog(null);
+    setModalVisible(true);
+  };
+
+  const handleEditLog = (log: CravingLog) => {
+    setEditingLog(log);
+    setModalVisible(true);
+  };
+
+  const handleDeleteLog = (log: CravingLog) => {
+    Alert.alert(
+      'Delete Log',
+      'Are you sure you want to delete this craving log?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await deleteCravingLog(log.id);
+            if (!success) {
+              Alert.alert('Error', 'Failed to delete log. Please try again.');
+            }
+          },
+        },
+      ]
     );
   };
 
-  const renderEmojiRating = (intensity: number) => {
-    return (
-      <View style={styles.emojiContainer}>
-        {[1, 2, 3, 4, 5].map((rating) => (
-          <TouchableOpacity
-            key={rating}
-            style={[
-              styles.emojiButton,
-              intensity === rating && styles.emojiButtonSelected
-            ]}
-          >
-            <Text style={styles.emojiText}>{getEmojiForIntensity(rating)}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  // Static sample data
-  const logs = [
-    {
-      id: '1',
-      timestamp: new Date(2025, 0, 15, 14, 30),
-      intensity: 7,
-      trigger: 'Stress at work',
-      howDealt: 'Used box breathing exercise',
-      notes: 'Felt much better after 5 minutes'
-    },
-    {
-      id: '2',
-      timestamp: new Date(2025, 0, 14, 9, 15),
-      intensity: 4,
-      trigger: 'Coffee break',
-      howDealt: 'Went for a walk instead',
-      notes: 'Fresh air helped a lot'
-    },
-    {
-      id: '3',
-      timestamp: new Date(2025, 0, 13, 20, 45),
-      intensity: 8,
-      trigger: 'Social situation',
-      howDealt: 'Called my support person',
-      notes: 'Talking it through really helped'
+  const handleSaveLog = async (logData: Omit<CravingLog, 'id'>) => {
+    const result = await addCravingLog(logData);
+    if (!result) {
+      throw new Error('Failed to save log');
     }
-  ];
+  };
+
+  const handleUpdateLog = async (logId: string, updates: Partial<Omit<CravingLog, 'id'>>) => {
+    const result = await updateCravingLog(logId, updates);
+    if (!result) {
+      throw new Error('Failed to update log');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setEditingLog(null);
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#35998d" />
+          <Text style={styles.loadingText}>Loading your logs...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load logs</Text>
+          <Text style={styles.errorSubtext}>{error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -109,24 +133,24 @@ export default function LogsScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Clock size={24} color="#35998d" />
-            <Text style={styles.statNumber}>3</Text>
+            <Text style={styles.statNumber}>{stats.totalLogs}</Text>
             <Text style={styles.statLabel}>Total Logs</Text>
           </View>
           <View style={styles.statBox}>
             <TrendingDown size={24} color="#FF6B47" />
-            <Text style={styles.statNumber}>6</Text>
+            <Text style={styles.statNumber}>{stats.averageIntensity.toFixed(1)}</Text>
             <Text style={styles.statLabel}>Avg Intensity</Text>
           </View>
           <View style={styles.statBox}>
-            <Star size={24} color="#35998d" />
-            <Text style={styles.statNumber}>1</Text>
-            <Text style={styles.statLabel}>Low Intensity</Text>
+            <Star size={24} color="#FF6B47" />
+            <Text style={styles.statNumber}>{stats.highIntensityCount}</Text>
+            <Text style={styles.statLabel}>High Intensity</Text>
           </View>
         </View>
 
         {/* Add New Log Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddLog}>
             <Plus size={20} color="#FFFFFF" />
             <Text style={styles.addButtonText}>Log New Craving</Text>
           </TouchableOpacity>
@@ -137,56 +161,73 @@ export default function LogsScreen() {
           <Text style={styles.sectionTitle}>Recent Logs</Text>
           <Text style={styles.sectionSubtitle}>Track your cravings and how you handled them.</Text>
           
-          {logs.map((log) => (
-            <View key={log.id} style={styles.logCard}>
-              <View style={styles.logHeader}>
-                <View style={styles.logTimestamp}>
-                  <Clock size={16} color="#8E8E93" />
-                  <Text style={styles.timestampText}>{formatDate(log.timestamp)}</Text>
-                </View>
-                <View style={styles.logActions}>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Edit size={16} color="#35998d" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton}>
-                    <Trash2 size={16} color="#FF6B47" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              <View style={styles.logContent}>
-                <View style={styles.intensitySection}>
-                  <Text style={styles.logLabel}>Intensity</Text>
-                  <View style={styles.logIntensityDisplay}>
-                    <Text style={styles.logIntensityEmoji}>{getEmojiForIntensity(log.intensity)}</Text>
-                    <Text style={styles.logIntensityText}>Level {log.intensity}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.logField}>
-                  <Text style={styles.logLabel}>Trigger</Text>
-                  <Text style={styles.logValue}>{log.trigger}</Text>
-                </View>
-
-                <View style={styles.logField}>
-                  <Text style={styles.logLabel}>How I dealt with it</Text>
-                  <Text style={styles.logValue}>{log.howDealt}</Text>
-                </View>
-
-                {log.notes && (
-                  <View style={styles.logField}>
-                    <Text style={styles.logLabel}>Notes</Text>
-                    <Text style={styles.logValue}>{log.notes}</Text>
-                  </View>
-                )}
-              </View>
+          {logs.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyStateTitle}>No logs yet</Text>
+              <Text style={styles.emptyStateSubtitle}>
+                Start by logging your first craving to track your journey
+              </Text>
             </View>
-          ))}
+          ) : (
+            logs.map((log) => (
+              <View key={log.id} style={styles.logCard}>
+                <View style={styles.logHeader}>
+                  <View style={styles.logTimestamp}>
+                    <Clock size={16} color="#8E8E93" />
+                    <Text style={styles.timestampText}>{formatDate(log.timestamp)}</Text>
+                  </View>
+                  <View style={styles.logActions}>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => handleEditLog(log)}>
+                      <Pencil size={16} color="#35998d" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteLog(log)}>
+                      <Trash2 size={16} color="#FF6B47" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <View style={styles.logContent}>
+                  <View style={styles.intensitySection}>
+                    <Text style={styles.logLabel}>Intensity</Text>
+                    <View style={styles.logIntensityDisplay}>
+                      <Text style={styles.logIntensityEmoji}>{getEmojiForIntensity(log.intensity)}</Text>
+                      <Text style={styles.logIntensityText}>Level {log.intensity}</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.logField}>
+                    <Text style={styles.logLabel}>Trigger</Text>
+                    <Text style={styles.logValue}>{log.trigger}</Text>
+                  </View>
+
+                  <View style={styles.logField}>
+                    <Text style={styles.logLabel}>How I dealt with it</Text>
+                    <Text style={styles.logValue}>{log.coping_strategy}</Text>
+                  </View>
+
+                  {log.notes && (
+                    <View style={styles.logField}>
+                      <Text style={styles.logLabel}>Notes</Text>
+                      <Text style={styles.logValue}>{log.notes}</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         {/* Bottom spacing for tab bar */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      <LogModal
+        visible={modalVisible}
+        onClose={handleCloseModal}
+        onSave={handleSaveLog}
+        onUpdate={handleUpdateLog}
+        editingLog={editingLog}
+      />
     </SafeAreaView>
   );
 }
@@ -195,6 +236,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F2F2F7',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8E8E93',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FF6B47',
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -318,6 +386,22 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     marginBottom: 32,
   },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    maxWidth: 250,
+  },
   logCard: {
     backgroundColor: '#F8FBFF',
     borderRadius: 12,
@@ -382,34 +466,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
-  },
-  starsContainer: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 4,
-  },
-  emojiContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-    gap: 8,
-  },
-  emojiButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  emojiButtonSelected: {
-    borderColor: '#35998d',
-    backgroundColor: '#E8F5E8',
-  },
-  emojiText: {
-    fontSize: 24,
   },
   logIntensityDisplay: {
     flexDirection: 'row',

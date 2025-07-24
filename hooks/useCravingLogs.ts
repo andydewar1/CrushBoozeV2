@@ -14,7 +14,7 @@ export interface CravingLog {
 export interface CravingStats {
   totalLogs: number;
   averageIntensity: number;
-  lowIntensityCount: number; // intensity <= 3
+  highIntensityCount: number; // intensity >= 7
 }
 
 export function useCravingLogs() {
@@ -23,7 +23,7 @@ export function useCravingLogs() {
   const [stats, setStats] = useState<CravingStats>({
     totalLogs: 0,
     averageIntensity: 0,
-    lowIntensityCount: 0
+    highIntensityCount: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,12 +38,16 @@ export function useCravingLogs() {
     async function fetchCravingLogs() {
       try {
         setLoading(true);
+        
+        if (!session?.user?.id) {
+          throw new Error('User not authenticated');
+        }
 
         // Get all craving logs for the user
         const { data: cravingLogs, error: logsError } = await supabase
           .from('craving_logs')
           .select('*')
-          .eq('user_id', session.user.id)
+          .eq('user_id', session.user!.id)
           .order('timestamp', { ascending: false });
 
         if (logsError) throw logsError;
@@ -58,13 +62,13 @@ export function useCravingLogs() {
         const totalLogs = transformedLogs.length;
         const intensitySum = transformedLogs.reduce((sum, log) => sum + log.intensity, 0);
         const averageIntensity = totalLogs > 0 ? intensitySum / totalLogs : 0;
-        const lowIntensityCount = transformedLogs.filter(log => log.intensity <= 3).length;
+        const highIntensityCount = transformedLogs.filter(log => log.intensity >= 7).length;
 
         setLogs(transformedLogs);
         setStats({
           totalLogs,
           averageIntensity,
-          lowIntensityCount
+          highIntensityCount
         });
         setError(null);
       } catch (err) {
@@ -114,7 +118,7 @@ export function useCravingLogs() {
         return {
           totalLogs: newTotal,
           averageIntensity: (prevStats.averageIntensity * prevStats.totalLogs + log.intensity) / newTotal,
-          lowIntensityCount: log.intensity <= 3 ? prevStats.lowIntensityCount + 1 : prevStats.lowIntensityCount
+          highIntensityCount: log.intensity >= 7 ? prevStats.highIntensityCount + 1 : prevStats.highIntensityCount
         };
       });
 
@@ -122,6 +126,61 @@ export function useCravingLogs() {
     } catch (err) {
       console.error('Error adding craving log:', err);
       setError(err instanceof Error ? err.message : 'Failed to add craving log');
+      return null;
+    }
+  };
+
+  const updateCravingLog = async (logId: string, updates: Partial<Omit<CravingLog, 'id'>>) => {
+    if (!session?.user?.id) {
+      setError('User not authenticated');
+      return null;
+    }
+
+    try {
+      const updateData: any = {};
+      if (updates.timestamp) updateData.timestamp = updates.timestamp.toISOString();
+      if (updates.intensity !== undefined) updateData.intensity = updates.intensity;
+      if (updates.trigger !== undefined) updateData.trigger = updates.trigger;
+      if (updates.coping_strategy !== undefined) updateData.coping_strategy = updates.coping_strategy;
+      if (updates.notes !== undefined) updateData.notes = updates.notes;
+
+      const { data, error: updateError } = await supabase
+        .from('craving_logs')
+        .update(updateData)
+        .eq('id', logId)
+        .eq('user_id', session.user.id)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      const updatedLog = {
+        ...data,
+        timestamp: new Date(data.timestamp)
+      };
+
+      const oldLog = logs.find(log => log.id === logId);
+      setLogs(prevLogs => prevLogs.map(log => log.id === logId ? updatedLog : log));
+      
+      // Update stats if intensity changed
+      if (oldLog && updates.intensity !== undefined && oldLog.intensity !== updates.intensity) {
+        setStats(prevStats => {
+          const intensityDiff = updates.intensity! - oldLog.intensity;
+          return {
+            ...prevStats,
+            averageIntensity: (prevStats.averageIntensity * prevStats.totalLogs + intensityDiff) / prevStats.totalLogs,
+            highIntensityCount: prevStats.highIntensityCount 
+              - (oldLog.intensity >= 7 ? 1 : 0) 
+              + (updates.intensity! >= 7 ? 1 : 0)
+          };
+        });
+      }
+
+      return updatedLog;
+    } catch (err) {
+      console.error('Error updating craving log:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update craving log');
       return null;
     }
   };
@@ -154,9 +213,9 @@ export function useCravingLogs() {
             averageIntensity: newTotal > 0 
               ? (prevStats.averageIntensity * prevStats.totalLogs - deletedLog.intensity) / newTotal 
               : 0,
-            lowIntensityCount: deletedLog.intensity <= 3 
-              ? prevStats.lowIntensityCount - 1 
-              : prevStats.lowIntensityCount
+            highIntensityCount: deletedLog.intensity >= 7 
+              ? prevStats.highIntensityCount - 1 
+              : prevStats.highIntensityCount
           };
         });
       }
@@ -175,6 +234,7 @@ export function useCravingLogs() {
     loading,
     error,
     addCravingLog,
+    updateCravingLog,
     deleteCravingLog
   };
 } 
