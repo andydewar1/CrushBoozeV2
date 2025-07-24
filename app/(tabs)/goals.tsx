@@ -1,16 +1,73 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, CreditCard as Edit, Trash2, Target, TrendingUp, Settings } from 'lucide-react-native';
+import { Plus, Pencil, Trash2, Target, TrendingUp, Settings } from 'lucide-react-native';
+import { useState, useEffect } from 'react';
+import { useGoals, type Goal, type CreateGoal, type UpdateGoal } from '@/hooks/useGoals';
+import { useMoneySaved } from '@/hooks/useMoneySaved';
+import { useFinancialGoals } from '@/hooks/useFinancialGoals';
+import AddEditGoalModal from '@/components/AddEditGoalModal';
 
 export default function GoalsScreen() {
-  const currentSavings = 1074;
+  const { 
+    goals, 
+    loading, 
+    error, 
+    activeGoals, 
+    achievedGoals, 
+    createGoal, 
+    updateGoal, 
+    deleteGoal, 
+    markGoalAchieved,
+    calculateGoalProgress,
+    refetch
+  } = useGoals();
   
-  const calculateProgress = (targetAmount: number) => {
-    return Math.min((currentSavings / targetAmount) * 100, 100);
-  };
+  const { totalSaved, currency, loading: moneyLoading } = useMoneySaved();
+  const { financialGoal, loading: financialGoalLoading } = useFinancialGoals();
+  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [onboardingGoalCreated, setOnboardingGoalCreated] = useState(false);
+
+  // Create onboarding goal as a regular goal if it exists and hasn't been created yet
+  useEffect(() => {
+    const createOnboardingGoal = async () => {
+      if (
+        !loading && 
+        !financialGoalLoading && 
+        financialGoal && 
+        financialGoal.description && 
+        financialGoal.amount > 0 &&
+        !onboardingGoalCreated
+      ) {
+        // Check if we already have a goal with the same name and amount
+        const existingGoal = goals.find(goal => 
+          goal.name === financialGoal.description && 
+          goal.target_amount === financialGoal.amount
+        );
+
+        if (!existingGoal) {
+          try {
+            await createGoal({
+              name: financialGoal.description,
+              target_amount: financialGoal.amount,
+              description: 'Your financial goal from onboarding'
+            });
+            setOnboardingGoalCreated(true);
+          } catch (error) {
+            console.error('Failed to create onboarding goal:', error);
+          }
+        } else {
+          setOnboardingGoalCreated(true);
+        }
+      }
+    };
+
+    createOnboardingGoal();
+  }, [loading, financialGoalLoading, financialGoal, goals, createGoal, onboardingGoalCreated]);
 
   const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString()}`;
+    return `${currency}${amount.toLocaleString()}`;
   };
 
   const getProgressColor = (progress: number) => {
@@ -20,33 +77,104 @@ export default function GoalsScreen() {
     return '#FF6B47';
   };
 
-  // Static sample data
-  const goals = [
-    {
-      id: '1',
-      name: 'Holiday to Dubai',
-      targetAmount: 2000,
-      description: 'Dream vacation to Dubai with family',
-      createdAt: new Date(2025, 0, 1)
-    },
-    {
-      id: '2',
-      name: 'New Laptop',
-      targetAmount: 1500,
-      description: 'MacBook Pro for work',
-      createdAt: new Date(2025, 0, 5)
-    },
-    {
-      id: '3',
-      name: 'Emergency Fund',
-      targetAmount: 5000,
-      description: 'Build up emergency savings',
-      createdAt: new Date(2025, 0, 10)
-    }
-  ];
+  const calculateOverallProgress = () => {
+    if (goals.length === 0) return { percentage: 0, achievedCount: 0, totalCount: 0 };
+    
+    // Calculate average progress across all goals
+    const totalProgress = goals.reduce((sum, goal) => {
+      const progress = calculateGoalProgress(goal, totalSaved);
+      return sum + progress;
+    }, 0);
+    
+    const averageProgress = Math.round(totalProgress / goals.length);
+    const achievedCount = achievedGoals.length;
+    const totalCount = goals.length;
+    
+    return { 
+      percentage: averageProgress, 
+      achievedCount, 
+      totalCount 
+    };
+  };
 
-  const achievedGoals = goals.filter(goal => calculateProgress(goal.targetAmount) >= 100);
-  const activeGoals = goals.filter(goal => calculateProgress(goal.targetAmount) < 100);
+  const handleAddGoal = () => {
+    setEditingGoal(null);
+    setModalVisible(true);
+  };
+
+  const handleEditGoal = (goal: Goal) => {
+    setEditingGoal(goal);
+    setModalVisible(true);
+  };
+
+  const handleDeleteGoal = (goal: Goal) => {
+    Alert.alert(
+      'Delete Goal',
+      `Are you sure you want to delete "${goal.name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteGoal(goal.id);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete goal. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const handleSaveGoal = async (goalData: CreateGoal | { id: string; updates: UpdateGoal }) => {
+    try {
+      if ('id' in goalData) {
+        // Editing existing goal
+        await updateGoal(goalData.id, goalData.updates);
+      } else {
+        // Creating new goal
+        await createGoal(goalData);
+      }
+    } catch (error) {
+      throw error; // Let the modal handle the error display
+    }
+  };
+
+  const handleMarkComplete = async (goal: Goal) => {
+    Alert.alert(
+      'Mark Goal Complete',
+      `Congratulations! Are you ready to mark "${goal.name}" as achieved?`,
+      [
+        { text: 'Not Yet', style: 'cancel' },
+        { 
+          text: 'Mark Complete', 
+          style: 'default',
+          onPress: async () => {
+            try {
+              await markGoalAchieved(goal.id);
+              Alert.alert('🎉 Congratulations!', `You've achieved your goal: "${goal.name}"! Well done!`);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to mark goal as complete. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const overallProgress = calculateOverallProgress();
+
+  if (loading || moneyLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text style={styles.loadingText}>Loading goals...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -71,18 +199,20 @@ export default function GoalsScreen() {
           <Text style={styles.progressSubtitle}>Overall completion of your financial goals</Text>
           
           <View style={styles.progressStats}>
-            <Text style={styles.progressPercentage}>67%</Text>
-            <Text style={styles.progressGoalsCount}>4 of 6 goals achieved</Text>
+            <Text style={styles.progressPercentage}>{overallProgress.percentage}%</Text>
+            <Text style={styles.progressGoalsCount}>
+              {overallProgress.achievedCount} of {overallProgress.totalCount} goals achieved
+            </Text>
           </View>
           
           <View style={styles.bigProgressBar}>
-            <View style={[styles.bigProgressFill, { width: '67%' }]} />
+            <View style={[styles.bigProgressFill, { width: `${overallProgress.percentage}%` }]} />
           </View>
         </View>
 
         {/* Add New Goal Button */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddGoal}>
             <Plus size={20} color="#FFFFFF" />
             <Text style={styles.addButtonText}>Add New Goal</Text>
           </TouchableOpacity>
@@ -95,21 +225,27 @@ export default function GoalsScreen() {
             <Text style={styles.sectionSubtitle}>Goals you're currently working towards.</Text>
             
             {activeGoals.map((goal) => {
-              const progress = calculateProgress(goal.targetAmount);
-              const remaining = goal.targetAmount - currentSavings;
+              const progress = calculateGoalProgress(goal, totalSaved);
+              const remaining = Math.max(0, goal.target_amount - totalSaved);
               
               return (
                 <View key={goal.id} style={styles.goalCard}>
                   <View style={styles.goalHeader}>
                     <View style={styles.goalInfo}>
                       <Text style={styles.goalName}>{goal.name}</Text>
-                      <Text style={styles.goalTarget}>{formatCurrency(goal.targetAmount)}</Text>
+                      <Text style={styles.goalTarget}>{formatCurrency(goal.target_amount)}</Text>
                     </View>
                     <View style={styles.goalActions}>
-                      <TouchableOpacity style={styles.actionButton}>
-                        <Edit size={16} color="#35998d" />
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleEditGoal(goal)}
+                      >
+                        <Pencil size={16} color="#35998d" />
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.actionButton}>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleDeleteGoal(goal)}
+                      >
                         <Trash2 size={16} color="#FF6B47" />
                       </TouchableOpacity>
                     </View>
@@ -122,7 +258,7 @@ export default function GoalsScreen() {
                   <View style={styles.progressContainer}>
                     <View style={styles.progressInfo}>
                       <Text style={styles.progressLabel}>Progress</Text>
-                      <Text style={styles.progressPercentage}>{Math.round(progress)}%</Text>
+                      <Text style={styles.goalProgressPercentage}>{Math.round(progress)}%</Text>
                     </View>
                     <View style={styles.progressBarContainer}>
                       <View style={styles.progressBar}>
@@ -135,10 +271,18 @@ export default function GoalsScreen() {
                         ]} />
                       </View>
                     </View>
-                    {remaining > 0 && (
+                    {remaining > 0 && progress < 100 && (
                       <Text style={styles.remainingText}>
                         {formatCurrency(remaining)} to go
                       </Text>
+                    )}
+                    {progress >= 100 && (
+                      <TouchableOpacity 
+                        style={styles.completeButton}
+                        onPress={() => handleMarkComplete(goal)}
+                      >
+                        <Text style={styles.completeButtonText}>🎯 Mark as Complete</Text>
+                      </TouchableOpacity>
                     )}
                   </View>
                 </View>
@@ -158,13 +302,19 @@ export default function GoalsScreen() {
                 <View style={styles.goalHeader}>
                   <View style={styles.goalInfo}>
                     <Text style={styles.goalName}>{goal.name}</Text>
-                    <Text style={styles.goalTarget}>{formatCurrency(goal.targetAmount)}</Text>
+                    <Text style={styles.goalTarget}>{formatCurrency(goal.target_amount)}</Text>
                   </View>
                   <View style={styles.goalActions}>
-                    <TouchableOpacity style={styles.actionButton}>
-                      <Edit size={16} color="#35998d" />
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleEditGoal(goal)}
+                    >
+                      <Pencil size={16} color="#35998d" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.actionButton}>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleDeleteGoal(goal)}
+                    >
                       <Trash2 size={16} color="#FF6B47" />
                     </TouchableOpacity>
                   </View>
@@ -183,9 +333,36 @@ export default function GoalsScreen() {
           </View>
         )}
 
+        {/* Empty State */}
+        {goals.length === 0 && !loading && (
+          <View style={styles.section}>
+            <Text style={styles.emptyStateTitle}>No goals yet</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              {financialGoalLoading 
+                ? 'Loading your onboarding goal...'
+                : financialGoal && financialGoal.description 
+                  ? 'Your onboarding goal is being added...'
+                  : 'Create your first financial goal to start tracking your progress!'
+              }
+            </Text>
+          </View>
+        )}
+
         {/* Bottom spacing for tab bar */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+
+      {/* Add/Edit Goal Modal */}
+      <AddEditGoalModal
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setEditingGoal(null);
+        }}
+        onSave={handleSaveGoal}
+        goal={editingGoal}
+        currency={currency.replace('$', 'USD').replace('€', 'EUR').replace('£', 'GBP').replace('A$', 'AUD').replace('C$', 'CAD')}
+      />
     </SafeAreaView>
   );
 }
@@ -201,6 +378,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 30,
     paddingBottom: 90,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#8E8E93',
   },
   pageHeader: {
     flexDirection: 'row',
@@ -427,6 +608,11 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
     fontWeight: '500',
   },
+  goalProgressPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#35998d',
+  },
   progressBarContainer: {
     marginBottom: 8,
   },
@@ -443,6 +629,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
+  },
+  completeButton: {
+    backgroundColor: '#35998d',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  completeButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   achievedBanner: {
     backgroundColor: 'rgba(53, 153, 141, 0.08)',
@@ -463,6 +661,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#35998d',
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    color: '#8E8E93',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   bottomSpacing: {
     height: 100,
