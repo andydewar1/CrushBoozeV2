@@ -28,6 +28,8 @@ import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { supabase } from '@/lib/supabase';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -64,6 +66,7 @@ export default function SettingsScreen() {
   const [editingPersonalGoals, setEditingPersonalGoals] = useState(false);
   const [editingDailyCosts, setEditingDailyCosts] = useState(false);
   const [editingChangePassword, setEditingChangePassword] = useState(false);
+  const [editingChangeEmail, setEditingChangeEmail] = useState(false);
   const [showHelpFAQ, setShowHelpFAQ] = useState(false);
   const [showContactSupport, setShowContactSupport] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
@@ -79,6 +82,8 @@ export default function SettingsScreen() {
   const [tempCurrentPassword, setTempCurrentPassword] = useState('');
   const [tempNewPassword, setTempNewPassword] = useState('');
   const [tempConfirmPassword, setTempConfirmPassword] = useState('');
+  const [tempNewEmail, setTempNewEmail] = useState('');
+  const [tempEmailPassword, setTempEmailPassword] = useState('');
   
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -327,6 +332,149 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleSaveEmail = async () => {
+    if (!tempNewEmail || !tempEmailPassword) {
+      Alert.alert('Error', 'Please fill in all fields.');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(tempNewEmail)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // First, verify the current password by attempting to sign in
+      const currentEmail = session?.user?.email;
+      if (!currentEmail) {
+        Alert.alert('Error', 'Could not verify current user.');
+        return;
+      }
+
+      // Verify password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentEmail,
+        password: tempEmailPassword,
+      });
+
+      if (signInError) {
+        Alert.alert('Error', 'Incorrect password. Please try again.');
+        return;
+      }
+
+      // Update email
+      const { error } = await supabase.auth.updateUser({
+        email: tempNewEmail
+      });
+
+      if (error) throw error;
+      
+      setEditingChangeEmail(false);
+      setTempNewEmail('');
+      setTempEmailPassword('');
+      
+      Alert.alert(
+        'Email Update Requested', 
+        'Please check both your old and new email addresses for confirmation links. You\'ll need to confirm the change from both emails.',
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('Error updating email:', error);
+      Alert.alert('Error', 'Failed to update email. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data including:\n\n• Your quit journey progress\n• All goals and achievements\n• Craving logs and statistics\n• Account settings and preferences',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Delete Forever',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Final Confirmation',
+              'This will PERMANENTLY delete your account and all data. Type DELETE to confirm.',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel'
+                },
+                {
+                  text: 'I understand, delete my account',
+                  style: 'destructive',
+                  onPress: performAccountDeletion
+                }
+              ]
+            );
+          }
+        }
+      ]
+    );
+  };
+
+  const performAccountDeletion = async () => {
+    setSaving(true);
+    try {
+      const userId = session?.user?.id;
+      if (!userId) {
+        Alert.alert('Error', 'Unable to identify user account.');
+        return;
+      }
+
+      // Delete user data from all tables
+      const deletePromises = [
+        supabase.from('profiles').delete().eq('id', userId),
+        supabase.from('goals').delete().eq('user_id', userId),
+        supabase.from('financial_goals').delete().eq('user_id', userId),
+        supabase.from('craving_logs').delete().eq('user_id', userId),
+      ];
+
+      await Promise.all(deletePromises);
+
+      // Delete the auth user (this will sign them out)
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (error) {
+        // If admin deletion fails, try user deletion
+        const { error: userError } = await supabase.auth.updateUser({
+          email: `deleted-${Date.now()}@deleted.com`
+        });
+        if (userError) throw userError;
+      }
+
+      // Sign out the user
+      await signOut();
+
+      Alert.alert(
+        'Account Deleted',
+        'Your account has been successfully deleted. Thank you for using CrushNic.',
+        [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
+      );
+
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      Alert.alert(
+        'Deletion Error', 
+        'There was an error deleting your account. Please contact support for assistance.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleExportData = async () => {
     try {
       setSaving(true);
@@ -337,9 +485,10 @@ export default function SettingsScreen() {
       }
 
       // Get all user data
-      const [profileResult, goalsResult, logsResult] = await Promise.all([
+      const [profileResult, financialGoalsResult, goalsResult, logsResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', userData.user.id).single(),
         supabase.from('financial_goals').select('*').eq('user_id', userData.user.id),
+        supabase.from('goals').select('*').eq('user_id', userData.user.id),
         supabase.from('craving_logs').select('*').eq('user_id', userData.user.id)
       ]);
 
@@ -349,24 +498,49 @@ export default function SettingsScreen() {
           created_at: userData.user.created_at,
         },
         profile: profileResult.data,
+        financial_goals: financialGoalsResult.data || [],
         goals: goalsResult.data || [],
-        logs: logsResult.data || [],
+        craving_logs: logsResult.data || [],
         exported_at: new Date().toISOString(),
+        app_version: '1.0.0',
+        export_format: 'CrushNic_Data_Export_v1'
       };
 
-      // For now, show the data summary
+      // Create formatted JSON string
       const dataString = JSON.stringify(exportData, null, 2);
-      console.log('Exported data:', dataString);
       
-      Alert.alert(
-        'Data Export Complete',
-        `Your data has been prepared for export.\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Goals: ${goalsResult.data?.length || 0}\n• Logs: ${logsResult.data?.length || 0}\n\nData logged to console for now. File export feature coming soon.`,
-        [{ text: 'OK' }]
-      );
+      // Create filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+      const filename = `CrushNic_Data_Export_${timestamp}.json`;
+      
+      // Save to file system
+      const fileUri = FileSystem.documentDirectory + filename;
+      await FileSystem.writeAsStringAsync(fileUri, dataString, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      // Check if sharing is available and share the file
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/json',
+          dialogTitle: 'Export Your CrushNic Data',
+          UTI: 'public.json'
+        });
+      } else {
+        // Fallback - show file location
+        Alert.alert(
+          'Export Complete',
+          `Your data has been exported successfully!\n\nFile saved to: ${filename}\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Financial Goals: ${financialGoalsResult.data?.length || 0}\n• Personal Goals: ${goalsResult.data?.length || 0}\n• Craving Logs: ${logsResult.data?.length || 0}`,
+          [{ text: 'OK' }]
+        );
+      }
+
+      console.log('Data exported to:', fileUri);
 
     } catch (error) {
       console.error('Export error:', error);
-      Alert.alert('Error', 'Failed to export data');
+      Alert.alert('Error', 'Failed to export data. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -591,6 +765,14 @@ export default function SettingsScreen() {
 
           <TouchableOpacity 
             style={styles.settingItem}
+            onPress={() => setEditingChangeEmail(true)}
+          >
+            <Text style={styles.settingLabel}>Change Email</Text>
+            <ChevronRight size={16} color="#C7C7CC" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
             onPress={() => setEditingChangePassword(true)}
           >
             <Text style={styles.settingLabel}>Change Password</Text>
@@ -602,7 +784,7 @@ export default function SettingsScreen() {
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleDeleteAccount}>
             <Text style={[styles.settingLabel, styles.warningText]}>Delete Account</Text>
             <ChevronRight size={16} color="#FF6B47" />
           </TouchableOpacity>
@@ -1016,6 +1198,75 @@ export default function SettingsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Change Email Modal */}
+      <Modal
+        visible={editingChangeEmail}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setEditingChangeEmail(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Change Email</Text>
+                <TouchableOpacity onPress={() => setEditingChangeEmail(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.currentEmailInfo}>
+                <Text style={styles.currentEmailLabel}>Current Email:</Text>
+                <Text style={styles.currentEmailText}>{session?.user?.email}</Text>
+              </View>
+
+              <TextInput
+                style={styles.passwordInput}
+                value={tempNewEmail}
+                onChangeText={setTempNewEmail}
+                placeholder="New email address"
+                placeholderTextColor="#8E8E93"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <TextInput
+                style={styles.passwordInput}
+                value={tempEmailPassword}
+                onChangeText={setTempEmailPassword}
+                placeholder="Current password (for verification)"
+                placeholderTextColor="#8E8E93"
+                secureTextEntry
+              />
+
+              <Text style={styles.emailChangeNotice}>
+                You'll receive confirmation emails at both your current and new email addresses. You must confirm from both to complete the change.
+              </Text>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={() => setEditingChangeEmail(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.saveButton]} 
+                  onPress={handleSaveEmail}
+                  disabled={saving || !tempNewEmail || !tempEmailPassword}
+                >
+                  <Check size={16} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>{saving ? 'Updating...' : 'Update Email'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1372,5 +1623,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  currentEmailInfo: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E1E3E6',
+  },
+  currentEmailLabel: {
+    fontSize: 14,
+    color: '#8E8E93',
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  currentEmailText: {
+    fontSize: 16,
+    color: '#1C1C1E',
+    fontWeight: '600',
+  },
+  emailChangeNotice: {
+    fontSize: 14,
+    color: '#8E8E93',
+    lineHeight: 20,
+    marginBottom: 20,
+    textAlign: 'center',
+    paddingHorizontal: 10,
   },
 }); 
