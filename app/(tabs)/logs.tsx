@@ -2,10 +2,12 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Pencil, Trash2, Clock, TrendingDown, Star, Settings } from 'lucide-react-native';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { useCravingLogs, CravingLog } from '@/hooks/useCravingLogs';
 import LogModal from '@/components/LogModal';
 
 export default function LogsScreen() {
+  const router = useRouter();
   const { logs, stats, loading, error, addCravingLog, updateCravingLog, deleteCravingLog } = useCravingLogs();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingLog, setEditingLog] = useState<CravingLog | null>(null);
@@ -124,7 +126,10 @@ export default function LogsScreen() {
             <Text style={styles.pageTitle}>Logs</Text>
             <Text style={styles.pageSubtitle}>Your journey in your own words.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
             <Settings size={20} color="#8E8E93" />
           </TouchableOpacity>
         </View>

@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { Trophy, Target, TrendingUp, Crosshair, Settings } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 import { useAchievements } from '@/hooks/useAchievements';
 
 export default function AchievementsScreen() {
+  const router = useRouter();
   const { achievements, stats, loading, error } = useAchievements();
   return (
     <>
@@ -16,7 +18,10 @@ export default function AchievementsScreen() {
             <Text style={styles.pageTitle}>Achievements</Text>
             <Text style={styles.pageSubtitle}>Celebrate the wins, big and small.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
             <Settings size={20} color="#8E8E93" />
           </TouchableOpacity>
         </View>

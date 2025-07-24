@@ -2,12 +2,14 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Pencil, Trash2, Target, TrendingUp, Settings } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { useGoals, type Goal, type CreateGoal, type UpdateGoal } from '@/hooks/useGoals';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import AddEditGoalModal from '@/components/AddEditGoalModal';
 
 export default function GoalsScreen() {
+  const router = useRouter();
   const { 
     goals, 
     loading, 
@@ -185,7 +187,10 @@ export default function GoalsScreen() {
             <Text style={styles.pageTitle}>Goals</Text>
             <Text style={styles.pageSubtitle}>One goal at a time. You're getting there.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
             <Settings size={20} color="#8E8E93" />
           </TouchableOpacity>
         </View>

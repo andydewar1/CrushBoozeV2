@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RotateCcw, Brain, Music, Gamepad2, Phone, Settings, Play, Pause, MessageCircle } from 'lucide-react-native';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'expo-router';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 
 export default function SOSScreen() {
+  const router = useRouter();
   const [isActive, setIsActive] = useState(false);
   const [phase, setPhase] = useState(0); // 0: inhale, 1: hold, 2: exhale, 3: hold
   const [count, setCount] = useState(4);
@@ -104,7 +106,10 @@ export default function SOSScreen() {
             <Text style={styles.pageTitle}>SOS</Text>
             <Text style={styles.pageSubtitle}>Pause. Breathe. You've got this.</Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity 
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+          >
             <Settings size={20} color="#8E8E93" />
           </TouchableOpacity>
         </View>
