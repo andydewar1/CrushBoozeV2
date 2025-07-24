@@ -30,6 +30,7 @@ import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { supabase } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as WebBrowser from 'expo-web-browser';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -475,6 +476,30 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleContactSupport = async () => {
+    try {
+      await WebBrowser.openBrowserAsync('https://crushnic.com/support/', {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+        controlsColor: '#35998d',
+      });
+    } catch (error) {
+      console.error('Error opening support page:', error);
+      Alert.alert('Error', 'Unable to open support page. Please visit crushnic.com/support directly.');
+    }
+  };
+
+  const handleHelpFAQ = () => {
+    setShowHelpFAQ(true);
+  };
+
+  const handlePrivacyPolicy = () => {
+    setShowPrivacyPolicy(true);
+  };
+
+  const handleTermsOfService = () => {
+    setShowTermsOfService(true);
+  };
+
   const handleExportData = async () => {
     try {
       setSaving(true);
@@ -797,22 +822,22 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Support & Info</Text>
           </View>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleHelpFAQ}>
             <Text style={styles.settingLabel}>Help & FAQ</Text>
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleContactSupport}>
             <Text style={styles.settingLabel}>Contact Support</Text>
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handlePrivacyPolicy}>
             <Text style={styles.settingLabel}>Privacy Policy</Text>
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.settingItem}>
+          <TouchableOpacity style={styles.settingItem} onPress={handleTermsOfService}>
             <Text style={styles.settingLabel}>Terms of Service</Text>
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
@@ -1267,6 +1292,247 @@ export default function SettingsScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Help & FAQ Modal */}
+      <Modal
+        visible={showHelpFAQ}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowHelpFAQ(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Help & FAQ</Text>
+                <TouchableOpacity onPress={() => setShowHelpFAQ(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.faqContainer}>
+                <View style={styles.faqItem}>
+                  <Text style={styles.faqQuestion}>How do I track my quit progress?</Text>
+                  <Text style={styles.faqAnswer}>
+                    Your quit progress is automatically tracked from your quit date. You can see your days clean, money saved, and health improvements on the home screen.
+                  </Text>
+                </View>
+
+                <View style={styles.faqItem}>
+                  <Text style={styles.faqQuestion}>How is my money saved calculated?</Text>
+                  <Text style={styles.faqAnswer}>
+                    Money saved is calculated based on your daily vaping costs and the number of days since your quit date. Update your daily costs in settings if needed.
+                  </Text>
+                </View>
+
+                                 <View style={styles.faqItem}>
+                   <Text style={styles.faqQuestion}>Can I change my quit date?</Text>
+                   <Text style={styles.faqAnswer}>
+                     Yes! Go to Settings {`>`} Quit Journey {`>`} Edit quit date. This will recalculate all your progress and statistics.
+                   </Text>
+                 </View>
+
+                 <View style={styles.faqItem}>
+                   <Text style={styles.faqQuestion}>How do goals work?</Text>
+                   <Text style={styles.faqAnswer}>
+                     Set financial goals to stay motivated. The app tracks your progress toward each goal based on money saved from not vaping.
+                   </Text>
+                 </View>
+
+                <View style={styles.faqItem}>
+                  <Text style={styles.faqQuestion}>What are craving logs?</Text>
+                  <Text style={styles.faqAnswer}>
+                    Log your cravings to track triggers, intensity, and coping strategies. This helps identify patterns and improve your quit strategy.
+                  </Text>
+                </View>
+
+                                 <View style={styles.faqItem}>
+                   <Text style={styles.faqQuestion}>How do I export my data?</Text>
+                   <Text style={styles.faqAnswer}>
+                     Go to Settings {`>`} Account Management {`>`} Export My Data. This creates a JSON file with all your progress, goals, and logs.
+                   </Text>
+                 </View>
+
+                <View style={styles.faqItem}>
+                  <Text style={styles.faqQuestion}>Is my data secure?</Text>
+                  <Text style={styles.faqAnswer}>
+                    Yes! Your data is encrypted and stored securely. We never share personal information with third parties. See our Privacy Policy for details.
+                  </Text>
+                </View>
+
+                                 <View style={styles.faqItem}>
+                   <Text style={styles.faqQuestion}>How do I delete my account?</Text>
+                   <Text style={styles.faqAnswer}>
+                     Go to Settings {`>`} Account Management {`>`} Delete Account. This permanently removes all your data and cannot be undone.
+                   </Text>
+                 </View>
+
+                 <View style={styles.faqItem}>
+                   <Text style={styles.faqQuestion}>Need more help?</Text>
+                   <Text style={styles.faqAnswer}>
+                     Contact our support team through Settings {`>`} Support & Info {`>`} Contact Support, or visit crushnic.com/support.
+                   </Text>
+                 </View>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={() => setShowHelpFAQ(false)}
+              >
+                <Text style={styles.saveButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyPolicy}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPrivacyPolicy(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Privacy Policy</Text>
+                <TouchableOpacity onPress={() => setShowPrivacyPolicy(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.legalDocContainer}>
+                <Text style={styles.legalDocText}>
+                  Last updated: July 24, 2025{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Introduction{'\n\n'}</Text>
+                  Welcome to CrushNic ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushNic mobile application (the "App") and website at crushnic.com.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Information We Collect{'\n\n'}</Text>
+                  <Text style={styles.legalDocSubheader}>Information You Provide Directly{'\n\n'}</Text>
+                  • Account information (email address, password){'\n'}
+                  • Quit date and personal motivation statements{'\n'}
+                  • Selected personal goals and vaping product information{'\n'}
+                  • Financial goals and daily vaping costs{'\n'}
+                  • Craving logs and coping strategy notes{'\n\n'}
+                  
+                  <Text style={styles.legalDocSubheader}>Information Collected Automatically{'\n\n'}</Text>
+                  • App usage patterns and session duration{'\n'}
+                  • Device information and performance metrics{'\n'}
+                  • Authentication and security data{'\n\n'}
+                  
+                  <Text style={styles.legalDocSubheader}>Information We Do NOT Collect{'\n\n'}</Text>
+                  We explicitly do not collect: location data, contacts, photos, browser history, information from other apps, social media profiles, or biometric data.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>How We Use Your Information{'\n\n'}</Text>
+                  • Track your progress and calculate savings{'\n'}
+                  • Provide personalized achievements and milestones{'\n'}
+                  • Analyze craving patterns and provide support{'\n'}
+                  • Improve app performance and user experience{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Data Security{'\n\n'}</Text>
+                  Your data is encrypted and stored securely using Supabase infrastructure with industry-standard security measures including TLS 1.3 encryption, secure authentication, and regular security audits.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Your Rights{'\n\n'}</Text>
+                  You have the right to access, correct, export, or delete your personal information at any time through the app settings. You can also control notification preferences and withdraw consent.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Contact Us{'\n\n'}</Text>
+                  For privacy questions: privacy@crushnic.com{'\n'}
+                  Support: crushnic.com/support{'\n\n'}
+                  
+                  CrushNic Ltd.{'\n'}
+                  20-22 Wenlock Road{'\n'}
+                  London, N1 7GU{'\n'}
+                  United Kingdom{'\n\n'}
+                  
+                  This policy is effective as of July 24, 2025.
+                </Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={() => setShowPrivacyPolicy(false)}
+              >
+                <Text style={styles.saveButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Terms of Service Modal */}
+      <Modal
+        visible={showTermsOfService}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowTermsOfService(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Terms of Service</Text>
+                <TouchableOpacity onPress={() => setShowTermsOfService(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.legalDocContainer}>
+                <Text style={styles.legalDocText}>
+                  Last updated: July 24, 2025{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Agreement to Terms{'\n\n'}</Text>
+                  By using the CrushNic mobile application or website, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Description of Service{'\n\n'}</Text>
+                  CrushNic is a digital health and wellness application designed to support individuals in quitting vaping and nicotine use. The App provides progress tracking, financial calculations, goal setting, craving support, and achievement systems.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Eligibility{'\n\n'}</Text>
+                  You must be at least 18 years old to use this Service. You must provide accurate information during registration and maintain the security of your account.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Acceptable Use{'\n\n'}</Text>
+                  You may use the Service to track your quit journey, set goals, and access support resources. You may not violate laws, infringe rights of others, transmit harmful content, or attempt unauthorized access.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Health Disclaimers{'\n\n'}</Text>
+                  <Text style={styles.legalDocImportant}>IMPORTANT:</Text> CrushNic is not a medical device and does not provide medical advice. The App is for educational and motivational purposes only. Always consult healthcare professionals for medical decisions.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Privacy{'\n\n'}</Text>
+                  Your privacy is protected according to our Privacy Policy. We implement security measures but cannot guarantee absolute security. You use the Service at your own risk regarding data security.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Termination{'\n\n'}</Text>
+                  You may terminate your account at any time. We may terminate accounts for violations of these Terms. Upon termination, your data will be deleted as described in our Privacy Policy.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Limitation of Liability{'\n\n'}</Text>
+                  Our liability is limited to £100 or amounts paid in the past 12 months. We are not liable for indirect or consequential damages. The Service is provided "as is" without warranties.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Governing Law{'\n\n'}</Text>
+                  These Terms are governed by the laws of England and Wales. Disputes are subject to the exclusive jurisdiction of English courts.{'\n\n'}
+                  
+                  <Text style={styles.legalDocHeader}>Contact Information{'\n\n'}</Text>
+                  For questions: support@crushnic.com{'\n'}
+                  Legal notices: legal@crushnic.com{'\n\n'}
+                  
+                  CrushNic Ltd.{'\n'}
+                  20-22 Wenlock Road{'\n'}
+                  London, N1 7GU{'\n'}
+                  United Kingdom{'\n\n'}
+                  
+                  Effective Date: July 24, 2025
+                </Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={() => setShowTermsOfService(false)}
+              >
+                <Text style={styles.saveButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1650,5 +1916,50 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     paddingHorizontal: 10,
+  },
+  faqContainer: {
+    marginBottom: 20,
+  },
+  faqItem: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E1E3E6',
+  },
+  faqQuestion: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  faqAnswer: {
+    fontSize: 14,
+    color: '#3C3C43',
+    lineHeight: 20,
+  },
+  legalDocContainer: {
+    marginBottom: 20,
+  },
+  legalDocText: {
+    fontSize: 14,
+    color: '#3C3C43',
+    lineHeight: 22,
+  },
+  legalDocHeader: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+  },
+  legalDocSubheader: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1C1C1E',
+  },
+  legalDocImportant: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FF3B30',
   },
 }); 
