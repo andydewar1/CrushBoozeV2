@@ -1,8 +1,100 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RotateCcw, Brain, Music, Gamepad2, Phone, Settings } from 'lucide-react-native';
+import { RotateCcw, Brain, Music, Gamepad2, Phone, Settings, Play, Pause, MessageCircle } from 'lucide-react-native';
+import { useState, useEffect, useRef } from 'react';
+import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 
 export default function SOSScreen() {
+  const [isActive, setIsActive] = useState(false);
+  const [phase, setPhase] = useState(0); // 0: inhale, 1: hold, 2: exhale, 3: hold
+  const [count, setCount] = useState(4);
+  const scaleAnim = useRef(new Animated.Value(1.0)).current;
+  const phaseTimer = useRef<number | null>(null);
+  const countTimer = useRef<number | null>(null);
+  const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
+
+  const phases = ['Breathe In', 'Hold', 'Breathe Out', 'Hold'];
+  const phaseInstructions = [
+    'Inhale slowly through your nose',
+    'Hold your breath',
+    'Exhale slowly through your mouth',
+    'Hold and prepare for next breath'
+  ];
+
+  useEffect(() => {
+    if (isActive) {
+      startBreathingCycle();
+    } else {
+      stopBreathingCycle();
+    }
+
+    return () => {
+      if (phaseTimer.current) clearTimeout(phaseTimer.current);
+      if (countTimer.current) clearInterval(countTimer.current);
+    };
+  }, [isActive]);
+
+  const startBreathingCycle = () => {
+    setPhase(0);
+    setCount(4);
+    runPhase(0);
+  };
+
+  const stopBreathingCycle = () => {
+    if (phaseTimer.current) clearTimeout(phaseTimer.current);
+    if (countTimer.current) clearInterval(countTimer.current);
+    
+    // Reset to initial state
+    Animated.timing(scaleAnim, {
+      toValue: 1.0,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+    setPhase(0);
+    setCount(4);
+  };
+
+  const runPhase = (currentPhase: number) => {
+    if (!isActive) return;
+
+    setPhase(currentPhase);
+    setCount(4);
+
+    // Animate circle based on phase
+    const targetScale = currentPhase === 0 || currentPhase === 1 ? 1.2 : 1.0; // Grow on inhale/hold, return to normal on exhale/hold
+    
+    Animated.timing(scaleAnim, {
+      toValue: targetScale,
+      duration: currentPhase === 0 || currentPhase === 2 ? 4000 : 0, // 4 seconds for inhale/exhale, instant for holds
+      useNativeDriver: true,
+    }).start();
+
+    // Start countdown
+    let currentCount = 4;
+    countTimer.current = setInterval(() => {
+      currentCount -= 1;
+      setCount(currentCount);
+      
+      if (currentCount === 0) {
+        if (countTimer.current) clearInterval(countTimer.current);
+        
+        // Move to next phase
+        const nextPhase = (currentPhase + 1) % 4;
+        phaseTimer.current = setTimeout(() => {
+          runPhase(nextPhase);
+        }, 100);
+      }
+    }, 1000);
+  };
+
+  const toggleBreathing = () => {
+    setIsActive(!isActive);
+  };
+
+  const resetBreathing = () => {
+    setIsActive(false);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -26,21 +118,85 @@ export default function SOSScreen() {
           <Text style={styles.breathingSubtitle}>Calm your mind and reduce cravings</Text>
 
           <View style={styles.breathingContainer}>
-            <TouchableOpacity style={styles.resetButton}>
-              <RotateCcw size={20} color="#8E8E93" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.breathingCircle}>
-              <View style={styles.breathingInner}>
-                <Text style={styles.breathingPhaseText}>Breathe In</Text>
-                <Text style={styles.breathingCountText}>4</Text>
-              </View>
+            <TouchableOpacity style={styles.breathingCircle} onPress={toggleBreathing}>
+              <Animated.View 
+                style={[
+                  styles.animatedCircle,
+                  {
+                    transform: [{ scale: scaleAnim }]
+                  }
+                ]}
+              >
+                <View style={styles.breathingInner}>
+                  {isActive ? (
+                    <>
+                      <Text style={styles.breathingPhaseText}>{phases[phase]}</Text>
+                      <Text style={styles.breathingCountText}>{count}</Text>
+                    </>
+                  ) : (
+                    <Play size={40} color="#FFFFFF" />
+                  )}
+                </View>
+              </Animated.View>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.breathingInstructions}>
             Focus on your breath and let the craving pass.
           </Text>
+        </View>
+
+        {/* Remember Your Why Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MessageCircle size={20} color="#35998d" />
+            <Text style={styles.sectionTitle}>Remember Your Why</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
+          
+          {motivationError || !motivation ? (
+            <View style={styles.motivationContainer}>
+              <Text style={styles.motivationText}>
+                {motivationError ? 'Complete onboarding to see your motivation' : 'No motivation set yet'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.motivationContainer}>
+              {/* Custom Quit Reason */}
+              <View style={styles.customReasonContainer}>
+                <Text style={styles.customReasonTitle}>Your Personal Why</Text>
+                <Text style={styles.customReasonText}>"{motivation.quitReason}"</Text>
+              </View>
+
+              {/* Personal Goals */}
+              {motivation.personalGoals.length > 0 && (
+                <View style={styles.goalsContainer}>
+                  <Text style={styles.goalsTitle}>Your Goals</Text>
+                  <View style={styles.goalsList}>
+                    {motivation.personalGoals.map((goal, index) => (
+                      <View key={index} style={styles.goalTag}>
+                        <Text style={styles.goalTagText}>{goal.charAt(0).toUpperCase() + goal.slice(1)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Quit Reasons */}
+              {motivation.quitReasons.length > 0 && (
+                <View style={styles.reasonsContainer}>
+                  <Text style={styles.reasonsTitle}>Your Reasons</Text>
+                  <View style={styles.reasonsList}>
+                    {motivation.quitReasons.map((reason, index) => (
+                      <View key={index} style={styles.reasonItem}>
+                        <Text style={styles.reasonText}>• {reason}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
         </View>
 
         {/* Quick Distraction Techniques */}
@@ -174,22 +330,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  resetButton: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F8F9FA',
+
+  breathingCircle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1,
   },
-  breathingCircle: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+  animatedCircle: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
     backgroundColor: '#35998d',
     justifyContent: 'center',
     alignItems: 'center',
@@ -203,9 +355,9 @@ const styles = StyleSheet.create({
     elevation: 16,
   },
   breathingInner: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 155,
+    height: 155,
+    borderRadius: 77.5,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -223,11 +375,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+
   breathingInstructions: {
-    fontSize: 16,
+    fontSize: 22,
     color: '#8E8E93',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 28,
   },
   section: {
     backgroundColor: '#FFFFFF',
@@ -235,19 +388,22 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 12,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
+    marginLeft: 8,
     marginBottom: 4,
   },
   sectionSubtitle: {
@@ -288,5 +444,81 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 100,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  motivationContainer: {
+    marginTop: 0,
+  },
+  motivationText: {
+    fontSize: 16,
+    color: '#35998d',
+    fontWeight: '500',
+  },
+  customReasonContainer: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  customReasonTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 8,
+  },
+  customReasonText: {
+    fontSize: 16,
+    color: '#1C1C1E',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  goalsContainer: {
+    marginBottom: 16,
+  },
+  goalsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 12,
+  },
+  goalsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  goalTag: {
+    backgroundColor: '#35998d',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  goalTagText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  reasonsContainer: {
+    marginBottom: 8,
+  },
+  reasonsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 12,
+  },
+  reasonsList: {
+    gap: 8,
+  },
+  reasonItem: {
+    paddingVertical: 4,
+  },
+  reasonText: {
+    fontSize: 14,
+    color: '#1C1C1E',
+    lineHeight: 20,
   },
 });

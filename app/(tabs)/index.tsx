@@ -371,7 +371,7 @@ export default function HomeScreen() {
                   <View style={styles.goalsList}>
                     {motivation.personalGoals.map((goal, index) => (
                       <View key={index} style={styles.goalTag}>
-                        <Text style={styles.goalTagText}>{goal}</Text>
+                        <Text style={styles.goalTagText}>{goal.charAt(0).toUpperCase() + goal.slice(1)}</Text>
                       </View>
                     ))}
                   </View>
