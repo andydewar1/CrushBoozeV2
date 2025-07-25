@@ -366,28 +366,14 @@ These Terms are written in English. Any translations are provided for convenienc
 ### 17.1 Customer Support
 
 For questions about these Terms or the Service:
-- **Email:** support@crushnic.com
 - **Website:** [crushnic.com/support](https://crushnic.com/support)
-- **Response Time:** Within 48 hours for general inquiries
 
-### 17.2 Legal Notices
+### 17.2 Business Address
 
-For legal notices or formal communications:
-- **Email:** legal@crushnic.com
-- **Subject Line:** Legal Notice - Terms of Service
-
-### 17.3 Business Address
-
-CrushNic Ltd.
+Odiono LTD
 20-22 Wenlock Road
 London, N1 7GU
 United Kingdom
-
-### 17.4 Data Protection Officer
-
-For privacy and data protection matters:
-- **Email:** dpo@crushnic.com
-- **Subject Line:** Data Protection Inquiry
 
 ---
 

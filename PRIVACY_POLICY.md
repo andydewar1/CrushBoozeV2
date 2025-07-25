@@ -393,22 +393,14 @@ We may share data only in these specific circumstances:
 
 ### Privacy Inquiries
 
-**Email:** privacy@crushnic.com
 **Support Website:** [crushnic.com/support](https://crushnic.com/support)
-**Response Time:** Within 48 hours for privacy-related inquiries
 
 ### Business Address
 
-CrushNic Ltd.
+Odiono LTD
 20-22 Wenlock Road
 London, N1 7GU
 United Kingdom
-
-### Data Protection Officer
-
-For GDPR-related inquiries:
-**Email:** dpo@crushnic.com
-**Subject Line:** GDPR Data Request
 
 ## Effective Date
 

@@ -1439,10 +1439,9 @@ export default function SettingsScreen() {
                   You have the right to access, correct, export, or delete your personal information at any time through the app settings. You can also control notification preferences and withdraw consent.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Contact Us{'\n\n'}</Text>
-                  For privacy questions: privacy@crushnic.com{'\n'}
                   Support: crushnic.com/support{'\n\n'}
                   
-                  CrushNic Ltd.{'\n'}
+                  Odiono LTD{'\n'}
                   20-22 Wenlock Road{'\n'}
                   London, N1 7GU{'\n'}
                   United Kingdom{'\n\n'}
@@ -1511,10 +1510,9 @@ export default function SettingsScreen() {
                   These Terms are governed by the laws of England and Wales. Disputes are subject to the exclusive jurisdiction of English courts.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Contact Information{'\n\n'}</Text>
-                  For questions: support@crushnic.com{'\n'}
-                  Legal notices: legal@crushnic.com{'\n\n'}
+                  Support: crushnic.com/support{'\n\n'}
                   
-                  CrushNic Ltd.{'\n'}
+                  Odiono LTD{'\n'}
                   20-22 Wenlock Road{'\n'}
                   London, N1 7GU{'\n'}
                   United Kingdom{'\n\n'}
