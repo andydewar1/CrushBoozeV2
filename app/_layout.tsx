@@ -10,8 +10,8 @@ export default function RootLayout() {
     <View style={styles.container}>
       <ToastProvider>
         <AuthProvider>
-          <SettingsProvider>
-            <OnboardingProvider>
+          <OnboardingProvider>
+            <SettingsProvider>
               <Stack screenOptions={{
                 headerShown: false,
                 contentStyle: {
@@ -19,8 +19,8 @@ export default function RootLayout() {
                 },
                 animation: 'slide_from_right',
               }} />
-            </OnboardingProvider>
-          </SettingsProvider>
+            </SettingsProvider>
+          </OnboardingProvider>
         </AuthProvider>
       </ToastProvider>
     </View>

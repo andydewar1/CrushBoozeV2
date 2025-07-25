@@ -2,14 +2,11 @@ import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platfor
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOnboarding } from '@/contexts/OnboardingContext';
-import { saveOnboardingData } from '@/lib/onboarding';
 
 type OnboardingScreenPath = 
   | '/onboarding/quit-date'
   | '/onboarding/goals'
+  | '/onboarding/reasons'
   | '/onboarding/vape-types'
   | '/onboarding/usage'
   | '/onboarding/costs'
@@ -27,8 +24,6 @@ interface OnboardingScreenProps {
   nextScreen: OnboardingScreenPath;
   previousScreen?: OnboardingScreenPath;
   canProgress?: boolean;
-  isLastScreen?: boolean;
-  onNext?: () => void;
   hideProgress?: boolean;
   scrollEnabled?: boolean;
 }
@@ -41,37 +36,13 @@ export default function OnboardingScreen({
   totalSteps,
   nextScreen,
   previousScreen,
-  isLastScreen,
   canProgress = true,
-  onNext,
   hideProgress,
   scrollEnabled = true,
 }: OnboardingScreenProps) {
   const router = useRouter();
-  const { session } = useAuth();
-  const { data } = useOnboarding();
 
-  const handleNext = async () => {
-    if (onNext) {
-      onNext();
-    }
-    
-    // Save onboarding data if this is the last screen
-    if (isLastScreen && session?.user?.id) {
-      try {
-        // Save onboarding completion status
-        await AsyncStorage.setItem(`onboarding_completed_${session.user.id}`, 'true');
-
-        // Save the actual onboarding data to the database
-        await saveOnboardingData(session.user.id, data);
-
-        console.log('Onboarding data saved successfully');
-      } catch (error) {
-        console.error('Failed to save onboarding data:', error);
-        // Continue anyway - don't block the user
-      }
-    }
-    
+  const handleNext = () => {
     if (canProgress) {
       router.push(nextScreen as any);
     }
@@ -141,9 +112,7 @@ export default function OnboardingScreen({
               onPress={handleNext}
               disabled={!canProgress || !nextScreen}
             >
-              <Text style={styles.nextButtonText}>
-                {isLastScreen ? 'Get Started' : 'Continue'}
-              </Text>
+              <Text style={styles.nextButtonText}>Continue</Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -212,7 +181,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.8)', // Increased from 0.6
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'left',
     lineHeight: 24,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',

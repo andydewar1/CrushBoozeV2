@@ -1,11 +1,28 @@
-import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { Calendar, Target, Heart } from 'lucide-react-native';
-import OnboardingScreen from '@/components/OnboardingScreen';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { saveOnboardingData } from '@/lib/onboarding';
+import { useToast } from '@/contexts/ToastContext';
+import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function SummaryScreen() {
   const { data } = useOnboarding();
+  const { user } = useAuth();
+  const router = useRouter();
+  const toast = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Safety check for incomplete onboarding data
+  if (!data || !data.quitDate) {
+    console.warn('⚠️ Incomplete onboarding data, redirecting to start');
+    router.replace('/onboarding/quit-date');
+    return null;
+  }
 
   const getCurrencySymbol = () => {
     switch (data.currency) {
@@ -22,8 +39,6 @@ export default function SummaryScreen() {
     const quantity = type.quantity || 0;
     const unitCost = type.unitCost || 0;
     const cost = quantity * unitCost;
-
-    // Convert to daily cost if frequency is weekly
     return type.frequency === 'week' ? cost / 7 : cost;
   };
 
@@ -33,20 +48,46 @@ export default function SummaryScreen() {
 
   const calculateMonthlySavings = () => {
     const dailyCost = calculateTotalDailyCost();
-    return dailyCost * 30; // Approximate monthly cost
+    return dailyCost * 30;
+  };
+
+  const handleGetStarted = async () => {
+    if (!user) return;
+    
+    setIsSaving(true);
+    try {
+      const result = await saveOnboardingData(user.id, data);
+      
+      if (result.success) {
+        toast.showSuccess('Welcome!', 'Your quit journey starts now!');
+      } else {
+        toast.showError('Error', result.error || 'Failed to save data');
+      }
+      
+      router.replace('/(tabs)');
+    } catch (error) {
+      toast.showError('Error', 'Something went wrong');
+      router.replace('/(tabs)');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <OnboardingScreen
-      title="Your Quit Plan"
-      subtitle="Here's a summary of your journey ahead"
-      currentStep={7}
-      totalSteps={7}
-      nextScreen="/(tabs)"
-      previousScreen="/onboarding/financial-goal"
-      isLastScreen
-    >
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={[]}>
+      {/* Progress Bar */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: '100%' }]} />
+        </View>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Your Quit Plan</Text>
+          <Text style={styles.subtitle}>Here's a summary of your journey ahead</Text>
+        </View>
+
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Calendar size={24} color="#FFFFFF" strokeWidth={2} />
@@ -116,13 +157,61 @@ export default function SummaryScreen() {
           </Text>
         </View>
       </ScrollView>
-    </OnboardingScreen>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={[styles.button, isSaving && styles.buttonDisabled]}
+          onPress={handleGetStarted}
+          disabled={isSaving}
+        >
+          <Text style={styles.buttonText}>
+            {isSaving ? 'Setting Up Your Journey...' : 'Get Started'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#35998d',
+  },
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 24,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+  },
+  scrollView: {
+    flex: 1,
+    padding: 20,
+  },
+  header: {
+    marginBottom: 32,
+  },
+  title: {
+    fontSize: 40,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    letterSpacing: -1,
+  },
+  subtitle: {
+    fontSize: 18,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   section: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -212,6 +301,29 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
     lineHeight: 24,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  footer: {
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+    backgroundColor: '#35998d',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  button: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 100,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#35998d',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
 }); 

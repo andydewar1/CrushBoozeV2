@@ -31,8 +31,8 @@ export function useQuitTimer(): QuitTimer {
       if (!settings?.quit_date) {
         setTimer(prev => ({
           ...prev,
-          loading: false,
-          error: 'No quit date set'
+          loading: settingsLoading,
+          error: settingsLoading ? null : 'No quit date set'
         }));
         return;
       }
@@ -74,7 +74,7 @@ export function useQuitTimer(): QuitTimer {
         clearInterval(interval);
       }
     };
-  }, [settings]);
+  }, [settings, settingsLoading]);
 
   return timer;
 } 

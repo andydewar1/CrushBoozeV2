@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import Header from '../../components/Header';
+import { useAuth } from '@/contexts/AuthContext';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
@@ -15,6 +16,7 @@ import { format } from 'date-fns';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
@@ -22,6 +24,8 @@ export default function HomeScreen() {
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+
+
 
   // Show loading state if any data is loading - temporarily disabled
   // if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
@@ -49,16 +53,18 @@ export default function HomeScreen() {
   //   );
   // }
 
-  // Show error state or fallback for timer
-  const displayDays = timerError ? 0 : days;
-  const displayHours = timerError ? 0 : hours;
-  const displayMinutes = timerError ? 0 : minutes;
-  const displayText = timerError ? 'Complete onboarding to start tracking' : 'days strong';
+  // Show loading or error state for timer
+  const displayDays = (timerLoading || timerError) ? 0 : days;
+  const displayHours = (timerLoading || timerError) ? 0 : hours;
+  const displayMinutes = (timerLoading || timerError) ? 0 : minutes;
+  const displayText = timerLoading ? 'Loading your progress...' 
+    : timerError ? 'Complete onboarding to start tracking' 
+    : 'days strong';
 
-  // Show error state or fallback for savings
-  const displayTotalSaved = savingsError ? 0 : totalSaved;
-  const displayDailyRate = savingsError ? 0 : dailyRate;
-  const displayHourlyRate = savingsError ? 0 : hourlyRate;
+  // Show loading or error state for savings
+  const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
+  const displayDailyRate = (savingsLoading || savingsError) ? 0 : dailyRate;
+  const displayHourlyRate = (savingsLoading || savingsError) ? 0 : hourlyRate;
   const displayCurrency = currency || '$';
 
   // Format money without decimals for the main display
@@ -89,6 +95,8 @@ export default function HomeScreen() {
           title="Home" 
           subtitle="Your future self is proud of you."
         />
+
+
 
         {/* Main Progress Card */}
         <View style={styles.progressCard}>
@@ -1005,11 +1013,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  progressLabel: {
-    fontSize: 14,
-    color: '#8E8E93',
-    fontWeight: '500',
-  },
   goalProgressPercentage: {
     fontSize: 14,
     fontWeight: '600',
@@ -1040,4 +1043,5 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#35998d',
   },
+
 });

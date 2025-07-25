@@ -28,11 +28,11 @@ import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useToast } from '@/contexts/ToastContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
-import { useSettings } from '@/contexts/SettingsContext';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -70,10 +70,10 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { signOut, session } = useAuth();
   const { 
-    settings,
+    profile,
     loading: settingsLoading,
-    updateSettings,
-    refetchSettings
+    updateProfile,
+    refetchProfile
   } = useSettings();
   const { currency } = useMoneySaved();
   const { quitDate, days, refetch: refetchTimer } = useQuitTimer();
@@ -109,7 +109,7 @@ export default function SettingsScreen() {
   const [tempUsagePatterns, setTempUsagePatterns] = useState<any[]>([]);
 
   const [tempPersonalGoals, setTempPersonalGoals] = useState<string[]>(motivation?.personalGoals || []);
-  const [tempDailyCost, setTempDailyCost] = useState(settings?.daily_cost?.toString() || '0');
+  const [tempDailyCost, setTempDailyCost] = useState(profile?.daily_cost?.toString() || '0');
   const [tempCurrentPassword, setTempCurrentPassword] = useState('');
   const [tempNewPassword, setTempNewPassword] = useState('');
   const [tempConfirmPassword, setTempConfirmPassword] = useState('');
@@ -142,10 +142,10 @@ export default function SettingsScreen() {
     if (currency) {
       setTempCurrency(currency);
     }
-    if (settings?.daily_cost) {
-      setTempDailyCost(settings.daily_cost.toString());
+    if (profile?.daily_cost) {
+      setTempDailyCost(profile.daily_cost.toString());
     }
-  }, [motivation, quitDate, currency, settings]);
+  }, [motivation, quitDate, currency, profile]);
 
   // Load onboarding data
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function SettingsScreen() {
     const newQuitDate = tempQuitDate.toISOString();
     
     try {
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         quit_date: newQuitDate,
         has_quit: true
       });
@@ -221,7 +221,7 @@ export default function SettingsScreen() {
           refetchMotivation()
         ]);
       } else {
-        throw new Error('Failed to update quit date');
+        throw new Error(error || 'Failed to update quit date');
       }
     } catch (error) {
       console.error('Error updating quit date:', error);
@@ -243,7 +243,7 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         quit_reason: tempPersonalWhy
       });
       
@@ -251,7 +251,7 @@ export default function SettingsScreen() {
         setEditingPersonalWhy(false);
         showSuccess('Personal Why Updated', 'Your personal reason has been updated successfully');
       } else {
-        throw new Error('Failed to update personal reason');
+        throw new Error(error || 'Failed to update personal reason');
       }
     } catch (error) {
       console.error('Error updating personal why:', error);
@@ -277,7 +277,7 @@ export default function SettingsScreen() {
       const selectedCurrency = CURRENCIES.find(c => c.symbol === tempCurrency);
       const currencyCode = selectedCurrency ? selectedCurrency.code : 'USD';
       
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         currency: currencyCode
       });
       
@@ -285,7 +285,7 @@ export default function SettingsScreen() {
         setEditingCurrency(false);
         showSuccess('Currency Updated', 'Your currency has been updated successfully');
       } else {
-        throw new Error('Failed to update currency');
+        throw new Error(error || 'Failed to update currency');
       }
     } catch (error) {
       console.error('Error updating currency:', error);
@@ -311,7 +311,7 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         personal_goals: tempPersonalGoals
       });
       
@@ -319,7 +319,7 @@ export default function SettingsScreen() {
         setEditingPersonalGoals(false);
         showSuccess('Personal Goals Updated', 'Your personal goals have been updated successfully');
       } else {
-        throw new Error('Failed to update personal goals');
+        throw new Error(error || 'Failed to update personal goals');
       }
     } catch (error) {
       console.error('Error updating personal goals:', error);
@@ -343,7 +343,7 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         daily_cost: cost
       });
       
@@ -351,7 +351,7 @@ export default function SettingsScreen() {
         setEditingDailyCosts(false);
         showSuccess('Daily Costs Updated', 'Your daily costs have been updated successfully');
       } else {
-        throw new Error('Failed to update daily costs');
+        throw new Error(error || 'Failed to update daily costs');
       }
     } catch (error) {
       console.error('Error updating daily costs:', error);
@@ -481,7 +481,7 @@ export default function SettingsScreen() {
   const handleSaveVapeTypes = async () => {
     setSaving(true);
     try {
-      const success = await updateSettings({
+      const { success, error } = await updateProfile({
         vape_types: tempVapeTypes
       });
       
@@ -490,7 +490,7 @@ export default function SettingsScreen() {
         setEditingVapeTypes(false);
         showSuccess('Vape Types Updated', 'Your vape types have been updated successfully');
       } else {
-        throw new Error('Failed to update vape types');
+        throw new Error(error || 'Failed to update vape types');
       }
     } catch (error) {
       console.error('Error updating vape types:', error);
@@ -940,13 +940,13 @@ export default function SettingsScreen() {
             <View style={styles.settingContent}>
               <Text style={styles.settingLabel}>Daily Spending</Text>
               <Text style={styles.settingValue}>
-                {currency}{settings?.daily_cost || '0'} per day
+                {currency}{profile?.daily_cost || '0'} per day
               </Text>
             </View>
             <TouchableOpacity 
               style={styles.editButton}
               onPress={() => {
-                setTempDailyCost(settings?.daily_cost?.toString() || '0');
+                setTempDailyCost(profile?.daily_cost?.toString() || '0');
                 setEditingDailyCosts(true);
               }}
             >

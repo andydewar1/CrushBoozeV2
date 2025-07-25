@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Heart, Activity, Moon, Scale, Wallet, Stethoscope } from 'lucide-react-native';
 import OnboardingScreen from '@/components/OnboardingScreen';
@@ -40,7 +40,12 @@ const GOALS = [
 
 export default function GoalsScreen() {
   const { data, updateData } = useOnboarding();
-  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set());
+  const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set(data.personalGoals));
+
+  // Keep selectedGoals in sync with context
+  useEffect(() => {
+    setSelectedGoals(new Set(data.personalGoals));
+  }, [data.personalGoals]);
 
   const toggleGoal = (goalId: string) => {
     const newSelected = new Set(selectedGoals);
@@ -51,10 +56,14 @@ export default function GoalsScreen() {
     }
     setSelectedGoals(newSelected);
 
-    // Update onboarding context
+    // Update onboarding context with array of selected goals
+    const selectedGoalsArray = Array.from(newSelected);
     updateData({
-      personalGoals: Array.from(newSelected),
+      personalGoals: selectedGoalsArray
     });
+
+    // Log for debugging
+    console.log('Selected goals:', selectedGoalsArray);
   };
 
   return (

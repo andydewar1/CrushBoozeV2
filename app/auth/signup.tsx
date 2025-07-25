@@ -21,15 +21,15 @@ export default function SignUpScreen() {
 
     setLoading(true);
     try {
-      const { error } = await signUp(email, password);
-      if (error) throw error;
+      const result = await signUp(email, password);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
       router.replace('/onboarding/quit-date');
     } catch (error: any) {
-      console.error('Error signing up:', error);
-      Alert.alert(
-        'Sign Up Failed',
-        error.message || 'Please check your internet connection and try again'
-      );
+      Alert.alert('Sign Up Failed', error.message || 'Please try again');
     } finally {
       setLoading(false);
     }

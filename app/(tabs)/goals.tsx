@@ -31,42 +31,7 @@ export default function GoalsScreen() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
   const [onboardingGoalCreated, setOnboardingGoalCreated] = useState(false);
 
-  // Create onboarding goal as a regular goal if it exists and hasn't been created yet
-  useEffect(() => {
-    const createOnboardingGoal = async () => {
-      if (
-        !loading && 
-        !financialGoalLoading && 
-        financialGoal && 
-        financialGoal.description && 
-        financialGoal.amount > 0 &&
-        !onboardingGoalCreated
-      ) {
-        // Check if we already have a goal with the same name and amount
-        const existingGoal = goals.find(goal => 
-          goal.name === financialGoal.description && 
-          goal.target_amount === financialGoal.amount
-        );
-
-        if (!existingGoal) {
-          try {
-            await createGoal({
-              name: financialGoal.description,
-              target_amount: financialGoal.amount,
-              description: 'Your financial goal from onboarding'
-            });
-            setOnboardingGoalCreated(true);
-          } catch (error) {
-            console.error('Failed to create onboarding goal:', error);
-          }
-        } else {
-          setOnboardingGoalCreated(true);
-        }
-      }
-    };
-
-    createOnboardingGoal();
-  }, [loading, financialGoalLoading, financialGoal, goals, createGoal, onboardingGoalCreated]);
+  // Remove automatic goal creation - let users create goals manually
 
   const formatCurrency = (amount: number) => {
     return `${currency}${amount.toLocaleString()}`;

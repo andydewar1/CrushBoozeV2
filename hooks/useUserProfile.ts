@@ -1,232 +1,174 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { PostgrestError } from '@supabase/supabase-js'
 
+// Strict typing for the profile data
 interface UserProfile {
-  quit_date: string | null
+  id: string
+  quit_date: string
   has_quit: boolean
+  personal_goals: string[]
+  quit_reason: string
+  quit_reasons: string[]
+  vape_types: any[]
+  currency: string
   daily_cost: number
-  financial_goal_amount: number
   financial_goal_description: string
-  currency?: string
-  vape_types?: any[]
+  financial_goal_amount: number
+  onboarding_completed?: boolean
+  created_at: string
+  updated_at: string
 }
 
 interface UseUserProfileResult {
-  data: UserProfile | null
+  profile: UserProfile | null
   loading: boolean
-  error: Error | null
+  error: string | null
   refetch: () => Promise<void>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>
   updateQuitDate: (quitDate: string) => Promise<boolean>
   updateDailyCost: (dailyCost: number) => Promise<boolean>
   updateCurrency: (currency: string) => Promise<boolean>
   updateVapeTypes: (vapeTypes: any[]) => Promise<boolean>
+  updateFinancialGoal: (amount: number, description: string) => Promise<boolean>
+  updateQuitReason: (reason: string, reasons: string[]) => Promise<boolean>
+  updatePersonalGoals: (goals: string[]) => Promise<boolean>
+  updateHasQuit: (hasQuit: boolean) => Promise<boolean>
 }
 
 export function useUserProfile(): UseUserProfileResult {
-  const [data, setData] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
   const { session } = useAuth()
 
-  useEffect(() => {
-    let isMounted = true
-
-    async function fetchProfile() {
-      try {
-        // Get current user
-        const { data: authData, error: authError } = await supabase.auth.getUser()
-        if (authError) {
-          console.error('Auth error in useUserProfile:', authError)
-          throw new Error(authError.message)
-        }
-        if (!authData.user) {
-          console.error('No user found in auth data')
-          throw new Error('No authenticated user')
-        }
-
-        console.log('Fetching profile for user:', authData.user.id)
-
-        // Fetch profile data
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select(`
-            quit_date,
-            has_quit,
-            daily_cost,
-            financial_goal_amount,
-            financial_goal_description,
-            currency,
-            vape_types
-          `)
-          .eq('id', authData.user.id)
-          .single()
-
-        if (profileError) {
-          console.error('Profile fetch error:', profileError)
-          throw new Error(profileError.message)
-        }
-
-        if (!profileData) {
-          console.error('No profile data found for user')
-          throw new Error('Profile not found')
-        }
-
-        console.log('Successfully fetched profile:', {
-          has_quit: profileData.has_quit,
-          quit_date: profileData.quit_date
-        })
-        
-        // Only update state if component is still mounted
-        if (isMounted) {
-          setData(profileData)
-          setError(null)
-        }
-      } catch (err) {
-        console.error('Error in useUserProfile:', err)
-        if (isMounted) {
-          setError(err instanceof Error ? err : new Error('An unknown error occurred'))
-          setData(null)
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
+  const fetchProfile = useCallback(async () => {
+    if (!session?.user?.id) {
+      setLoading(false)
+      return
     }
 
-    fetchProfile()
-
-    // Cleanup function to prevent setting state on unmounted component
-    return () => {
-      isMounted = false
-    }
-  }, [session?.user?.id]) // Depend on user ID
-
-  const refetch = useCallback(async () => {
-    if (!session?.user?.id) return;
-    
     try {
-      setLoading(true);
-      setError(null);
+      setLoading(true)
+      setError(null)
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data, error: profileError } = await supabase
         .from('profiles')
-        .select(`
-          quit_date,
-          has_quit,
-          daily_cost,
-          financial_goal_amount,
-          financial_goal_description,
-          currency,
-          vape_types
-        `)
+        .select('*')
         .eq('id', session.user.id)
-        .single();
+        .single()
 
-      if (profileError) throw new Error(profileError.message);
-      if (!profileData) throw new Error('Profile not found');
-
-      setData(profileData);
+      if (profileError) {
+        // If profile doesn't exist (PGRST116), just set null - don't error
+        if (profileError.code === 'PGRST116') {
+          console.log('No profile found for user, will be created during onboarding')
+          setProfile(null)
+          setError(null)
+        } else {
+          console.error('Profile fetch error:', profileError)
+          setError(profileError.message)
+          setProfile(null)
+        }
+      } else {
+        setProfile(data)
+        setError(null)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('An unknown error occurred'));
+      console.error('Error fetching profile:', err)
+      setError('Failed to load profile')
+      setProfile(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id])
 
-  const updateQuitDate = useCallback(async (quitDate: string): Promise<boolean> => {
-    if (!session?.user?.id || !data) return false;
-
-    const previousData = data;
-    setData(prev => prev ? { ...prev, quit_date: quitDate } : null);
+  // Generic update function
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>): Promise<boolean> => {
+    if (!session?.user?.id || !profile) return false
 
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ quit_date: quitDate })
-        .eq('id', session.user.id);
+        .update(updates)
+        .eq('id', session.user.id)
 
-      if (error) throw error;
-      return true;
+      if (error) throw error
+
+      // Update local state
+      setProfile(prev => prev ? { ...prev, ...updates } : null)
+      return true
     } catch (err) {
-      setData(previousData);
-      console.error('Error updating quit date:', err);
-      return false;
+      console.error('Error updating profile:', err)
+      return false
     }
-  }, [session?.user?.id, data]);
+  }, [session?.user?.id, profile])
+
+  // Specific update functions
+  const updateQuitDate = useCallback(async (quitDate: string): Promise<boolean> => {
+    return updateProfile({ quit_date: quitDate })
+  }, [updateProfile])
 
   const updateDailyCost = useCallback(async (dailyCost: number): Promise<boolean> => {
-    if (!session?.user?.id || !data) return false;
-
-    const previousData = data;
-    setData(prev => prev ? { ...prev, daily_cost: dailyCost } : null);
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ daily_cost: dailyCost })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-      return true;
-    } catch (err) {
-      setData(previousData);
-      console.error('Error updating daily cost:', err);
-      return false;
-    }
-  }, [session?.user?.id, data]);
+    return updateProfile({ daily_cost: dailyCost })
+  }, [updateProfile])
 
   const updateCurrency = useCallback(async (currency: string): Promise<boolean> => {
-    if (!session?.user?.id || !data) return false;
-
-    const previousData = data;
-    setData(prev => prev ? { ...prev, currency } : null);
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ currency })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-      return true;
-    } catch (err) {
-      setData(previousData);
-      console.error('Error updating currency:', err);
-      return false;
-    }
-  }, [session?.user?.id, data]);
+    return updateProfile({ currency })
+  }, [updateProfile])
 
   const updateVapeTypes = useCallback(async (vapeTypes: any[]): Promise<boolean> => {
-    if (!session?.user?.id || !data) return false;
+    return updateProfile({ vape_types: vapeTypes })
+  }, [updateProfile])
 
-    const previousData = data;
-    setData(prev => prev ? { ...prev, vape_types: vapeTypes } : null);
+  const updateFinancialGoal = useCallback(async (amount: number, description: string): Promise<boolean> => {
+    return updateProfile({
+      financial_goal_amount: amount,
+      financial_goal_description: description
+    })
+  }, [updateProfile])
 
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ vape_types: vapeTypes })
-        .eq('id', session.user.id);
+  const updateQuitReason = useCallback(async (reason: string, reasons: string[]): Promise<boolean> => {
+    return updateProfile({
+      quit_reason: reason,
+      quit_reasons: reasons
+    })
+  }, [updateProfile])
 
-      if (error) throw error;
-      return true;
-    } catch (err) {
-      setData(previousData);
-      console.error('Error updating vape types:', err);
-      return false;
-    }
-  }, [session?.user?.id, data]);
+  const updatePersonalGoals = useCallback(async (goals: string[]): Promise<boolean> => {
+    return updateProfile({ personal_goals: goals })
+  }, [updateProfile])
 
-  return { 
-    data, 
-    loading, 
-    error, 
-    refetch, 
-    updateQuitDate, 
-    updateDailyCost, 
-    updateCurrency, 
-    updateVapeTypes 
+  const updateHasQuit = useCallback(async (hasQuit: boolean): Promise<boolean> => {
+    return updateProfile({ has_quit: hasQuit })
+  }, [updateProfile])
+
+  // Initial fetch
+  useEffect(() => {
+    fetchProfile()
+  }, [fetchProfile])
+
+  // Refetch wrapper that maintains the loading state
+  const refetch = useCallback(async () => {
+    await fetchProfile()
+  }, [fetchProfile])
+
+  return {
+    profile,
+    loading,
+    error,
+    refetch,
+    updateProfile,
+    updateQuitDate,
+    updateDailyCost,
+    updateCurrency,
+    updateVapeTypes,
+    updateFinancialGoal,
+    updateQuitReason,
+    updatePersonalGoals,
+    updateHasQuit
   }
-} 
+}
+
+// Export types for use in other components
+export type { UserProfile } 

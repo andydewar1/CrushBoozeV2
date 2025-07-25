@@ -17,6 +17,8 @@ export function useFinancialGoals() {
   useEffect(() => {
     if (!session?.user?.id) {
       setLoading(false);
+      setFinancialGoal(null);
+      setError(null);
       return;
     }
 
@@ -24,34 +26,45 @@ export function useFinancialGoals() {
   }, [session?.user?.id]);
 
   const fetchFinancialGoal = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      setLoading(false);
+      setFinancialGoal(null);
+      setError(null);
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
-      console.log('Fetching financial goal for user:', session.user.id);
-
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('financial_goal_description, financial_goal_amount, currency')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
-      if (fetchError) {
-        console.error('Financial goal fetch error:', fetchError);
-        setError('Failed to fetch financial goal');
+      // Handle case where profile doesn't exist yet
+      if (fetchError?.code === 'PGRST116' || !data) {
+        setFinancialGoal(null);
+        setError(null);
+        setLoading(false);
         return;
       }
 
-      if (data) {
-        console.log('Financial goal found:', data);
-        setFinancialGoal({
-          description: data.financial_goal_description,
-          amount: data.financial_goal_amount,
-          currency: data.currency,
-        });
+      // Handle other errors
+      if (fetchError) {
+        console.error('Financial goal fetch error:', fetchError);
+        setError('Failed to fetch financial goal');
+        setLoading(false);
+        return;
       }
+
+      setFinancialGoal({
+        description: data.financial_goal_description,
+        amount: data.financial_goal_amount,
+        currency: data.currency,
+      });
+      setError(null);
     } catch (err) {
       console.error('Error in useFinancialGoals:', err);
       setError('Failed to fetch financial goal');
@@ -60,7 +73,7 @@ export function useFinancialGoals() {
     }
   };
 
-  const getCurrencySymbol = (currency: string) => {
+  const getCurrencySymbol = (currency?: string) => {
     switch (currency) {
       case 'EUR': return '€';
       case 'GBP': return '£';

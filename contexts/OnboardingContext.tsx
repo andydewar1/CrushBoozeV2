@@ -9,13 +9,13 @@ interface VapeType {
 }
 
 interface OnboardingData {
-  quitDate: Date | null;
+  quitDate: Date;  // Changed from Date | null to Date
   hasQuit: boolean;
   personalGoals: string[];
   quitReasons: string[];
+  quitReason: string;
   vapeTypes: VapeType[];
   currency: string;
-  quitReason: string;
   financialGoal: {
     description: string;
     amount: number;
@@ -28,16 +28,17 @@ interface OnboardingContextType {
   addVapeType: (vapeType: VapeType) => void;
   updateVapeType: (index: number, vapeType: Partial<VapeType>) => void;
   removeVapeType: (index: number) => void;
+  resetData: () => void;
 }
 
 const defaultData: OnboardingData = {
-  quitDate: null,
+  quitDate: new Date(),  // Initialize with current date
   hasQuit: false,
   personalGoals: [],
   quitReasons: [],
+  quitReason: '',
   vapeTypes: [],
   currency: 'USD',
-  quitReason: '',
   financialGoal: {
     description: '',
     amount: 0,
@@ -51,33 +52,86 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const updateData = (newData: Partial<OnboardingData>) => {
     setData(prev => {
-      // If updating vapeTypes, ensure we migrate any existing data
-      if (newData.vapeTypes) {
-        newData.vapeTypes = newData.vapeTypes.map(type => {
-          // Ensure all required fields exist
-          return {
-            type: type.type || 'other',
-            quantity: type.quantity || 0,
-            frequency: type.frequency || 'day',
-            unitCost: type.unitCost || 0,
-            otherText: type.type === 'other' ? type.otherText : undefined,
-          };
-        });
+      // Create a deep copy of the previous state
+      const updatedData = {
+        ...prev,
+        personalGoals: [...prev.personalGoals],
+        quitReasons: [...prev.quitReasons],
+        vapeTypes: prev.vapeTypes.map(vt => ({ ...vt })),
+        financialGoal: { ...prev.financialGoal }
+      };
+
+      // Handle quit date update
+      if (newData.hasQuit !== undefined) {
+        updatedData.hasQuit = newData.hasQuit;
+        if (newData.quitDate) {
+          updatedData.quitDate = newData.quitDate;
+        } else if (!updatedData.quitDate) {
+          updatedData.quitDate = new Date();
+        }
       }
-      return { ...prev, ...newData };
+
+      // Handle arrays with proper validation
+      if (Array.isArray(newData.personalGoals)) {
+        updatedData.personalGoals = [...newData.personalGoals];
+      }
+
+      if (Array.isArray(newData.quitReasons)) {
+        updatedData.quitReasons = [...newData.quitReasons];
+      }
+
+      // Handle vape types with validation
+      if (Array.isArray(newData.vapeTypes)) {
+        updatedData.vapeTypes = newData.vapeTypes.map(vt => ({
+          type: vt.type || 'other',
+          quantity: vt.quantity || 0,
+          frequency: vt.frequency || 'day',
+          unitCost: vt.unitCost || 0,
+          otherText: vt.type === 'other' ? vt.otherText : undefined,
+        }));
+      }
+
+      // Handle financial goal with validation
+      if (newData.financialGoal) {
+        updatedData.financialGoal = {
+          description: newData.financialGoal.description || updatedData.financialGoal.description,
+          amount: newData.financialGoal.amount || updatedData.financialGoal.amount,
+        };
+      }
+
+      // Handle primitive fields
+      if (typeof newData.quitReason === 'string') {
+        updatedData.quitReason = newData.quitReason;
+      }
+
+      if (typeof newData.currency === 'string') {
+        updatedData.currency = newData.currency;
+      }
+
+      // Log state updates for debugging
+      console.log('Onboarding state update:', {
+        previous: prev,
+        updates: newData,
+        result: updatedData
+      });
+
+      return updatedData;
     });
   };
 
   const addVapeType = (vapeType: VapeType) => {
     setData(prev => ({
       ...prev,
-      vapeTypes: [...prev.vapeTypes, {
-        type: vapeType.type,
-        quantity: vapeType.quantity || 0,
-        frequency: vapeType.frequency || 'day',
-        unitCost: vapeType.unitCost || 0,
-        otherText: vapeType.type === 'other' ? vapeType.otherText : undefined,
-      }],
+      vapeTypes: [
+        ...prev.vapeTypes,
+        {
+          type: vapeType.type,
+          quantity: vapeType.quantity || 0,
+          frequency: vapeType.frequency || 'day',
+          unitCost: vapeType.unitCost || 0,
+          otherText: vapeType.type === 'other' ? vapeType.otherText : undefined,
+        }
+      ],
     }));
   };
 
@@ -88,7 +142,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         i === index ? {
           ...type,
           ...vapeType,
-          // Ensure otherText is only set for 'other' type
           otherText: vapeType.type === 'other' ? vapeType.otherText || type.otherText : undefined,
         } : type
       ),
@@ -102,6 +155,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     }));
   };
 
+  const resetData = () => {
+    setData(defaultData);
+  };
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -110,6 +167,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         addVapeType,
         updateVapeType,
         removeVapeType,
+        resetData,
       }}
     >
       {children}

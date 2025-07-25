@@ -1,47 +1,58 @@
 import React, { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
-interface Settings {
-  quit_date: string | null;
+interface UserProfile {
+  id: string;
+  quit_date: string;
   has_quit: boolean;
-  daily_cost: number;
-  currency: string;
-  financial_goal_amount: number;
-  financial_goal_description: string;
-  vape_types: any[];
-  quit_reason: string | null;
   personal_goals: string[];
+  quit_reason: string;
   quit_reasons: string[];
+  vape_types: any[];
+  currency: string;
+  daily_cost: number;
+  financial_goal_description: string;
+  financial_goal_amount: number;
+  onboarding_completed?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface SettingsContextType {
-  settings: Settings | null;
+  profile: UserProfile | null;
+  settings: UserProfile | null; // Alias for compatibility
   loading: boolean;
   error: string | null;
-  updateSettings: (updates: Partial<Settings>) => Promise<boolean>;
-  refetchSettings: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
+  refetchProfile: () => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType>({
+  profile: null,
   settings: null,
   loading: true,
   error: null,
-  updateSettings: async () => false,
-  refetchSettings: async () => {},
+  updateProfile: async () => ({ success: false }),
+  refetchProfile: async () => {},
 });
 
 export const useSettings = () => useContext(SettingsContext);
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
-  const fetchSettings = useCallback(async () => {
+  const fetchProfile = useCallback(async () => {
+    // Don't fetch if there's no session
     if (!session?.user?.id) {
       setLoading(false);
+      setProfile(null);
+      setError(null);
       return;
     }
 
@@ -51,30 +62,27 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select(`
-          quit_date,
-          has_quit,
-          daily_cost,
-          currency,
-          financial_goal_amount,
-          financial_goal_description,
-          vape_types,
-          quit_reason,
-          personal_goals,
-          quit_reasons
-        `)
+        .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
+      // If no profile exists, that's fine - user hasn't completed onboarding
+      if (fetchError?.code === 'PGRST116' || !data) {
+        setProfile(null);
+        setError(null);
+        return;
+      }
+
+      // Handle other errors
       if (fetchError) {
-        console.error('Settings fetch error:', fetchError);
+        console.error('Profile fetch error:', fetchError);
         setError(fetchError.message);
         return;
       }
 
-      setSettings(data);
+      setProfile(data as UserProfile);
     } catch (err) {
-      console.error('Error fetching settings:', err);
+      console.error('Error fetching profile:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -83,41 +91,65 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   // Initial fetch
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    fetchProfile();
+  }, [fetchProfile]);
 
-  const updateSettings = useCallback(async (updates: Partial<Settings>): Promise<boolean> => {
-    if (!session?.user?.id || !settings) return false;
+  const calculateDailyCost = (vapeTypes: UserProfile['vape_types']) => {
+    return vapeTypes.reduce((total, type) => {
+      const quantity = type.quantity || 0;
+      const unitCost = type.unitCost || 0;
+      const cost = quantity * unitCost;
+      return total + (type.frequency === 'week' ? cost / 7 : cost);
+    }, 0);
+  };
+
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
+    if (!session?.user?.id) {
+      return { success: false, error: 'Not authenticated' };
+    }
 
     try {
+      // If updating vape types, recalculate daily cost
+      if (updates.vape_types) {
+        updates.daily_cost = calculateDailyCost(updates.vape_types);
+      }
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', session.user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        return { success: false, error: updateError.message };
+      }
 
       // Update local state
-      setSettings(prev => prev ? { ...prev, ...updates } : null);
+      setProfile(prev => prev ? { ...prev, ...updates } : null);
 
-      // Trigger a refetch to ensure we have the latest data
-      await fetchSettings();
+      // Show success message
+      toast.showSuccess('Settings Updated', 'Your changes have been saved');
 
-      return true;
+      // Refetch to ensure we have the latest data
+      await fetchProfile();
+
+      return { success: true };
     } catch (err) {
-      console.error('Error updating settings:', err);
-      return false;
+      console.error('Error updating profile:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      return { success: false, error: errorMessage };
     }
-  }, [session?.user?.id, settings, fetchSettings]);
+  }, [session?.user?.id, fetchProfile, toast]);
 
   return (
     <SettingsContext.Provider 
       value={{
-        settings,
+        profile,
+        settings: profile, // Alias for compatibility
         loading,
         error,
-        updateSettings,
-        refetchSettings: fetchSettings,
+        updateProfile,
+        refetchProfile: fetchProfile,
       }}
     >
       {children}

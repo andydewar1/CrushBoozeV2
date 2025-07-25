@@ -39,9 +39,9 @@ export function useMoneySaved(): MoneySaved {
       if (!settings?.quit_date || !settings.has_quit) {
         setMoneySaved(prev => ({
           ...prev,
-          loading: false,
+          loading: settingsLoading,
           currency: getCurrencySymbol(settings?.currency || 'USD'),
-          error: 'No quit data available'
+          error: settingsLoading ? null : 'No quit data available'
         }));
         return;
       }
@@ -83,7 +83,7 @@ export function useMoneySaved(): MoneySaved {
         clearInterval(interval);
       }
     };
-  }, [settings]);
+  }, [settings, settingsLoading]);
 
   return moneySaved;
 } 

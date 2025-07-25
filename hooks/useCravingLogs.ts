@@ -55,7 +55,8 @@ export function useCravingLogs() {
         // Transform the data
         const transformedLogs = (cravingLogs || []).map(log => ({
           ...log,
-          timestamp: new Date(log.timestamp)
+          timestamp: new Date(log.timestamp || log.created_at),
+          trigger: log.trigger || log.trigger_type || log.trigger_description || 'Unknown trigger'
         }));
 
         // Calculate statistics

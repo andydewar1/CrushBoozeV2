@@ -1,140 +1,182 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, checkInactivityLogout } from '@/lib/supabase';
-import { Session } from '@supabase/supabase-js';
+import { Session, User } from '@supabase/supabase-js';
 import { useRouter, useSegments } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { signUp, signIn, signOut, getCurrentSession } from '@/lib/auth';
 
 interface AuthContextType {
-  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signUp: (email: string, password: string) => Promise<{ error?: Error }>;
-  signOut: () => Promise<void>;
+  // Auth state
+  user: User | null;
   session: Session | null;
   loading: boolean;
+  
+  // Auth actions
+  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signOut: () => Promise<{ success: boolean; error?: string }>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
-// This hook will protect the route access based on user authentication
-function useProtectedRoute(session: Session | null, loading: boolean) {
-  const segments = useSegments();
+export function useAuth(): AuthContextType {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
+  const segments = useSegments();
 
+  // Initialize auth state
+  useEffect(() => {
+    let mounted = true;
+
+    async function initializeAuth() {
+      try {
+        const { session: currentSession, error } = await getCurrentSession();
+        
+        if (error) {
+          console.error('❌ Failed to get current session:', error);
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (currentSession?.user) {
+          console.log('✅ Found existing session for user:', currentSession.user.id);
+          
+          if (mounted) {
+            setUser(currentSession.user);
+            setSession(currentSession);
+          }
+        } else {
+          console.log('ℹ️ No existing session found');
+        }
+
+        if (mounted) {
+          setLoading(false);
+        }
+
+      } catch (error) {
+        console.error('❌ Auth initialization error:', error);
+        if (mounted) {
+          setUser(null);
+          setSession(null);
+          setLoading(false);
+        }
+      }
+    }
+
+    initializeAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.id);
+
+      if (mounted) {
+        setUser(session?.user || null);
+        setSession(session);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Simple navigation - let individual screens handle onboarding checks
   useEffect(() => {
     if (loading) return;
 
     const inAuthGroup = segments[0] === 'auth';
-    const inOnboardingGroup = segments[0] === 'onboarding';
 
-    if (!session) {
-      // Not signed in
-      if (!inAuthGroup && !inOnboardingGroup && segments[0] !== undefined) {
-        // If not on auth pages, onboarding, or landing page, redirect to login
-        router.replace('/auth/login');
-      }
-    } else {
-      // Signed in
-      if (inAuthGroup && !inOnboardingGroup) {
-        // Only redirect from auth pages if not going to onboarding
-        // Let the signup screen handle its own navigation to onboarding
-        // router.replace('/(tabs)');
-      }
+    if (!user && !inAuthGroup && segments[0] !== undefined) {
+      router.replace('/auth/login');
     }
-  }, [session, loading, segments]);
-}
+  }, [user, loading, segments, router]);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const handleSignUp = async (email: string, password: string) => {
+    return await signUp(email, password);
+  };
 
-  // Use the useProtectedRoute hook here
-  useProtectedRoute(session, loading);
+  const handleSignIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      console.log('🔐 Attempting signin...');
 
-  useEffect(() => {
-    // Check for inactivity logout first
-    const initializeAuth = async () => {
-      const shouldLogout = await checkInactivityLogout();
-      if (shouldLogout) {
-        setSession(null);
-        setLoading(false);
-        return;
+      const result = await signIn(email, password);
+      
+      if (result.success) {
+        console.log('✅ Signin successful');
+        // Auth state will be updated via onAuthStateChange
+        return { success: true };
+      } else {
+        console.error('❌ Signin failed:', result.error);
+        return { success: false, error: result.error };
       }
-
-      // Then check active sessions and subscribe to auth changes
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setLoading(false);
-      });
-    };
-
-    initializeAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    } catch (error) {
+      console.error('❌ Unexpected signin error:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+      };
+    } finally {
       setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      
-      if (error) {
-        return { error };
-      }
-
-      // Profile will be created during onboarding completion
-      return { error: undefined };
-    } catch (error) {
-      return { error: error as Error };
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const handleSignOut = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        return { error };
-      }
+      setLoading(true);
+      console.log('🔐 Attempting signout...');
 
-      return { error: undefined };
+      // Force clear local state first
+      setUser(null);
+      setSession(null);
+
+      const result = await signOut();
+      
+      if (result.success) {
+        console.log('✅ Signout successful');
+        return { success: true };
+      } else {
+        console.error('❌ Signout failed:', result.error);
+        // Even if Supabase signout fails, we've cleared local state
+        return { success: true };
+      }
     } catch (error) {
-      return { error: error as Error };
+      console.error('❌ Unexpected signout error:', error);
+      // Even if there's an error, we've cleared local state
+      return { success: true };
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const value: AuthContextType = {
+    user,
+    session,
+    loading,
+    signUp: handleSignUp,
+    signIn: handleSignIn,
+    signOut: handleSignOut,
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        signUp,
-        signIn,
-        signOut,
-        session,
-        loading,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 } 
