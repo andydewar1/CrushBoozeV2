@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface QuitMotivation {
   quitReason: string;
@@ -9,61 +8,52 @@ interface QuitMotivation {
 }
 
 export function useQuitMotivation() {
+  const { settings, loading: settingsLoading, error: settingsError, updateSettings } = useSettings();
   const [motivation, setMotivation] = useState<QuitMotivation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { session } = useAuth();
 
+  // Update local state when settings change
   useEffect(() => {
-    if (!session?.user?.id) {
-      setLoading(false);
-      return;
+    if (settings) {
+      setMotivation({
+        quitReason: settings.quit_reason || '',
+        personalGoals: settings.personal_goals || [],
+        quitReasons: settings.quit_reasons || [],
+      });
     }
+  }, [settings]);
 
-    fetchQuitMotivation();
-  }, [session?.user?.id]);
-
-  const fetchQuitMotivation = async () => {
-    if (!session?.user?.id) return;
+  const updateQuitReason = useCallback(async (quitReason: string): Promise<boolean> => {
+    // Optimistic update
+    setMotivation(prev => prev ? { ...prev, quitReason } : null);
 
     try {
-      setLoading(true);
-      setError(null);
-
-      console.log('Fetching quit motivation for user:', session.user.id);
-
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('quit_reason, personal_goals, quit_reasons')
-        .eq('id', session.user.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Quit motivation fetch error:', fetchError);
-        setError('Failed to fetch quit motivation');
-        return;
-      }
-
-      if (data) {
-        console.log('Quit motivation found:', data);
-        setMotivation({
-          quitReason: data.quit_reason,
-          personalGoals: data.personal_goals || [],
-          quitReasons: data.quit_reasons || [],
-        });
-      }
+      const success = await updateSettings({ quit_reason: quitReason });
+      return success;
     } catch (err) {
-      console.error('Error in useQuitMotivation:', err);
-      setError('Failed to fetch quit motivation');
-    } finally {
-      setLoading(false);
+      console.error('Error updating quit reason:', err);
+      return false;
     }
-  };
+  }, [updateSettings]);
+
+  const updatePersonalGoals = useCallback(async (personalGoals: string[]): Promise<boolean> => {
+    // Optimistic update
+    setMotivation(prev => prev ? { ...prev, personalGoals } : null);
+
+    try {
+      const success = await updateSettings({ personal_goals: personalGoals });
+      return success;
+    } catch (err) {
+      console.error('Error updating personal goals:', err);
+      return false;
+    }
+  }, [updateSettings]);
 
   return {
     motivation,
-    loading,
-    error,
-    refetch: fetchQuitMotivation,
+    loading: settingsLoading,
+    error: settingsError,
+    refetch: useCallback(() => {}, []), // No need for refetch since SettingsContext handles it
+    updateQuitReason,
+    updatePersonalGoals,
   };
 } 

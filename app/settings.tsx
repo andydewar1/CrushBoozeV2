@@ -27,10 +27,12 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
+import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/lib/supabase';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const CURRENCIES = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -67,10 +69,21 @@ const VAPE_TYPES: Array<{
 export default function SettingsScreen() {
   const router = useRouter();
   const { signOut, session } = useAuth();
-  const { data: profile, loading: profileLoading } = useUserProfile();
+  const { 
+    settings,
+    loading: settingsLoading,
+    updateSettings,
+    refetchSettings
+  } = useSettings();
   const { currency } = useMoneySaved();
-  const { quitDate, days } = useQuitTimer();
-  const { motivation, refetch: refetchMotivation } = useQuitMotivation();
+  const { quitDate, days, refetch: refetchTimer } = useQuitTimer();
+  const { 
+    motivation, 
+    refetch: refetchMotivation,
+    updateQuitReason,
+    updatePersonalGoals 
+  } = useQuitMotivation();
+  const { showSuccess, showError, showInfo } = useToast();
 
   // Edit states
   const [editingQuitDate, setEditingQuitDate] = useState(false);
@@ -96,7 +109,7 @@ export default function SettingsScreen() {
   const [tempUsagePatterns, setTempUsagePatterns] = useState<any[]>([]);
 
   const [tempPersonalGoals, setTempPersonalGoals] = useState<string[]>(motivation?.personalGoals || []);
-  const [tempDailyCost, setTempDailyCost] = useState(profile?.daily_cost?.toString() || '0');
+  const [tempDailyCost, setTempDailyCost] = useState(settings?.daily_cost?.toString() || '0');
   const [tempCurrentPassword, setTempCurrentPassword] = useState('');
   const [tempNewPassword, setTempNewPassword] = useState('');
   const [tempConfirmPassword, setTempConfirmPassword] = useState('');
@@ -109,15 +122,11 @@ export default function SettingsScreen() {
   // Current onboarding data
   const [currentVapeTypes, setCurrentVapeTypes] = useState<any[]>([]);
 
-  // Refresh data function
+  // Legacy refresh function - no longer needed with optimistic updates
   const refreshData = useCallback(async () => {
-    try {
-      await refetchMotivation();
-      // Force re-render by updating a dummy state or use a proper data fetching solution
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  }, [refetchMotivation]);
+    // This function is kept for compatibility but is no longer needed
+    // Optimistic updates handle state changes automatically
+  }, []);
 
   // Refresh data when profile changes
   useEffect(() => {
@@ -133,10 +142,10 @@ export default function SettingsScreen() {
     if (currency) {
       setTempCurrency(currency);
     }
-    if (profile?.daily_cost) {
-      setTempDailyCost(profile.daily_cost.toString());
+    if (settings?.daily_cost) {
+      setTempDailyCost(settings.daily_cost.toString());
     }
-  }, [motivation, quitDate, currency, profile]);
+  }, [motivation, quitDate, currency, settings]);
 
   // Load onboarding data
   useEffect(() => {
@@ -176,11 +185,11 @@ export default function SettingsScreen() {
           text: 'Sign Out',
           style: 'destructive',
           onPress: async () => {
-            try {
-              await signOut();
-              router.replace('/auth/login');
-            } catch (error) {
-              console.error('Error signing out:', error);
+    try {
+      await signOut();
+      router.replace('/auth/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
               Alert.alert('Error', 'Failed to sign out. Please try again.');
             }
           },
@@ -193,29 +202,37 @@ export default function SettingsScreen() {
     if (!session?.user?.id) return;
     
     setSaving(true);
+    const newQuitDate = tempQuitDate.toISOString();
+    
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          quit_date: tempQuitDate.toISOString(),
-          has_quit: true 
-        })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      const success = await updateSettings({
+        quit_date: newQuitDate,
+        has_quit: true
+      });
       
-      setEditingQuitDate(false);
-      setShowDatePicker(false);
-      
-      // Force page refresh to show updated data
-      setTimeout(() => {
-        router.replace('/settings');
-      }, 500);
-      
-      Alert.alert('Success', 'Quit date updated successfully!');
+      if (success) {
+        setEditingQuitDate(false);
+        setShowDatePicker(false);
+        showSuccess('Quit Date Updated', 'Your quit date has been updated successfully');
+        
+        // Force a refresh of all relevant data
+        await Promise.all([
+          refetchTimer(),
+          refetchMotivation()
+        ]);
+      } else {
+        throw new Error('Failed to update quit date');
+      }
     } catch (error) {
       console.error('Error updating quit date:', error);
-      Alert.alert('Error', 'Failed to update quit date. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update quit date. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveQuitDate()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -226,24 +243,26 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ quit_reason: tempPersonalWhy })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      const success = await updateSettings({
+        quit_reason: tempPersonalWhy
+      });
       
-      setEditingPersonalWhy(false);
-      
-      // Force page refresh to show updated data
-      setTimeout(() => {
-        router.replace('/settings');
-      }, 500);
-      
-      Alert.alert('Success', 'Personal reason updated successfully!');
+      if (success) {
+        setEditingPersonalWhy(false);
+        showSuccess('Personal Why Updated', 'Your personal reason has been updated successfully');
+      } else {
+        throw new Error('Failed to update personal reason');
+      }
     } catch (error) {
       console.error('Error updating personal why:', error);
-      Alert.alert('Error', 'Failed to update personal reason. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update personal reason. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSavePersonalWhy()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -258,24 +277,26 @@ export default function SettingsScreen() {
       const selectedCurrency = CURRENCIES.find(c => c.symbol === tempCurrency);
       const currencyCode = selectedCurrency ? selectedCurrency.code : 'USD';
       
-      const { error } = await supabase
-        .from('profiles')
-        .update({ currency: currencyCode })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      const success = await updateSettings({
+        currency: currencyCode
+      });
       
-      setEditingCurrency(false);
-      
-      // Force page refresh to show updated data
-      setTimeout(() => {
-        router.replace('/settings');
-      }, 500);
-      
-      Alert.alert('Success', 'Currency updated successfully!');
+      if (success) {
+        setEditingCurrency(false);
+        showSuccess('Currency Updated', 'Your currency has been updated successfully');
+      } else {
+        throw new Error('Failed to update currency');
+      }
     } catch (error) {
       console.error('Error updating currency:', error);
-      Alert.alert('Error', 'Failed to update currency. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update currency. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveCurrency()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -290,25 +311,26 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      // Ensure we're saving only the selected goal IDs, completely replacing the array
-      const { error } = await supabase
-        .from('profiles')
-        .update({ personal_goals: tempPersonalGoals })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      const success = await updateSettings({
+        personal_goals: tempPersonalGoals
+      });
       
-      setEditingPersonalGoals(false);
-      
-      // Force page refresh to show updated data
-      setTimeout(() => {
-        router.replace('/settings');
-      }, 500);
-      
-      Alert.alert('Success', 'Personal goals updated successfully!');
+      if (success) {
+        setEditingPersonalGoals(false);
+        showSuccess('Personal Goals Updated', 'Your personal goals have been updated successfully');
+      } else {
+        throw new Error('Failed to update personal goals');
+      }
     } catch (error) {
       console.error('Error updating personal goals:', error);
-      Alert.alert('Error', 'Failed to update personal goals. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update personal goals. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSavePersonalGoals()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -321,24 +343,26 @@ export default function SettingsScreen() {
     
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ daily_cost: cost })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
+      const success = await updateSettings({
+        daily_cost: cost
+      });
       
-      setEditingDailyCosts(false);
-      
-      // Force page refresh to show updated data
-      setTimeout(() => {
-        router.replace('/settings');
-      }, 500);
-      
-      Alert.alert('Success', 'Daily costs updated successfully!');
+      if (success) {
+        setEditingDailyCosts(false);
+        showSuccess('Daily Costs Updated', 'Your daily costs have been updated successfully');
+      } else {
+        throw new Error('Failed to update daily costs');
+      }
     } catch (error) {
       console.error('Error updating daily costs:', error);
-      Alert.alert('Error', 'Failed to update daily costs. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update daily costs. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveDailyCosts()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -346,17 +370,17 @@ export default function SettingsScreen() {
 
   const handleSavePassword = async () => {
     if (!tempNewPassword || !tempConfirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      showError('Validation Error', 'Please fill in all fields.');
       return;
     }
 
     if (tempNewPassword !== tempConfirmPassword) {
-      Alert.alert('Error', 'New passwords do not match.');
+      showError('Validation Error', 'New passwords do not match.');
       return;
     }
 
     if (tempNewPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters long.');
+      showError('Validation Error', 'Password must be at least 6 characters long.');
       return;
     }
 
@@ -372,10 +396,17 @@ export default function SettingsScreen() {
       setTempCurrentPassword('');
       setTempNewPassword('');
       setTempConfirmPassword('');
-      Alert.alert('Success', 'Password updated successfully!');
+      showSuccess('Password Updated', 'Your password has been updated successfully');
     } catch (error) {
       console.error('Error updating password:', error);
-      Alert.alert('Error', 'Failed to update password. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update password. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSavePassword()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -383,14 +414,14 @@ export default function SettingsScreen() {
 
   const handleSaveEmail = async () => {
     if (!tempNewEmail || !tempEmailPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      showError('Validation Error', 'Please fill in all fields.');
       return;
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(tempNewEmail)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      showError('Validation Error', 'Please enter a valid email address.');
       return;
     }
 
@@ -399,7 +430,7 @@ export default function SettingsScreen() {
       // First, verify the current password by attempting to sign in
       const currentEmail = session?.user?.email;
       if (!currentEmail) {
-        Alert.alert('Error', 'Could not verify current user.');
+        showError('Authentication Error', 'Could not verify current user.');
         return;
       }
 
@@ -410,7 +441,7 @@ export default function SettingsScreen() {
       });
 
       if (signInError) {
-        Alert.alert('Error', 'Incorrect password. Please try again.');
+        showError('Authentication Error', 'Incorrect password. Please try again.');
         return;
       }
 
@@ -425,15 +456,21 @@ export default function SettingsScreen() {
       setTempNewEmail('');
       setTempEmailPassword('');
       
-      Alert.alert(
+      showInfo(
         'Email Update Requested', 
-        'Please check both your old and new email addresses for confirmation links. You\'ll need to confirm the change from both emails.',
-        [{ text: 'OK' }]
+        'Please check both your old and new email addresses for confirmation links. You\'ll need to confirm the change from both emails.'
       );
 
     } catch (error) {
       console.error('Error updating email:', error);
-      Alert.alert('Error', 'Failed to update email. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update email. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveEmail()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -444,25 +481,27 @@ export default function SettingsScreen() {
   const handleSaveVapeTypes = async () => {
     setSaving(true);
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError || !userData.user) {
-        Alert.alert('Error', 'User not found');
-        return;
+      const success = await updateSettings({
+        vape_types: tempVapeTypes
+      });
+      
+      if (success) {
+        setCurrentVapeTypes(tempVapeTypes);
+        setEditingVapeTypes(false);
+        showSuccess('Vape Types Updated', 'Your vape types have been updated successfully');
+      } else {
+        throw new Error('Failed to update vape types');
       }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ vape_types: tempVapeTypes })
-        .eq('id', userData.user.id);
-
-      if (error) throw error;
-
-      setCurrentVapeTypes(tempVapeTypes);
-      setEditingVapeTypes(false);
-      await refreshData();
     } catch (error) {
       console.error('Error updating vape types:', error);
-      Alert.alert('Error', 'Failed to update vape types. Please try again.');
+      showError(
+        'Update Failed', 
+        'Failed to update vape types. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveVapeTypes()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -604,7 +643,7 @@ export default function SettingsScreen() {
       setSaving(true);
       const { data: userData, error } = await supabase.auth.getUser();
       if (error || !userData.user) {
-        Alert.alert('Error', 'Failed to get user data');
+        showError('Export Failed', 'Failed to get user data');
         return;
       }
 
@@ -653,10 +692,9 @@ export default function SettingsScreen() {
         });
       } else {
         // Fallback - show file location
-        Alert.alert(
+        showSuccess(
           'Export Complete',
-          `Your data has been exported successfully!\n\nFile saved to: ${filename}\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Financial Goals: ${financialGoalsResult.data?.length || 0}\n• Personal Goals: ${goalsResult.data?.length || 0}\n• Craving Logs: ${logsResult.data?.length || 0}`,
-          [{ text: 'OK' }]
+          `Your data has been exported successfully!\n\nFile saved to: ${filename}\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Financial Goals: ${financialGoalsResult.data?.length || 0}\n• Personal Goals: ${goalsResult.data?.length || 0}\n• Craving Logs: ${logsResult.data?.length || 0}`
         );
       }
 
@@ -664,7 +702,14 @@ export default function SettingsScreen() {
 
     } catch (error) {
       console.error('Export error:', error);
-      Alert.alert('Error', 'Failed to export data. Please try again.');
+      showError(
+        'Export Failed', 
+        'Failed to export data. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleExportData()
+        }
+      );
     } finally {
       setSaving(false);
     }
@@ -752,15 +797,15 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => router.back()}
-          >
-            <X size={20} color="#8E8E93" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <Text style={styles.title}>Settings</Text>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => router.back()}
+        >
+          <X size={20} color="#8E8E93" />
+        </TouchableOpacity>
+      </View>
 
         {/* Profile Overview */}
         <View style={styles.section}>
@@ -791,7 +836,7 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Quit Date</Text>
               <Text style={styles.settingValue}>{formatDate(quitDate)}</Text>
             </View>
-            <TouchableOpacity 
+      <TouchableOpacity
               style={styles.editButton}
               onPress={() => setEditingQuitDate(true)}
             >
@@ -895,13 +940,13 @@ export default function SettingsScreen() {
             <View style={styles.settingContent}>
               <Text style={styles.settingLabel}>Daily Spending</Text>
               <Text style={styles.settingValue}>
-                {currency}{profile?.daily_cost || '0'} per day
+                {currency}{settings?.daily_cost || '0'} per day
               </Text>
             </View>
             <TouchableOpacity 
               style={styles.editButton}
               onPress={() => {
-                setTempDailyCost(profile?.daily_cost?.toString() || '0');
+                setTempDailyCost(settings?.daily_cost?.toString() || '0');
                 setEditingDailyCosts(true);
               }}
             >
@@ -1000,12 +1045,12 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.signOutButton}
-            onPress={handleSignOut}
-          >
+        onPress={handleSignOut}
+      >
             <LogOut size={20} color="#FF3B30" />
             <Text style={styles.signOutText}>Sign Out</Text>
-          </TouchableOpacity>
-        </View>
+      </TouchableOpacity>
+    </View>
 
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />

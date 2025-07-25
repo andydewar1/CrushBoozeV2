@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { differenceInMinutes } from 'date-fns';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface MoneySaved {
   totalSaved: number;
@@ -23,7 +22,7 @@ const getCurrencySymbol = (currency: string): string => {
 };
 
 export function useMoneySaved(): MoneySaved {
-  const { session } = useAuth();
+  const { settings, loading: settingsLoading } = useSettings();
   const [moneySaved, setMoneySaved] = useState<MoneySaved>({
     totalSaved: 0,
     dailyRate: 0,
@@ -34,111 +33,57 @@ export function useMoneySaved(): MoneySaved {
   });
 
   useEffect(() => {
-    if (!session?.user?.id) {
-      setMoneySaved(prev => ({ ...prev, loading: false, error: 'No user session' }));
-      return;
-    }
-
-    let isMounted = true;
     let interval: ReturnType<typeof setInterval>;
 
-    const fetchSavingsData = async () => {
-      try {
-        console.log('Fetching savings data for user:', session.user.id);
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('quit_date, has_quit, daily_cost, currency')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching savings data:', error);
-          if (isMounted) {
-            setMoneySaved(prev => ({ 
-              ...prev, 
-              loading: false, 
-              error: `Failed to fetch savings data: ${error.message}` 
-            }));
-          }
-          return;
-        }
-
-        if (!data || !data.quit_date || !data.has_quit) {
-          console.log('No savings data found or user hasn\'t quit yet');
-          if (isMounted) {
-            setMoneySaved(prev => ({ 
-              ...prev, 
-              loading: false,
-              currency: getCurrencySymbol(data?.currency || 'USD'),
-              error: 'No quit data available'
-            }));
-          }
-          return;
-        }
-
-        const quitDate = new Date(data.quit_date);
-        const dailyCost = data.daily_cost || 0;
-        const currency = data.currency || 'USD';
-        const currencySymbol = getCurrencySymbol(currency);
-
-        console.log('Savings data found:', { quitDate, dailyCost, currency, hasQuit: data.has_quit });
-
-        if (isMounted) {
-          // Update savings calculation
-          const updateSavings = () => {
-            if (!isMounted) return;
-            
-            const now = new Date();
-            let totalSaved = 0;
-
-            if (data.has_quit && dailyCost > 0) {
-              // Calculate total minutes since quit
-              const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
-              // Calculate savings: (minutes since quit / minutes per day) * daily cost
-              totalSaved = (totalMinutes / (24 * 60)) * dailyCost;
-            }
-
-            const hourlyRate = dailyCost / 24;
-
-            setMoneySaved({
-              totalSaved: Math.max(0, totalSaved),
-              dailyRate: dailyCost,
-              hourlyRate,
-              currency: currencySymbol,
-              loading: false,
-              error: null
-            });
-          };
-
-          // Initial update
-          updateSavings();
-
-          // Update every minute for real-time precision
-          interval = setInterval(updateSavings, 60000);
-        }
-
-      } catch (error) {
-        console.error('Unexpected error fetching savings data:', error);
-        if (isMounted) {
-          setMoneySaved(prev => ({ 
-            ...prev, 
-            loading: false, 
-            error: error instanceof Error ? error.message : 'Unknown error' 
-          }));
-        }
+    const updateSavings = () => {
+      if (!settings?.quit_date || !settings.has_quit) {
+        setMoneySaved(prev => ({
+          ...prev,
+          loading: false,
+          currency: getCurrencySymbol(settings?.currency || 'USD'),
+          error: 'No quit data available'
+        }));
+        return;
       }
+
+      const quitDate = new Date(settings.quit_date);
+      const dailyCost = settings.daily_cost || 0;
+      const currencySymbol = getCurrencySymbol(settings.currency || 'USD');
+
+      const now = new Date();
+      let totalSaved = 0;
+
+      if (settings.has_quit && dailyCost > 0) {
+        // Calculate total minutes since quit
+        const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
+        // Calculate savings: (minutes since quit / minutes per day) * daily cost
+        totalSaved = (totalMinutes / (24 * 60)) * dailyCost;
+      }
+
+      const hourlyRate = dailyCost / 24;
+
+      setMoneySaved({
+        totalSaved: Math.max(0, totalSaved),
+        dailyRate: dailyCost,
+        hourlyRate,
+        currency: currencySymbol,
+        loading: false,
+        error: null
+      });
     };
 
-    fetchSavingsData();
+    // Initial update
+    updateSavings();
+
+    // Update every minute for real-time precision
+    interval = setInterval(updateSavings, 60000);
 
     return () => {
-      isMounted = false;
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [session?.user?.id]);
+  }, [settings]);
 
   return moneySaved;
 } 
