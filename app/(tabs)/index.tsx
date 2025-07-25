@@ -378,19 +378,7 @@ export default function HomeScreen() {
                 </View>
               )}
 
-              {/* Quit Reasons */}
-              {motivation.quitReasons.length > 0 && (
-                <View style={styles.reasonsContainer}>
-                  <Text style={styles.reasonsTitle}>Your Reasons</Text>
-                  <View style={styles.reasonsList}>
-                    {motivation.quitReasons.map((reason, index) => (
-                      <View key={index} style={styles.reasonItem}>
-                        <Text style={styles.reasonText}>• {reason}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
+
             </View>
           )}
         </View>
@@ -975,26 +963,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#FFFFFF',
   },
-  reasonsContainer: {
-    marginBottom: 8,
-  },
-  reasonsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1C1C1E',
-    marginBottom: 12,
-  },
-  reasonsList: {
-    gap: 8,
-  },
-  reasonItem: {
-    paddingVertical: 4,
-  },
-  reasonText: {
-    fontSize: 14,
-    color: '#1C1C1E',
-    lineHeight: 20,
-  },
+
   goalCard: {
     backgroundColor: '#F8FBFF',
     borderRadius: 12,

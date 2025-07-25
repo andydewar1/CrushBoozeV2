@@ -51,6 +51,19 @@ const PERSONAL_GOALS = [
   { id: 'stress', title: 'Reduce Stress' },
 ];
 
+type VapeTypeId = 'disposable' | 'pod' | 'liquid' | 'other';
+
+const VAPE_TYPES: Array<{
+  id: VapeTypeId;
+  title: string;
+  emoji: string;
+}> = [
+  { id: 'disposable', title: 'Disposable', emoji: '🔋' },
+  { id: 'pod', title: 'Pod System', emoji: '💨' },
+  { id: 'liquid', title: 'E-Liquid', emoji: '💧' },
+  { id: 'other', title: 'Other', emoji: '➕' },
+];
+
 export default function SettingsScreen() {
   const router = useRouter();
   const { signOut, session } = useAuth();
@@ -63,6 +76,8 @@ export default function SettingsScreen() {
   const [editingQuitDate, setEditingQuitDate] = useState(false);
   const [editingPersonalWhy, setEditingPersonalWhy] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(false);
+  const [editingVapeTypes, setEditingVapeTypes] = useState(false);
+  const [editingUsagePatterns, setEditingUsagePatterns] = useState(false);
 
   const [editingPersonalGoals, setEditingPersonalGoals] = useState(false);
   const [editingDailyCosts, setEditingDailyCosts] = useState(false);
@@ -77,6 +92,8 @@ export default function SettingsScreen() {
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
   const [tempPersonalWhy, setTempPersonalWhy] = useState(motivation?.quitReason || '');
   const [tempCurrency, setTempCurrency] = useState(currency || '$');
+  const [tempVapeTypes, setTempVapeTypes] = useState<any[]>([]);
+  const [tempUsagePatterns, setTempUsagePatterns] = useState<any[]>([]);
 
   const [tempPersonalGoals, setTempPersonalGoals] = useState<string[]>(motivation?.personalGoals || []);
   const [tempDailyCost, setTempDailyCost] = useState(profile?.daily_cost?.toString() || '0');
@@ -88,6 +105,9 @@ export default function SettingsScreen() {
   
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // Current onboarding data
+  const [currentVapeTypes, setCurrentVapeTypes] = useState<any[]>([]);
 
   // Refresh data function
   const refreshData = useCallback(async () => {
@@ -117,6 +137,34 @@ export default function SettingsScreen() {
       setTempDailyCost(profile.daily_cost.toString());
     }
   }, [motivation, quitDate, currency, profile]);
+
+  // Load onboarding data
+  useEffect(() => {
+    const loadOnboardingData = async () => {
+      try {
+        const { data: userData, error } = await supabase.auth.getUser();
+        if (error || !userData.user) return;
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('quit_reasons, vape_types')
+          .eq('id', userData.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error loading onboarding data:', profileError);
+          return;
+        }
+
+        setCurrentVapeTypes(profileData?.vape_types || []);
+        setTempVapeTypes(profileData?.vape_types || []);
+      } catch (error) {
+        console.error('Error loading onboarding data:', error);
+      }
+    };
+
+    loadOnboardingData();
+  }, [session]);
 
   const handleSignOut = async () => {
     Alert.alert(
@@ -389,6 +437,57 @@ export default function SettingsScreen() {
     } finally {
       setSaving(false);
     }
+  };
+
+
+
+  const handleSaveVapeTypes = async () => {
+    setSaving(true);
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        Alert.alert('Error', 'User not found');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ vape_types: tempVapeTypes })
+        .eq('id', userData.user.id);
+
+      if (error) throw error;
+
+      setCurrentVapeTypes(tempVapeTypes);
+      setEditingVapeTypes(false);
+      await refreshData();
+    } catch (error) {
+      console.error('Error updating vape types:', error);
+      Alert.alert('Error', 'Failed to update vape types. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+
+  const toggleVapeType = (typeId: VapeTypeId) => {
+    const newTypes = [...tempVapeTypes];
+    const existingIndex = newTypes.findIndex(vt => vt.type === typeId);
+    
+    if (existingIndex > -1) {
+      // Remove this vape type
+      newTypes.splice(existingIndex, 1);
+    } else {
+      // Add this vape type with default values
+      newTypes.push({
+        type: typeId,
+        quantity: 1,
+        frequency: 'day',
+        unitCost: 0,
+        otherText: typeId === 'other' ? '' : undefined
+      });
+    }
+    setTempVapeTypes(newTypes);
   };
 
   const handleDeleteAccount = async () => {
@@ -748,6 +847,36 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
+
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Vape Types</Text>
+              <Text style={styles.settingValue} numberOfLines={2}>
+                {currentVapeTypes.length ? 
+                  currentVapeTypes
+                    .map(vt => {
+                      if (vt.type === 'other' && vt.otherText) {
+                        return vt.otherText;
+                      }
+                      const typeObj = VAPE_TYPES.find(t => t.id === vt.type);
+                      return typeObj ? typeObj.title : vt.type;
+                    })
+                    .join(', ') :
+                  'Add vape types'}
+              </Text>
+            </View>
+            <TouchableOpacity 
+              style={styles.editButton}
+              onPress={() => {
+                setTempVapeTypes([...currentVapeTypes]);
+                setEditingVapeTypes(true);
+              }}
+            >
+              <Edit3 size={16} color="#35998d" />
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.settingItem}>
             <View style={styles.settingContent}>
               <Text style={styles.settingLabel}>Currency</Text>
@@ -1099,6 +1228,75 @@ export default function SettingsScreen() {
                   style={[styles.modalButton, styles.saveButton]} 
                   onPress={handleSavePersonalGoals}
                   disabled={saving || tempPersonalGoals.length === 0}
+                >
+                  <Check size={16} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+
+
+      {/* Edit Vape Types Modal */}
+      <Modal
+        visible={editingVapeTypes}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setEditingVapeTypes(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Vape Types</Text>
+                <TouchableOpacity onPress={() => setEditingVapeTypes(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.vapeTypesGrid}>
+                {VAPE_TYPES.map((type) => (
+                  <TouchableOpacity
+                    key={type.id}
+                    style={[
+                      styles.vapeTypeCard,
+                      tempVapeTypes.some(vt => vt.type === type.id) && styles.vapeTypeCardSelected,
+                    ]}
+                    onPress={() => toggleVapeType(type.id)}
+                  >
+                    <Text style={styles.vapeTypeEmoji}>{type.emoji}</Text>
+                    <Text style={[
+                      styles.vapeTypeLabel,
+                      tempVapeTypes.some(vt => vt.type === type.id) && styles.vapeTypeLabelSelected,
+                    ]}>
+                      {type.title}
+                    </Text>
+                    {tempVapeTypes.some(vt => vt.type === type.id) && (
+                      <View style={styles.vapeTypeCheck}>
+                        <Check size={12} color="#FFFFFF" />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={() => setEditingVapeTypes(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.saveButton]} 
+                  onPress={handleSaveVapeTypes}
+                  disabled={saving || tempVapeTypes.length === 0}
                 >
                   <Check size={16} color="#FFFFFF" />
                   <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
@@ -1959,5 +2157,74 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#FF3B30',
+  },
+  selectionButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E1E3E6',
+  },
+  selectionButtonSelected: {
+    backgroundColor: '#35998d',
+    borderColor: '#35998d',
+  },
+  selectionButtonText: {
+    fontSize: 16,
+    color: '#1C1C1E',
+    fontWeight: '500',
+  },
+  selectionButtonTextSelected: {
+    color: '#FFFFFF',
+  },
+  vapeTypesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  vapeTypeCard: {
+    width: '48%',
+    aspectRatio: 1,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E1E3E6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    position: 'relative',
+  },
+  vapeTypeCardSelected: {
+    backgroundColor: '#35998d',
+    borderColor: '#35998d',
+  },
+  vapeTypeEmoji: {
+    fontSize: 32,
+    marginBottom: 8,
+  },
+  vapeTypeLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1C1C1E',
+    textAlign: 'center',
+  },
+  vapeTypeLabelSelected: {
+    color: '#FFFFFF',
+  },
+  vapeTypeCheck: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 20,
+    height: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 
