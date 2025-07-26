@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { saveOnboardingData } from '@/lib/onboarding';
 import { useToast } from '@/contexts/ToastContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { useState } from 'react';
@@ -15,6 +16,7 @@ export default function SummaryScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const toast = useToast();
+  const { refetchProfile } = useSettings();
   const [isSaving, setIsSaving] = useState(false);
 
   // Safety check for incomplete onboarding data
@@ -59,12 +61,14 @@ export default function SummaryScreen() {
       const result = await saveOnboardingData(user.id, data);
       
       if (result.success) {
+        // Force refresh the settings context so homepage gets fresh data
+        await refetchProfile();
         toast.showSuccess('Welcome!', 'Your quit journey starts now!');
+        router.replace('/(tabs)');
       } else {
         toast.showError('Error', result.error || 'Failed to save data');
+        router.replace('/(tabs)');
       }
-      
-      router.replace('/(tabs)');
     } catch (error) {
       toast.showError('Error', 'Something went wrong');
       router.replace('/(tabs)');

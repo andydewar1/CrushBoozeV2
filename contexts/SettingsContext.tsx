@@ -124,13 +124,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: updateError.message };
       }
 
-      // Update local state
+      // Update local state immediately
       setProfile(prev => prev ? { ...prev, ...updates } : null);
 
       // Show success message
       toast.showSuccess('Settings Updated', 'Your changes have been saved');
 
-      // Refetch to ensure we have the latest data
+      // Force refetch to ensure we have the latest data
       await fetchProfile();
 
       return { success: true };

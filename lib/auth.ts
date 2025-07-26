@@ -34,13 +34,37 @@ export async function signUp(email: string, password: string): Promise<AuthResul
   try {
     console.log('🔐 Starting signup for:', email);
 
-    const { data, error } = await supabase.auth.signUp({
+    // Add network timeout
+    const signUpPromise = supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password: password.trim(),
     });
 
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Network request timeout - please check your internet connection'));
+      }, 15000); // 15 second timeout
+    });
+
+    const { data, error } = await Promise.race([signUpPromise, timeoutPromise]);
+
     if (error) {
       console.error('❌ Signup error:', error);
+      
+      // Provide more specific error messages
+      if (error.message.includes('fetch')) {
+        return { success: false, error: 'Network error - please check your internet connection and try again' };
+      }
+      if (error.message.includes('User already registered')) {
+        return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
+      }
+      if (error.message.includes('Password')) {
+        return { success: false, error: 'Password must be at least 6 characters long' };
+      }
+      if (error.message.includes('Email')) {
+        return { success: false, error: 'Please enter a valid email address' };
+      }
+      
       return { success: false, error: error.message };
     }
 
@@ -59,9 +83,21 @@ export async function signUp(email: string, password: string): Promise<AuthResul
 
   } catch (error) {
     console.error('❌ Signup error:', error);
+    
+    // Handle network-specific errors
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        return { success: false, error: 'Request timed out - please check your internet connection and try again' };
+      }
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        return { success: false, error: 'Network error - please check your internet connection and try again' };
+      }
+      return { success: false, error: error.message };
+    }
+    
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Signup failed'
+      error: 'Signup failed - please try again'
     };
   }
 }

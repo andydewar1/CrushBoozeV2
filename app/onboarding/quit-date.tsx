@@ -36,14 +36,19 @@ export default function QuitDateScreen() {
 
   const toggleHasQuit = (value: boolean) => {
     updateData({ hasQuit: value });
-    // Update the date constraints based on the toggle
-    const newDate = new Date();
+    
+    // Only update the date constraints, don't change the selected date
+    // The user should keep their chosen date regardless of the toggle
     if (!value) {
-      // If not quit yet, set date to tomorrow
-      newDate.setDate(newDate.getDate() + 1);
+      // If planning to quit in future, ensure date isn't in the past
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      if (selectedDate < tomorrow) {
+        setSelectedDate(tomorrow);
+        updateData({ quitDate: tomorrow });
+      }
     }
-    setSelectedDate(newDate);
-    updateData({ quitDate: newDate });
+    // If already quit (value = true), keep whatever date they selected
   };
 
   const formatDateTime = (date: Date) => {
@@ -80,7 +85,7 @@ export default function QuitDateScreen() {
             display="inline"
             onChange={handleDateChange}
             maximumDate={data.hasQuit ? new Date() : undefined}
-            minimumDate={data.hasQuit ? undefined : new Date()}
+            minimumDate={!data.hasQuit ? new Date() : undefined}
             textColor="#FFFFFF"
             accentColor="#FFFFFF"
             themeVariant="dark"
@@ -164,6 +169,9 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   dateContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    width: '100%',
     marginBottom: 24,
   },
   timeSection: {
@@ -220,7 +228,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#FFFFFF',
     fontWeight: '700',
-    textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   timeText: {

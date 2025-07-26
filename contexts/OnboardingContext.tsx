@@ -61,14 +61,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         financialGoal: { ...prev.financialGoal }
       };
 
-      // Handle quit date update
+      // Handle hasQuit update
       if (newData.hasQuit !== undefined) {
         updatedData.hasQuit = newData.hasQuit;
-        if (newData.quitDate) {
-          updatedData.quitDate = newData.quitDate;
-        } else if (!updatedData.quitDate) {
-          updatedData.quitDate = new Date();
-        }
+      }
+
+      // Handle quitDate update independently
+      if (newData.quitDate) {
+        updatedData.quitDate = newData.quitDate;
       }
 
       // Handle arrays with proper validation
@@ -107,13 +107,6 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       if (typeof newData.currency === 'string') {
         updatedData.currency = newData.currency;
       }
-
-      // Log state updates for debugging
-      console.log('Onboarding state update:', {
-        previous: prev,
-        updates: newData,
-        result: updatedData
-      });
 
       return updatedData;
     });

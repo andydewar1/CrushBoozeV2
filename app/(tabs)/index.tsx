@@ -25,8 +25,6 @@ export default function HomeScreen() {
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
-
-
   // Show loading state if any data is loading - temporarily disabled
   // if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
   //   return (

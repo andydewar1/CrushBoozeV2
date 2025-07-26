@@ -74,8 +74,6 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
 
     // Also create the financial goal in the financial_goals table so it shows up on the goals page
     if (data.financialGoal.description && data.financialGoal.amount > 0) {
-      console.log('💰 Creating financial goal in financial_goals table...');
-      
       // Check if this goal already exists to avoid duplicates
       const { data: existingGoal } = await supabase
         .from('financial_goals')
@@ -100,11 +98,7 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
         if (goalError) {
           console.error('⚠️ Warning: Failed to create financial goal:', goalError);
           // Don't fail the entire onboarding if goal creation fails
-        } else {
-          console.log('✅ Financial goal created successfully');
         }
-      } else {
-        console.log('ℹ️ Financial goal already exists, skipping creation');
       }
     }
 
