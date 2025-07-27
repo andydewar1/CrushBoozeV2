@@ -52,12 +52,17 @@ export default function HomeScreen() {
   // }
 
   // Show loading or error state for timer
-  const displayDays = (timerLoading || timerError) ? 0 : days;
-  const displayHours = (timerLoading || timerError) ? 0 : hours;
-  const displayMinutes = (timerLoading || timerError) ? 0 : minutes;
+  const displayDays = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : days;
+  const displayHours = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : hours;
+  const displayMinutes = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : minutes;
   const displayText = timerLoading ? 'Loading your progress...' 
-    : timerError ? 'Complete onboarding to start tracking' 
-    : 'days strong';
+    : timerError 
+      ? timerError === 'No quit date set' 
+        ? 'Complete onboarding to start tracking'
+        : timerError === 'future_quit_date'
+        ? 'days until quit'
+        : 'Set your quit date to begin'
+      : 'days strong';
 
   // Show loading or error state for savings
   const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
@@ -125,12 +130,22 @@ export default function HomeScreen() {
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>🫁</Text>
-              <Text style={styles.statValue}>{Math.min(Math.floor(displayDays * 1.5), 100)}%</Text>
+              <Text style={styles.statValue}>
+                {displayDays === 0 
+                  ? '0%' 
+                  : `${Math.min(Math.floor(displayDays * 0.3), 100)}%`
+                }
+              </Text>
               <Text style={styles.statLabel}>Lung Recovery</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>❤️</Text>
-              <Text style={styles.statValue}>{Math.min(Math.floor(displayDays * 2), 100)}%</Text>
+              <Text style={styles.statValue}>
+                {displayDays === 0 
+                  ? '0%' 
+                  : `${Math.min(Math.floor(displayDays * 0.4), 100)}%`
+                }
+              </Text>
               <Text style={styles.statLabel}>Circulation</Text>
             </View>
           </View>
@@ -160,7 +175,11 @@ export default function HomeScreen() {
             <Text style={styles.motivationEmoji}>💰</Text>
             <Text style={styles.motivationText}>
               {savingsError 
-                ? 'Complete onboarding to track savings!' 
+                ? savingsError === 'future_quit_date'
+                  ? quitDate 
+                    ? `Savings begin on ${format(quitDate, 'MMMM d, yyyy')}!`
+                    : 'Savings will start when you quit!'
+                  : 'Complete onboarding to track savings!' 
                 : displayTotalSaved > 0 
                   ? 'Every minute counts! Keep it up!' 
                   : 'Your savings will start growing once you quit!'
@@ -184,8 +203,20 @@ export default function HomeScreen() {
             </View>
           ) : achievementsError ? (
             <View style={styles.achievementInfo}>
-              <Text style={styles.achievementName}>Complete onboarding</Text>
-              <Text style={styles.achievementDescription}>Set your quit date to track progress</Text>
+              <Text style={styles.achievementName}>
+                {achievementsError === 'future_quit_date' 
+                  ? 'Achievements coming soon' 
+                  : 'Complete onboarding'
+                }
+              </Text>
+              <Text style={styles.achievementDescription}>
+                {achievementsError === 'future_quit_date'
+                  ? quitDate 
+                    ? `Your journey begins ${format(quitDate, 'MMMM d, yyyy')}`
+                    : 'Your achievements will unlock when you quit'
+                  : 'Set your quit date to track progress'
+                }
+              </Text>
             </View>
           ) : (
             <>
@@ -643,6 +674,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#35998d',
     fontWeight: '500',
+    flex: 1,
   },
   achievementInfo: {
     marginBottom: 12,

@@ -42,7 +42,14 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       return sum + (type.frequency === 'week' ? cost / 7 : cost);
     }, 0);
 
-    // Simple profile data
+    // Check if profile already exists
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id, created_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    // Prepare profile data
     const profileData = {
       id: userId,
       quit_date: data.quitDate.toISOString(),
@@ -56,49 +63,62 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       financial_goal_description: data.financialGoal.description,
       financial_goal_amount: data.financialGoal.amount,
       onboarding_completed: true,
-      created_at: new Date().toISOString(),
+      created_at: existingProfile?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    // Just save it - use upsert to handle create or update
+    console.log('💾 Profile data prepared:', { userId, hasExisting: !!existingProfile });
+
+    // Use upsert to handle create or update
     const { data: savedProfile, error } = await supabase
       .from('profiles')
-      .upsert(profileData)
+      .upsert(profileData, { onConflict: 'id' })
       .select()
       .single();
 
     if (error) {
-      console.error('❌ Save failed:', error);
-      return { success: false, error: error.message };
+      console.error('❌ Profile save failed:', error);
+      return { success: false, error: `Profile save failed: ${error.message}` };
     }
 
     // Also create the financial goal in the financial_goals table so it shows up on the goals page
     if (data.financialGoal.description && data.financialGoal.amount > 0) {
-      // Check if this goal already exists to avoid duplicates
-      const { data: existingGoal } = await supabase
-        .from('financial_goals')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('description', data.financialGoal.description)
-        .eq('target_amount', data.financialGoal.amount)
-        .maybeSingle();
-
-      if (!existingGoal) {
-        const { error: goalError } = await supabase
+      console.log('💰 Creating financial goal:', data.financialGoal);
+      
+      try {
+        // Check if this goal already exists to avoid duplicates
+        const { data: existingGoal } = await supabase
           .from('financial_goals')
-          .insert({
-            user_id: userId,
-            name: data.financialGoal.description,
-            target_amount: data.financialGoal.amount,
-            description: data.financialGoal.description,
-            is_primary: true, // Mark onboarding goal as primary
-            baseline_amount: 0,
-          });
+          .select('id')
+          .eq('user_id', userId)
+          .eq('description', data.financialGoal.description)
+          .eq('target_amount', data.financialGoal.amount)
+          .maybeSingle();
 
-        if (goalError) {
-          console.error('⚠️ Warning: Failed to create financial goal:', goalError);
-          // Don't fail the entire onboarding if goal creation fails
+        if (!existingGoal) {
+          const { error: goalError } = await supabase
+            .from('financial_goals')
+            .insert({
+              user_id: userId,
+              name: data.financialGoal.description,
+              target_amount: data.financialGoal.amount,
+              description: data.financialGoal.description,
+              is_primary: true, // Mark onboarding goal as primary
+              baseline_amount: 0,
+            });
+
+          if (goalError) {
+            console.error('⚠️ Warning: Failed to create financial goal:', goalError);
+            // Don't fail the entire onboarding if goal creation fails
+          } else {
+            console.log('✅ Financial goal created successfully');
+          }
+        } else {
+          console.log('ℹ️ Financial goal already exists, skipping creation');
         }
+      } catch (goalError) {
+        console.error('⚠️ Error handling financial goal:', goalError);
+        // Don't fail the entire onboarding if goal creation fails
       }
     }
 

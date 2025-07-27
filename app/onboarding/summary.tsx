@@ -54,23 +54,34 @@ export default function SummaryScreen() {
   };
 
   const handleGetStarted = async () => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ No user found when trying to save onboarding data');
+      toast.showError('Error', 'Please log in again');
+      return;
+    }
     
+    console.log('💾 Starting onboarding save process for user:', user.id);
     setIsSaving(true);
+    
     try {
       const result = await saveOnboardingData(user.id, data);
       
       if (result.success) {
+        console.log('✅ Onboarding data saved successfully');
         // Force refresh the settings context so homepage gets fresh data
         await refetchProfile();
         toast.showSuccess('Welcome!', 'Your quit journey starts now!');
         router.replace('/(tabs)');
       } else {
-        toast.showError('Error', result.error || 'Failed to save data');
+        console.error('❌ Failed to save onboarding data:', result.error);
+        // Still redirect to tabs even if save fails, as the user can update data later
+        toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
         router.replace('/(tabs)');
       }
     } catch (error) {
-      toast.showError('Error', 'Something went wrong');
+      console.error('❌ Unexpected error during onboarding save:', error);
+      // Still redirect to tabs to avoid user getting stuck
+      toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
       router.replace('/(tabs)');
     } finally {
       setIsSaving(false);

@@ -3,14 +3,31 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useEffect } from 'react';
 
 export default function LandingScreen() {
   const router = useRouter();
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
+  const { profile, loading: profileLoading } = useSettings();
+
+  // Redirect authenticated users who have completed onboarding
+  useEffect(() => {
+    if (!authLoading && !profileLoading && session && profile) {
+      // User is authenticated and has a profile (completed onboarding)
+      router.replace('/(tabs)');
+    }
+  }, [session, profile, authLoading, profileLoading, router]);
 
   const handleGetStarted = () => {
     if (session) {
-      router.replace('/(tabs)');
+      if (profile) {
+        // User has completed onboarding
+        router.replace('/(tabs)');
+      } else {
+        // User is authenticated but hasn't completed onboarding
+        router.push('/onboarding/quit-date');
+      }
     } else {
       router.push('/auth/signup');
     }

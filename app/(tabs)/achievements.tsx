@@ -66,8 +66,18 @@ export default function AchievementsScreen() {
             </View>
           ) : error ? (
             <View style={styles.achievementInfo}>
-              <Text style={styles.achievementName}>Complete onboarding</Text>
-              <Text style={styles.achievementDescription}>Set your quit date to track progress</Text>
+              <Text style={styles.achievementName}>
+                {error === 'future_quit_date' 
+                  ? 'Achievements coming soon' 
+                  : 'Complete onboarding'
+                }
+              </Text>
+              <Text style={styles.achievementDescription}>
+                {error === 'future_quit_date'
+                  ? 'Your achievements will unlock when you quit'
+                  : 'Set your quit date to track progress'
+                }
+              </Text>
             </View>
           ) : (
             <>
@@ -152,7 +162,12 @@ export default function AchievementsScreen() {
             </View>
           ) : error ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.errorText}>Complete onboarding to see achievements</Text>
+              <Text style={styles.errorText}>
+                {error === 'future_quit_date'
+                  ? 'Achievements will unlock when you quit'
+                  : 'Complete onboarding to see achievements'
+                }
+              </Text>
             </View>
           ) : (
             <View style={styles.milestonesGrid}>

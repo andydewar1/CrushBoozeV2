@@ -36,7 +36,7 @@ export function useMoneySaved(): MoneySaved {
     let interval: ReturnType<typeof setInterval>;
 
     const updateSavings = () => {
-      if (!settings?.quit_date || !settings.has_quit) {
+      if (!settings?.quit_date) {
         setMoneySaved(prev => ({
           ...prev,
           loading: settingsLoading,
@@ -44,6 +44,26 @@ export function useMoneySaved(): MoneySaved {
           error: settingsLoading ? null : 'No quit data available'
         }));
         return;
+      }
+
+      // Handle future quit dates
+      if (!settings.has_quit) {
+        const quitDate = new Date(settings.quit_date);
+        const now = new Date();
+        
+        if (quitDate > now) {
+          // Quit date is in the future
+          setMoneySaved(prev => ({
+            ...prev,
+            totalSaved: 0,
+            dailyRate: settings.daily_cost || 0,
+            hourlyRate: (settings.daily_cost || 0) / 24,
+            currency: getCurrencySymbol(settings.currency || 'USD'),
+            loading: false,
+            error: 'future_quit_date' // Special error type for future dates
+          }));
+          return;
+        }
       }
 
       const quitDate = new Date(settings.quit_date);

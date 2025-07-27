@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import { 
   X, 
   User, 
@@ -118,6 +119,7 @@ export default function SettingsScreen() {
   
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   
   // Current onboarding data
   const [currentVapeTypes, setCurrentVapeTypes] = useState<any[]>([]);
@@ -204,16 +206,26 @@ export default function SettingsScreen() {
     setSaving(true);
     const newQuitDate = tempQuitDate.toISOString();
     
+    // Determine if user has already quit based on selected date
+    const now = new Date();
+    const hasQuit = tempQuitDate <= now;
+    
     try {
       const { success, error } = await updateProfile({
         quit_date: newQuitDate,
-        has_quit: true
+        has_quit: hasQuit
       });
       
       if (success) {
         setEditingQuitDate(false);
         setShowDatePicker(false);
-        showSuccess('Quit Date Updated', 'Your quit date has been updated successfully');
+        setShowTimePicker(false);
+        showSuccess(
+          'Quit Date Updated', 
+          hasQuit 
+            ? 'Your quit date has been updated successfully'
+            : `Your quit date is set for ${tempQuitDate.toLocaleDateString()}. Good luck!`
+        );
         
         // Force a refresh of all relevant data
         await Promise.all([
@@ -779,7 +791,28 @@ export default function SettingsScreen() {
       setShowDatePicker(false);
     }
     if (selectedDate) {
-      setTempQuitDate(selectedDate);
+      // Keep the existing time when changing date
+      const newDate = new Date(selectedDate);
+      newDate.setHours(tempQuitDate.getHours());
+      newDate.setMinutes(tempQuitDate.getMinutes());
+      setTempQuitDate(newDate);
+    }
+  };
+
+  const handleTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
+    console.log('Time change event:', { event, selectedTime, currentTemp: tempQuitDate });
+    
+    if (selectedTime) {
+      // Create completely new date object to avoid any reference issues
+      const year = tempQuitDate.getFullYear();
+      const month = tempQuitDate.getMonth();
+      const day = tempQuitDate.getDate();
+      const hours = selectedTime.getHours();
+      const minutes = selectedTime.getMinutes();
+      
+      const newDateTime = new Date(year, month, day, hours, minutes, 0, 0);
+      console.log('Setting new time:', newDateTime);
+      setTempQuitDate(newDateTime);
     }
   };
 
@@ -836,9 +869,12 @@ export default function SettingsScreen() {
               <Text style={styles.settingLabel}>Quit Date</Text>
               <Text style={styles.settingValue}>{formatDate(quitDate)}</Text>
             </View>
-      <TouchableOpacity
+                  <TouchableOpacity
               style={styles.editButton}
-              onPress={() => setEditingQuitDate(true)}
+              onPress={() => {
+                setTempQuitDate(quitDate || new Date());
+                setEditingQuitDate(true);
+              }}
             >
               <Edit3 size={16} color="#35998d" />
             </TouchableOpacity>
@@ -1080,7 +1116,9 @@ export default function SettingsScreen() {
                 <Text style={styles.dateLabel}>Current Quit Date</Text>
                 <View style={styles.currentDateDisplay}>
                   <Calendar size={20} color="#35998d" />
-                  <Text style={styles.currentDateText}>{formatDate(tempQuitDate)}</Text>
+                  <Text style={styles.currentDateText}>
+                    {format(tempQuitDate, 'MMMM d, yyyy')} at {format(tempQuitDate, 'h:mm a')}
+                  </Text>
                 </View>
                 
                 <Text style={styles.dateInstructions}>Select a new date:</Text>
@@ -1089,9 +1127,56 @@ export default function SettingsScreen() {
                   mode="date"
                   display={Platform.OS === 'ios' ? 'compact' : 'default'}
                   onChange={handleDateChange}
-                  maximumDate={new Date()}
+                  minimumDate={new Date(2020, 0, 1)} // Allow dates from 2020 onwards
+                  maximumDate={new Date(2030, 11, 31)} // Allow dates up to 2030
                   style={styles.datePicker}
                 />
+
+                                <Text style={styles.dateInstructions}>Select a time:</Text>
+                
+                {/* Current time display */}
+                <View style={styles.currentTimeDisplay}>
+                  <Text style={styles.currentTimeText}>
+                    Current time: {format(tempQuitDate, 'h:mm a')}
+                  </Text>
+                </View>
+                
+                {/* Time picker - try multiple approaches */}
+                {Platform.OS === 'ios' ? (
+                  <View>
+                    <DateTimePicker
+                      value={tempQuitDate}
+                      mode="time"
+                      display="spinner"
+                      onChange={handleTimeChange}
+                      style={styles.timePicker}
+                      minuteInterval={1}
+                      textColor="#1C1C1E"
+                    />
+                  </View>
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.androidTimeButton}
+                    onPress={() => setShowTimePicker(true)}
+                  >
+                    <Text style={styles.androidTimeButtonText}>
+                      {format(tempQuitDate, 'h:mm a')} - Tap to change
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                
+                {/* Android time picker modal */}
+                {showTimePicker && Platform.OS === 'android' && (
+                  <DateTimePicker
+                    value={tempQuitDate}
+                    mode="time"
+                    is24Hour={false}
+                    onChange={(event, time) => {
+                      setShowTimePicker(false);
+                      handleTimeChange(event, time);
+                    }}
+                  />
+                )}
               </View>
               
               <View style={styles.modalButtons}>
@@ -2010,6 +2095,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#35998d',
     marginLeft: 8,
+    fontWeight: '500',
+  },
+  timeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    justifyContent: 'center',
+  },
+  timeButtonText: {
+    fontSize: 16,
+    color: '#35998d',
+    fontWeight: '500',
+  },
+  currentTimeDisplay: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    alignItems: 'center',
+  },
+  currentTimeText: {
+    fontSize: 16,
+    color: '#1C1C1E',
+    fontWeight: '600',
+  },
+  timePicker: {
+    height: 120,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+  },
+  androidTimeButton: {
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    alignItems: 'center',
+  },
+  androidTimeButtonText: {
+    fontSize: 16,
+    color: '#35998d',
     fontWeight: '500',
   },
   textInput: {

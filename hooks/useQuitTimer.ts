@@ -42,6 +42,7 @@ export function useQuitTimer(): QuitTimer {
       let days = 0;
       let hours = 0;
       let minutes = 0;
+      let error = null;
 
       if (settings.has_quit) {
         // User has already quit, calculate time since quit date
@@ -50,6 +51,24 @@ export function useQuitTimer(): QuitTimer {
         hours = totalHours % 24;
         const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
         minutes = totalMinutes % 60;
+      } else {
+        // Check if quit date is in the future
+        if (quitDate > now) {
+          // Future quit date - show countdown to quit date
+          days = Math.max(0, differenceInDays(quitDate, now));
+          const totalHours = Math.max(0, differenceInHours(quitDate, now));
+          hours = totalHours % 24;
+          const totalMinutes = Math.max(0, differenceInMinutes(quitDate, now));
+          minutes = totalMinutes % 60;
+          error = 'future_quit_date';
+        } else {
+          // Past quit date but has_quit is false - should probably be corrected
+          days = Math.max(0, differenceInDays(now, quitDate));
+          const totalHours = Math.max(0, differenceInHours(now, quitDate));
+          hours = totalHours % 24;
+          const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
+          minutes = totalMinutes % 60;
+        }
       }
 
       setTimer(prev => ({
@@ -59,7 +78,7 @@ export function useQuitTimer(): QuitTimer {
         minutes,
         quitDate,
         loading: false,
-        error: null
+        error
       }));
     };
 

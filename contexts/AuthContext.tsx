@@ -96,14 +96,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Simple navigation - let individual screens handle onboarding checks
+  // Navigation logic - handle auth state and onboarding
   useEffect(() => {
     if (loading) return;
 
     const inAuthGroup = segments[0] === 'auth';
+    const inOnboardingGroup = segments[0] === 'onboarding';
+    const inTabsGroup = segments[0] === '(tabs)';
+    const isLandingPage = segments[0] === undefined;
 
-    if (!user && !inAuthGroup && segments[0] !== undefined) {
-      router.replace('/auth/login');
+    // If not authenticated and trying to access protected routes
+    if (!user && !inAuthGroup && !isLandingPage) {
+      router.replace('/');
     }
   }, [user, loading, segments, router]);
 
