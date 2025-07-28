@@ -1,14 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import OnboardingScreen from '@/components/OnboardingScreen';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useSettings } from '@/contexts/SettingsContext';
 
 export default function QuitDateScreen() {
   const { data, updateData } = useOnboarding();
+  const { profile } = useSettings();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(data.quitDate || new Date());
+
+  // ALWAYS sync onboarding context with latest saved profile data
+  useEffect(() => {
+    if (profile?.quit_date) {
+      const savedDate = new Date(profile.quit_date);
+      // Only update if the saved date is different from current context data
+      const currentContextTime = data.quitDate?.getTime();
+      const savedTime = savedDate.getTime();
+      
+      if (currentContextTime !== savedTime) {
+        console.log('Syncing onboarding context with saved profile data:', savedDate);
+        setSelectedDate(savedDate);
+        updateData({ 
+          quitDate: savedDate,
+          hasQuit: profile.has_quit || false 
+        });
+      }
+    }
+  }, [profile?.quit_date, profile?.has_quit, updateData]);
+
+  // Sync local selectedDate state with context data
+  useEffect(() => {
+    if (data.quitDate && data.quitDate.getTime() !== selectedDate.getTime()) {
+      console.log('Syncing local state with context data:', data.quitDate);
+      setSelectedDate(new Date(data.quitDate));
+    }
+  }, [data.quitDate?.getTime()]);
 
   const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
     if (date) {
@@ -44,8 +73,12 @@ export default function QuitDateScreen() {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       if (selectedDate < tomorrow) {
-        setSelectedDate(tomorrow);
-        updateData({ quitDate: tomorrow });
+        const newDate = new Date(tomorrow);
+        // Keep the same time
+        newDate.setHours(selectedDate.getHours());
+        newDate.setMinutes(selectedDate.getMinutes());
+        setSelectedDate(newDate);
+        updateData({ quitDate: newDate });
       }
     }
     // If already quit (value = true), keep whatever date they selected
@@ -80,6 +113,7 @@ export default function QuitDateScreen() {
 
         <View style={styles.dateContainer}>
           <DateTimePicker
+            key={`date-${selectedDate.getTime()}`}
             value={selectedDate}
             mode="date"
             display="inline"
@@ -97,11 +131,13 @@ export default function QuitDateScreen() {
           {Platform.OS === 'ios' ? (
             <View style={styles.timePickerContainer}>
               <DateTimePicker
+                key={`time-${selectedDate.getTime()}`}
                 value={selectedDate}
                 mode="time"
                 display="spinner"
                 onChange={handleTimeChange}
                 textColor="#FFFFFF"
+                accentColor="#FFFFFF"
                 themeVariant="dark"
               />
             </View>
@@ -115,6 +151,7 @@ export default function QuitDateScreen() {
               </Text>
               {showTimePicker && (
                 <DateTimePicker
+                  key={`android-time-${selectedDate.getTime()}`}
                   value={selectedDate}
                   mode="time"
                   is24Hour={false}

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +20,11 @@ export default function LandingScreen() {
   }, [session, profile, authLoading, profileLoading, router]);
 
   const handleGetStarted = () => {
+    // Don't redirect if still loading auth or profile data
+    if (authLoading || profileLoading) {
+      return;
+    }
+    
     if (session) {
       if (profile) {
         // User has completed onboarding
@@ -36,6 +41,15 @@ export default function LandingScreen() {
   const handleSignIn = () => {
     router.push('/auth/login');
   };
+
+  // Only prevent render if we're in the process of redirecting authenticated users
+  if (!authLoading && !profileLoading && session && profile) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </View>
+    );
+  }
 
   return (
     <ImageBackground
@@ -177,5 +191,11 @@ const styles = StyleSheet.create({
   linkTextBold: {
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#35998d',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 
