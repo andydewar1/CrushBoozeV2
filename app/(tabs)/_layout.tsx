@@ -1,7 +1,26 @@
 import { Tabs } from 'expo-router';
 import { House, ChartBar as BarChart3, Zap, Trophy, Target } from 'lucide-react-native';
+import { useEffect } from 'react';
+import RevenueCatService from '@/services/RevenueCatService';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function TabLayout() {
+  const { showError } = useToast();
+
+  // Initialize RevenueCat when user reaches main app
+  useEffect(() => {
+    const initRevenueCat = async () => {
+      try {
+        await RevenueCatService.initialize();
+        console.log('✅ RevenueCat initialized in tabs');
+      } catch (error) {
+        console.error('❌ RevenueCat initialization failed:', error);
+        // Don't show error to user - non-critical for now
+      }
+    };
+
+    initRevenueCat();
+  }, []);
 
   return (
     <Tabs
