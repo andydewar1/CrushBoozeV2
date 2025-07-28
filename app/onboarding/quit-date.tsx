@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Switch, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import OnboardingScreen from '@/components/OnboardingScreen';
@@ -24,12 +24,11 @@ export default function QuitDateScreen() {
         console.log('Syncing onboarding context with saved profile data:', savedDate);
         setSelectedDate(savedDate);
         updateData({ 
-          quitDate: savedDate,
-          hasQuit: profile.has_quit || false 
+          quitDate: savedDate
         });
       }
     }
-  }, [profile?.quit_date, profile?.has_quit, updateData]);
+  }, [profile?.quit_date, updateData]);
 
   // Sync local selectedDate state with context data
   useEffect(() => {
@@ -63,9 +62,7 @@ export default function QuitDateScreen() {
     }
   };
 
-  const toggleHasQuit = (value: boolean) => {
-    updateData({ hasQuit: value });
-  };
+
 
   const formatDateTime = (date: Date) => {
     const formattedDate = format(date, 'MMMM d, yyyy');
@@ -85,16 +82,6 @@ export default function QuitDateScreen() {
       canProgress={selectedDate !== null}
     >
       <View style={styles.container}>
-        <View style={styles.toggleContainer}>
-          <Text style={styles.toggleLabel}>I've already quit</Text>
-          <Switch
-            value={data.hasQuit}
-            onValueChange={toggleHasQuit}
-            trackColor={{ false: 'rgba(255, 255, 255, 0.3)', true: 'rgba(255, 255, 255, 0.3)' }}
-            thumbColor="#FFFFFF"
-            ios_backgroundColor="rgba(255, 255, 255, 0.3)"
-          />
-        </View>
 
         <View style={styles.dateContainer}>
           <DateTimePicker
@@ -113,7 +100,6 @@ export default function QuitDateScreen() {
           {Platform.OS === 'ios' ? (
             <View style={styles.timePickerContainer}>
               <DateTimePicker
-                key={`time-${selectedDate.getTime()}`}
                 value={selectedDate}
                 mode="time"
                 display="spinner"
@@ -133,7 +119,7 @@ export default function QuitDateScreen() {
               </Text>
               {showTimePicker && (
                 <DateTimePicker
-                  key={`android-time-${selectedDate.getTime()}`}
+
                   value={selectedDate}
                   mode="time"
                   is24Hour={false}
@@ -146,7 +132,7 @@ export default function QuitDateScreen() {
 
         <View style={styles.summaryContainer}>
           <Text style={styles.summaryLabel}>
-            {data.hasQuit ? 'Your journey began' : 'Your journey begins'}
+            Your journey begins
           </Text>
           <View style={styles.dateTimeContainer}>
             <Text style={styles.dateText}>
@@ -157,10 +143,7 @@ export default function QuitDateScreen() {
             </Text>
           </View>
           <Text style={styles.motivationalText}>
-            {data.hasQuit 
-              ? "Every moment since then is a step towards a healthier you"
-              : "This date marks the beginning of your journey to freedom"
-            }
+            This date marks the beginning of your journey to freedom
           </Text>
         </View>
       </View>
@@ -172,21 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  toggleContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 24,
-  },
-  toggleLabel: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    fontWeight: '500',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
+
   dateContainer: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 16,
