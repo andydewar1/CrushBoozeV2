@@ -109,6 +109,32 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     loadSettings();
   }, []);
 
+  // Check existing permissions on mount
+  useEffect(() => {
+    const checkExistingPermissions = async () => {
+      try {
+        const { status } = await Notifications.getPermissionsAsync();
+        const hasPerms = status === 'granted';
+        setHasPermissions(hasPerms);
+        
+        // If we have permissions, try to get the push token
+        if (hasPerms && Device.isDevice) {
+          try {
+            const projectId = '4fb906e8-fea5-4082-8a0e-445722ad3558';
+            const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+            setExpoPushToken(token);
+          } catch (error) {
+            console.log('Error getting existing push token:', error);
+          }
+        }
+      } catch (error) {
+        console.log('Error checking existing permissions:', error);
+      }
+    };
+
+    checkExistingPermissions();
+  }, []);
+
   const requestPermissions = async (): Promise<boolean> => {
     const token = await registerForPushNotificationsAsync();
     setExpoPushToken(token);

@@ -68,6 +68,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
       // If no profile exists, that's fine - user hasn't completed onboarding
       if (fetchError?.code === 'PGRST116' || !data) {
+        console.log('📝 No profile data found - setting profile to null');
         setProfile(null);
         setError(null);
         return;
@@ -80,6 +81,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      console.log('📝 Profile data loaded:', data);
       setProfile(data as UserProfile);
     } catch (err) {
       console.error('Error fetching profile:', err);

@@ -3,6 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 import Header from '../../components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
@@ -23,7 +25,7 @@ export default function HomeScreen() {
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
-  const { activeGoals, calculateGoalProgress } = useGoals();
+  const { activeGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
@@ -31,6 +33,13 @@ export default function HomeScreen() {
   // Initialize notification hooks (these will monitor for new achievements and milestones)
   useAchievementNotifications();
   useMoneySavedNotifications();
+
+  // Refresh goals when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refetchGoals();
+    }, [refetchGoals])
+  );
 
   // Show loading state if any data is loading - temporarily disabled
   // if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
@@ -62,13 +71,11 @@ export default function HomeScreen() {
   const displayDays = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : days;
   const displayHours = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : hours;
   const displayMinutes = (timerLoading || (timerError && timerError !== 'future_quit_date')) ? 0 : minutes;
-  const displayText = timerLoading ? 'Loading your progress...' 
+  const displayText = timerLoading ? 'Loading...' 
     : timerError 
-      ? timerError === 'No quit date set' 
-        ? 'Complete onboarding to start tracking'
-        : timerError === 'future_quit_date'
+      ? timerError === 'future_quit_date'
         ? 'days until quit'
-        : 'Set your quit date to begin'
+        : 'days'
       : 'days strong';
 
   // Show loading or error state for savings
@@ -116,13 +123,15 @@ export default function HomeScreen() {
               <View style={styles.progressContent}>
                 <Text style={styles.daysNumber}>{displayDays}</Text>
                 <Text style={styles.daysText}>{displayText}</Text>
-                <Text style={styles.timeText}>{displayHours}h {displayMinutes}m</Text>
+                {!timerError || timerError === 'future_quit_date' ? (
+                  <Text style={styles.timeText}>{displayHours}h {displayMinutes}m</Text>
+                ) : null}
               </View>
             </View>
           </View>
           <Text style={styles.sinceText}>
-            {timerError 
-              ? 'Set up your quit date in settings' 
+            {timerError && timerError !== 'future_quit_date'
+              ? 'Add your quit and habit data in settings to see your results' 
               : quitDate 
                 ? `Since ${format(quitDate, 'MMMM d, yyyy')}` 
                 : 'Since you quit'
@@ -187,7 +196,7 @@ export default function HomeScreen() {
                   ? quitDate 
                     ? `Savings begin on ${format(quitDate, 'MMMM d, yyyy')}!`
                     : 'Savings will start when you quit!'
-                  : 'Complete onboarding to track savings!' 
+                  : 'Add your quit and habit data in settings to see your results' 
                 : displayTotalSaved > 0 
                   ? 'Every minute counts! Keep it up!' 
                   : 'Your savings will start growing once you quit!'
@@ -214,7 +223,7 @@ export default function HomeScreen() {
               <Text style={styles.achievementName}>
                 {achievementsError === 'future_quit_date' 
                   ? 'Achievements coming soon' 
-                  : 'Complete onboarding'
+                  : 'Add your quit and habit data in settings to see your results'
                 }
               </Text>
               <Text style={styles.achievementDescription}>
@@ -222,7 +231,7 @@ export default function HomeScreen() {
                   ? quitDate 
                     ? `Your journey begins ${format(quitDate, 'MMMM d, yyyy')}`
                     : 'Your achievements will unlock when you quit'
-                  : 'Set your quit date to track progress'
+                  : 'Track your progress and earn badges for milestones'
                 }
               </Text>
             </View>
@@ -311,7 +320,7 @@ export default function HomeScreen() {
               <View style={styles.goalHeader}>
                 <View style={styles.goalInfo}>
                   <Text style={styles.goalName}>
-                    {goalError ? 'Complete onboarding to set goals' : 'No financial goals set'}
+                    {goalError ? 'Add your quit and habit data in settings to see your results' : 'No financial goals set'}
                   </Text>
                   <Text style={styles.goalTarget}>--</Text>
                 </View>
@@ -398,7 +407,7 @@ export default function HomeScreen() {
           {motivationError || !motivation ? (
             <View style={styles.motivationContainer}>
               <Text style={styles.motivationText}>
-                {motivationError ? 'Complete onboarding to see your motivation' : 'No motivation set yet'}
+                {motivationError ? 'Add your quit and habit data in settings to see your results' : 'No motivation set yet'}
               </Text>
             </View>
           ) : (
@@ -439,7 +448,7 @@ export default function HomeScreen() {
           {healthError ? (
             <View style={styles.timelineContainer}>
               <Text style={styles.timelineDescription}>
-                Complete onboarding to see your health recovery progress
+                Add your quit and habit data in settings to see your results
               </Text>
             </View>
           ) : (

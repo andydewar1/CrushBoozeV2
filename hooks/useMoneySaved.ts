@@ -39,12 +39,16 @@ export function useMoneySaved(): MoneySaved {
 
     const updateSavings = () => {
       if (!settings?.quit_date) {
-              setMoneySaved(prev => ({
-        ...prev,
-        loading: settingsLoading,
-        currency: getCurrencySymbol(settings?.currency || 'USD'),
-        error: settingsLoading ? null : 'No quit data available'
-      }));
+        console.log('💰 No quit date found - resetting money saved to zero');
+        setMoneySaved(prev => ({
+          ...prev,
+          totalSaved: 0,
+          dailyRate: 0,
+          hourlyRate: 0,
+          loading: settingsLoading,
+          currency: getCurrencySymbol(settings?.currency || 'USD'),
+          error: settingsLoading ? null : 'No quit data available'
+        }));
         return;
       }
 

@@ -29,8 +29,13 @@ export function useQuitTimer(): QuitTimer {
 
     const updateTimer = () => {
       if (!settings?.quit_date) {
+        console.log('⏰ No quit date found - resetting timer to zero');
         setTimer(prev => ({
           ...prev,
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          quitDate: null,
           loading: settingsLoading,
           error: settingsLoading ? null : 'No quit date set'
         }));

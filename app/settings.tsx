@@ -744,50 +744,7 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleResetAllData = () => {
-    Alert.alert(
-      '⚠️ Reset All Data',
-      'This will permanently delete ALL your data including progress, goals, logs, and settings. This action cannot be undone and you will need to complete onboarding again.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I Understand - Reset Everything',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Final Confirmation',
-              'Are you absolutely sure? This will delete everything and cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Yes, Reset All Data',
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      const { data: userData } = await supabase.auth.getUser();
-                      if (userData.user) {
-                        await Promise.all([
-                          supabase.from('financial_goals').delete().eq('user_id', userData.user.id),
-                          supabase.from('craving_logs').delete().eq('user_id', userData.user.id),
-                          supabase.from('profiles').delete().eq('id', userData.user.id),
-                        ]);
-                        
-                        Alert.alert('Success', 'All data has been reset. You will now be redirected to onboarding.');
-                        router.replace('/onboarding/quit-date');
-                      }
-                    } catch (error) {
-                      console.error('Reset error:', error);
-                      Alert.alert('Error', 'Failed to reset data. Please try again.');
-                    }
-                  },
-                },
-              ]
-            );
-          },
-        },
-      ]
-    );
-  };
+
 
   const formatDate = (date: Date | null) => {
     if (!date) return 'Not set';
@@ -1129,24 +1086,7 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Danger Zone */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Trash2 size={20} color="#FF6B47" />
-            <Text style={[styles.sectionTitle, { color: '#FF6B47' }]}>Danger Zone</Text>
-          </View>
 
-          <TouchableOpacity 
-            style={[styles.settingItem, styles.dangerItem]}
-            onPress={handleResetAllData}
-          >
-            <View style={styles.settingContent}>
-              <Text style={[styles.settingLabel, styles.dangerText]}>Reset All Data</Text>
-              <Text style={styles.dangerSubtext}>Permanently delete everything - cannot be undone</Text>
-            </View>
-            <ChevronRight size={16} color="#FF3B30" />
-          </TouchableOpacity>
-        </View>
 
         {/* Sign Out */}
         <View style={styles.section}>
