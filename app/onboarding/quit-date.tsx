@@ -65,23 +65,6 @@ export default function QuitDateScreen() {
 
   const toggleHasQuit = (value: boolean) => {
     updateData({ hasQuit: value });
-    
-    // Only update the date constraints, don't change the selected date
-    // The user should keep their chosen date regardless of the toggle
-    if (!value) {
-      // If planning to quit in future, ensure date isn't in the past
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      if (selectedDate < tomorrow) {
-        const newDate = new Date(tomorrow);
-        // Keep the same time
-        newDate.setHours(selectedDate.getHours());
-        newDate.setMinutes(selectedDate.getMinutes());
-        setSelectedDate(newDate);
-        updateData({ quitDate: newDate });
-      }
-    }
-    // If already quit (value = true), keep whatever date they selected
   };
 
   const formatDateTime = (date: Date) => {
@@ -89,6 +72,8 @@ export default function QuitDateScreen() {
     const formattedTime = format(date, 'h:mm a').replace(' ', ''); // Remove space before AM/PM
     return { formattedDate, formattedTime };
   };
+
+
 
   return (
     <OnboardingScreen
@@ -113,13 +98,10 @@ export default function QuitDateScreen() {
 
         <View style={styles.dateContainer}>
           <DateTimePicker
-            key={`date-${selectedDate.getTime()}`}
             value={selectedDate}
             mode="date"
             display="inline"
             onChange={handleDateChange}
-            maximumDate={data.hasQuit ? new Date() : undefined}
-            minimumDate={!data.hasQuit ? new Date() : undefined}
             textColor="#FFFFFF"
             accentColor="#FFFFFF"
             themeVariant="dark"
