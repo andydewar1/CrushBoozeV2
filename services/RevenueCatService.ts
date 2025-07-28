@@ -1,6 +1,6 @@
 import Purchases, { PurchasesOffering, CustomerInfo, LOG_LEVEL } from 'react-native-purchases';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 
 export class RevenueCatService {
   private static instance: RevenueCatService;
@@ -17,10 +17,8 @@ export class RevenueCatService {
 
   /**
    * Initialize RevenueCat with the platform-specific API key
-   * Uses iOS key on iOS devices, Android key on Android devices
-   * Should be called after onboarding is complete
    */
-  public async initialize(): Promise<void> {
+  public async initialize(userId?: string): Promise<void> {
     if (this.isConfigured) {
       console.log('RevenueCat already configured');
       return;
@@ -31,6 +29,11 @@ export class RevenueCatService {
       const iosKey = Constants.expoConfig?.extra?.REVENUECAT_API_KEY_IOS;
       const androidKey = Constants.expoConfig?.extra?.REVENUECAT_API_KEY_ANDROID;
       
+      console.log('Debug: Available API Keys:', {
+        ios: iosKey ? 'Present' : 'Missing',
+        android: androidKey ? 'Present' : 'Missing'
+      });
+      
       const apiKey = Platform.OS === 'ios' ? iosKey : androidKey;
 
       if (!apiKey || 
@@ -40,15 +43,41 @@ export class RevenueCatService {
         return;
       }
 
-      // Configure RevenueCat
-      await Purchases.configure({ apiKey });
+      // Configure RevenueCat with debug options
+      const configOptions = {
+        apiKey,
+        observerMode: false,
+        useAmazon: false
+      };
+      
+      console.log('Debug: Configuring RevenueCat with options:', {
+        platform: Platform.OS,
+        observerMode: configOptions.observerMode,
+        useAmazon: configOptions.useAmazon
+      });
+
+      await Purchases.configure(configOptions);
+      
+      // Set user ID if provided
+      if (userId) {
+        console.log('Debug: Setting RevenueCat user ID:', userId);
+        await Purchases.logIn(userId);
+      }
       
       this.isConfigured = true;
       console.log(`RevenueCat initialized successfully for ${Platform.OS} platform`);
 
       // Set debug logs in development
       if (__DEV__) {
-        await Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+        await Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+        
+        // Get initial state
+        const customerInfo = await Purchases.getCustomerInfo();
+        console.log('Debug: Initial customer info:', {
+          originalAppUserId: customerInfo.originalAppUserId,
+          entitlements: Object.keys(customerInfo.entitlements.active),
+          activeSubscriptions: customerInfo.activeSubscriptions
+        });
       }
     } catch (error) {
       console.error('Failed to initialize RevenueCat:', error);
@@ -104,14 +133,24 @@ export class RevenueCatService {
     }
 
     try {
-      const restoreResult: CustomerInfo = await Purchases.restorePurchases();
+      const customerInfo = await Purchases.restorePurchases();
+      console.log('Debug: Restore result:', customerInfo);
       
-      // Check if user has any active entitlements
-      const hasActiveSubscription = Object.keys(restoreResult.entitlements.active).length > 0;
+      // Check if there are any active subscriptions or past purchases
+      const hasActiveSubs = customerInfo.activeSubscriptions.length > 0;
+      const hasPastPurchases = customerInfo.allPurchasedProductIdentifiers.length > 0;
+      
+      if (!hasActiveSubs && !hasPastPurchases) {
+        return {
+          success: true,
+          customerInfo,
+          error: 'No previous purchases found'
+        };
+      }
       
       return { 
         success: true, 
-        customerInfo: restoreResult 
+        customerInfo
       };
     } catch (error) {
       console.error('Failed to restore purchases:', error);
@@ -128,16 +167,40 @@ export class RevenueCatService {
   public async openManageSubscriptions(): Promise<void> {
     if (!this.isConfigured) {
       console.warn('RevenueCat not configured. Call initialize() first.');
-      return;
+      throw new Error('RevenueCat not configured');
     }
 
     try {
+      // First try to get customer info to ensure connection
+      const customerInfo = await this.getCustomerInfo();
+      console.log('Debug: Customer info before opening management:', customerInfo);
+      
+      if (!customerInfo) {
+        throw new Error('Unable to get customer information');
+      }
+
+      // Check if user has any active subscriptions
+      const hasActiveSubscriptions = customerInfo.activeSubscriptions.length > 0;
+      
       if (Platform.OS === 'ios') {
-        await Purchases.showManageSubscriptions();
+        if (hasActiveSubscriptions) {
+          // If they have active subscriptions, use RevenueCat's management URL
+          await Purchases.showManageSubscriptions();
+        } else {
+          // If no active subscriptions, open App Store subscriptions page
+          if (await Linking.canOpenURL('itms-apps://apps.apple.com/account/subscriptions')) {
+            await Linking.openURL('itms-apps://apps.apple.com/account/subscriptions');
+          } else {
+            throw new Error('Cannot open subscription management');
+          }
+        }
       } else {
-        // For Android, we'll need to open the Play Store subscriptions page
-        // This is a placeholder - you might want to use Linking.openURL for Android
-        console.log('On Android, opening subscription management requires additional setup');
+        // For Android, open Play Store subscriptions
+        if (await Linking.canOpenURL('market://subscriptions')) {
+          await Linking.openURL('market://subscriptions');
+        } else {
+          throw new Error('Cannot open subscription management');
+        }
       }
     } catch (error) {
       console.error('Failed to open subscription management:', error);
@@ -176,8 +239,10 @@ export class RevenueCatService {
         return defaultStatus;
       }
 
+      console.log('Debug: Full customer info:', customerInfo);
+
       const activeEntitlements = Object.keys(customerInfo.entitlements.active);
-      const activeSubscriptions = Object.keys(customerInfo.activeSubscriptions);
+      const activeSubscriptions = customerInfo.activeSubscriptions;
 
       return {
         isSubscribed: activeEntitlements.length > 0,
