@@ -3,6 +3,7 @@ import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import { View, StyleSheet } from 'react-native';
 
 export default function RootLayout() {
@@ -12,13 +13,15 @@ export default function RootLayout() {
         <AuthProvider>
           <OnboardingProvider>
             <SettingsProvider>
-              <Stack screenOptions={{
-                headerShown: false,
-                contentStyle: {
-                  backgroundColor: '#35998d',
-                },
-                animation: 'slide_from_right',
-              }} />
+              <NotificationProvider>
+                <Stack screenOptions={{
+                  headerShown: false,
+                  contentStyle: {
+                    backgroundColor: '#35998d',
+                  },
+                  animation: 'slide_from_right',
+                }} />
+              </NotificationProvider>
             </SettingsProvider>
           </OnboardingProvider>
         </AuthProvider>

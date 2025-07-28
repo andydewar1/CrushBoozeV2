@@ -22,7 +22,8 @@ import {
   Plus,
   Minus,
   Settings as SettingsIcon,
-  AlertTriangle
+  AlertTriangle,
+  Bell
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -33,6 +34,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
+import { useNotifications } from '@/contexts/NotificationContext';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
@@ -104,6 +106,14 @@ export default function SettingsScreen() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
+
+  // Notification settings
+  const { 
+    notificationSettings, 
+    updateNotificationSettings, 
+    hasPermissions, 
+    requestPermissions 
+  } = useNotifications();
 
   // Temp data states
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
@@ -1030,6 +1040,55 @@ export default function SettingsScreen() {
             <Text style={[styles.settingLabel, styles.warningText]}>Delete Account</Text>
             <ChevronRight size={16} color="#FF6B47" />
           </TouchableOpacity>
+        </View>
+
+        {/* Notifications */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Bell size={20} color="#35998d" />
+            <Text style={styles.sectionTitle}>Notifications</Text>
+          </View>
+
+          {!hasPermissions && (
+            <TouchableOpacity 
+              style={[styles.settingItem, styles.warningItem]} 
+              onPress={requestPermissions}
+            >
+              <View style={styles.settingItemContent}>
+                <Text style={[styles.settingLabel, styles.warningText]}>Enable Notifications</Text>
+                <Text style={styles.settingSubtitle}>Get notified about achievements and milestones</Text>
+              </View>
+              <ChevronRight size={16} color="#FF6B47" />
+            </TouchableOpacity>
+          )}
+
+          {hasPermissions && (
+            <View style={styles.toggleSettingItem}>
+              <View style={styles.settingItemContent}>
+                <Text style={styles.settingLabel}>Notifications</Text>
+                <Text style={styles.settingSubtitle}>Get notified about achievements and milestones</Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.toggle,
+                  (notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications) && styles.toggleActive
+                ]}
+                onPress={() => {
+                  const newValue = !(notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications);
+                  updateNotificationSettings({ 
+                    achievementNotifications: newValue,
+                    moneySavedNotifications: newValue,
+                    dailyReminders: false // Keep daily reminders off for simplicity
+                  });
+                }}
+              >
+                <View style={[
+                  styles.toggleSlider,
+                  (notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications) && styles.toggleSliderActive
+                ]} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Support */}
@@ -2496,5 +2555,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF6B47',
     marginLeft: 6,
+  },
+  warningItem: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#FF6B47',
+  },
+  settingItemContent: {
+    flex: 1,
+  },
+  settingSubtitle: {
+    fontSize: 12,
+    color: '#8E8E93',
+    marginTop: 2,
+  },
+  toggleSettingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F2F7',
+  },
+  toggle: {
+    width: 44,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#E5E5EA',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleActive: {
+    backgroundColor: '#35998d',
+  },
+  toggleSlider: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleSliderActive: {
+    transform: [{ translateX: 18 }],
   },
 }); 

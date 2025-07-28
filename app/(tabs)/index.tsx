@@ -12,6 +12,9 @@ import { useGoals } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
+import { useMoneySavedNotifications } from '@/hooks/useMoneySavedNotifications';
+import NotificationPermissionRequest from '@/components/NotificationPermissionRequest';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
@@ -24,6 +27,10 @@ export default function HomeScreen() {
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+
+  // Initialize notification hooks (these will monitor for new achievements and milestones)
+  useAchievementNotifications();
+  useMoneySavedNotifications();
 
   // Show loading state if any data is loading - temporarily disabled
   // if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
@@ -93,6 +100,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <NotificationPermissionRequest />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Header 
           title="Home" 

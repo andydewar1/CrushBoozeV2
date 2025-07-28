@@ -14,10 +14,12 @@ interface MoneySaved {
 const getCurrencySymbol = (currency: string): string => {
   switch (currency) {
     case 'EUR': return '€';
-    case 'GBP': return '£';
+    case 'GBP': return '£';  
     case 'AUD': return 'A$';
     case 'CAD': return 'C$';
-    default: return '$';
+    case 'USD':
+    default: 
+      return '$';
   }
 };
 
@@ -37,12 +39,12 @@ export function useMoneySaved(): MoneySaved {
 
     const updateSavings = () => {
       if (!settings?.quit_date) {
-        setMoneySaved(prev => ({
-          ...prev,
-          loading: settingsLoading,
-          currency: getCurrencySymbol(settings?.currency || 'USD'),
-          error: settingsLoading ? null : 'No quit data available'
-        }));
+              setMoneySaved(prev => ({
+        ...prev,
+        loading: settingsLoading,
+        currency: getCurrencySymbol(settings?.currency || 'USD'),
+        error: settingsLoading ? null : 'No quit data available'
+      }));
         return;
       }
 
