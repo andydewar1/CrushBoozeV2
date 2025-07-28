@@ -8,14 +8,36 @@
     "scheme": "crushnic",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "CrushNic is a smoking cessation app designed for general fitness and wellness purposes only. Not a medical device.",
+    "keywords": ["smoking cessation", "quit smoking", "wellness", "fitness", "health tracking", "motivation"],
+    "category": "health-fitness",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crushnic.quitvaping",
       "buildNumber": "61",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
+        "NSHealthUpdateUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device"
+      },
+      "config": {
+        "googleMobileAdsAppId": ""
       }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#35998d"
+      },
+      "package": "com.crushnic.quitvaping",
+      "versionCode": 61,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -34,6 +56,14 @@
       "router": {},
       "eas": {
         "projectId": "4fb906e8-fea5-4082-8a0e-445722ad3558"
+      },
+      "healthDisclaimer": {
+        "isHealthApp": true,
+        "medicalDevice": false,
+        "medicalUse": false,
+        "generalFitnessOnly": true,
+        "requiresDisclaimer": true,
+        "consultHealthcareProvider": true
       }
     }
   }

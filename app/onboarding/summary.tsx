@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 
 export default function SummaryScreen() {
   const { data } = useOnboarding();
@@ -171,6 +172,9 @@ export default function SummaryScreen() {
             Remember, every journey begins with a single step. We're here to support you every step of the way.
           </Text>
         </View>
+
+        {/* Medical Disclaimer - Required for App Store Approval */}
+        <MedicalDisclaimer style={styles.disclaimer} />
       </ScrollView>
 
       <View style={styles.footer}>
@@ -297,6 +301,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
+    marginBottom: 16,
+  },
+  disclaimer: {
+    margin: 20,
+    marginTop: 8,
     marginBottom: 24,
   },
   messageEmoji: {

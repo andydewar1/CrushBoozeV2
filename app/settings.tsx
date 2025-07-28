@@ -21,7 +21,8 @@ import {
   Check,
   Plus,
   Minus,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  AlertTriangle
 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -31,6 +32,7 @@ import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useToast } from '@/contexts/ToastContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
+import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
@@ -101,6 +103,7 @@ export default function SettingsScreen() {
   const [showContactSupport, setShowContactSupport] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
 
   // Temp data states
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
@@ -650,6 +653,10 @@ export default function SettingsScreen() {
     setShowTermsOfService(true);
   };
 
+  const handleMedicalDisclaimer = () => {
+    setShowMedicalDisclaimer(true);
+  };
+
   const handleExportData = async () => {
     try {
       setSaving(true);
@@ -1049,6 +1056,11 @@ export default function SettingsScreen() {
 
           <TouchableOpacity style={styles.settingItem} onPress={handleTermsOfService}>
             <Text style={styles.settingLabel}>Terms of Service</Text>
+            <ChevronRight size={16} color="#C7C7CC" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingItem} onPress={handleMedicalDisclaimer}>
+            <Text style={styles.settingLabel}>Medical Disclaimer</Text>
             <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
 
@@ -1859,6 +1871,62 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Medical Disclaimer Modal */}
+      <Modal
+        visible={showMedicalDisclaimer}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowMedicalDisclaimer(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Medical Disclaimer</Text>
+                <TouchableOpacity onPress={() => setShowMedicalDisclaimer(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <View style={styles.legalDocContainer}>
+                <View style={styles.disclaimerModalHeader}>
+                  <Heart size={18} color="#35998d" />
+                  <Text style={styles.disclaimerModalTitle}>Health & Medical Disclaimer</Text>
+                </View>
+                
+                <View style={styles.disclaimerWarningContainer}>
+                  <AlertTriangle size={16} color="#FF6B47" />
+                  <Text style={styles.disclaimerWarningText}>Important Medical Notice</Text>
+                </View>
+                
+                <Text style={styles.legalDocText}>
+                  <Text style={styles.legalDocImportant}>NOT A MEDICAL DEVICE:</Text> CrushNic is not a medical device and is not intended for medical use. This app does not provide medical advice, diagnosis, or treatment.{'\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>GENERAL FITNESS & WELLNESS ONLY:</Text> This app is designed for general fitness and wellness purposes only to help track your smoking cessation journey and provide motivational support.{'\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>CONSULT HEALTHCARE PROFESSIONALS:</Text> Before starting any smoking cessation program, always consult with qualified healthcare professionals, especially if you have medical conditions, are pregnant, or experience withdrawal symptoms.{'\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>NO MEDICAL SUPERVISION:</Text> This app does not replace professional medical supervision, counseling, or approved smoking cessation treatments such as nicotine replacement therapy or prescription medications.{'\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>ESTIMATES ONLY:</Text> Health recovery timelines, savings calculations, and progress indicators are estimates based on general research and population averages. Individual results may vary significantly and should not be considered medical predictions or guarantees.{'\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>EMERGENCY SITUATIONS:</Text> If you experience severe withdrawal symptoms, mental health crises, or medical emergencies, seek immediate professional medical attention. Do not rely on this app for emergency situations.{'\n\n\n'}
+                  
+                  <Text style={styles.legalDocImportant}>Agreement:</Text> By using CrushNic, you acknowledge that you have read, understood, and agree to this medical disclaimer. You understand that this app is for educational and motivational purposes only and agree to use it at your own discretion. You will consult healthcare professionals for medical advice regarding smoking cessation.
+                </Text>
+              </View>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={() => setShowMedicalDisclaimer(false)}
+              >
+                <Text style={styles.saveButtonText}>Close</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -2403,5 +2471,30 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  disclaimerInModal: {
+    marginBottom: 20,
+  },
+  disclaimerModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  disclaimerModalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginLeft: 8,
+  },
+  disclaimerWarningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  disclaimerWarningText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FF6B47',
+    marginLeft: 6,
   },
 }); 
