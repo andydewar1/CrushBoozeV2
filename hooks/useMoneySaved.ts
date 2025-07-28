@@ -52,34 +52,27 @@ export function useMoneySaved(): MoneySaved {
         return;
       }
 
-      // Handle future quit dates
-      if (!settings.has_quit) {
-        const quitDate = new Date(settings.quit_date);
-        const now = new Date();
-        
-        if (quitDate > now) {
-          // Quit date is in the future
-          setMoneySaved(prev => ({
-            ...prev,
-            totalSaved: 0,
-            dailyRate: settings.daily_cost || 0,
-            hourlyRate: (settings.daily_cost || 0) / 24,
-            currency: getCurrencySymbol(settings.currency || 'USD'),
-            loading: false,
-            error: 'future_quit_date' // Special error type for future dates
-          }));
-          return;
-        }
-      }
-
       const quitDate = new Date(settings.quit_date);
+      const now = new Date();
       const dailyCost = settings.daily_cost || 0;
       const currencySymbol = getCurrencySymbol(settings.currency || 'USD');
-
-      const now = new Date();
       let totalSaved = 0;
 
-      if (settings.has_quit && dailyCost > 0) {
+      if (quitDate > now) {
+        // Quit date is in the future
+        setMoneySaved(prev => ({
+          ...prev,
+          totalSaved: 0,
+          dailyRate: dailyCost,
+          hourlyRate: dailyCost / 24,
+          currency: currencySymbol,
+          loading: false,
+          error: 'future_quit_date'
+        }));
+        return;
+      }
+
+      if (dailyCost > 0) {
         // Calculate total minutes since quit
         const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
         // Calculate savings: (minutes since quit / minutes per day) * daily cost
