@@ -4,7 +4,7 @@ import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import Header from '../../components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
@@ -17,6 +17,7 @@ import { useAchievements } from '@/hooks/useAchievements';
 import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
 import { useMoneySavedNotifications } from '@/hooks/useMoneySavedNotifications';
 import NotificationPermissionRequest from '@/components/NotificationPermissionRequest';
+import RevenueCatService from '@/services/RevenueCatService';
 import { format } from 'date-fns';
 
 export default function HomeScreen() {
@@ -29,6 +30,20 @@ export default function HomeScreen() {
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+
+  // Initialize RevenueCat when user reaches main app (after onboarding)
+  useEffect(() => {
+    const initRevenueCat = async () => {
+      try {
+        await RevenueCatService.initialize();
+      } catch (error) {
+        // Silently fail - don't break the app if RevenueCat fails
+        console.error('RevenueCat init failed:', error);
+      }
+    };
+
+    initRevenueCat();
+  }, []);
 
   // Initialize notification hooks (these will monitor for new achievements and milestones)
   useAchievementNotifications();
