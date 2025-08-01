@@ -14,9 +14,15 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
     const status = await RevenueCatService.getSubscriptionStatus();
     console.log('🔐 Subscription status check:', status);
     
+    // Ensure status is valid before checking entitlements
+    if (!status || !Array.isArray(status.entitlements)) {
+      console.warn('Invalid subscription status response:', status);
+      return false;
+    }
+    
     // Check if user has premium entitlement (case-insensitive)
     const hasSubscription = status.isSubscribed && status.entitlements.some(
-      entitlement => entitlement.toLowerCase() === 'premium'
+      entitlement => typeof entitlement === 'string' && entitlement.toLowerCase() === 'premium'
     );
     
     console.log(`🔐 User subscription status: ${hasSubscription ? 'SUBSCRIBED' : 'NOT SUBSCRIBED'}`);
@@ -39,7 +45,8 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
     }
   } catch (error) {
     console.error('❌ Failed to initialize RevenueCat:', error);
-    throw error;
+    // Don't throw - just log the error to prevent crashes
+    // The subscription check will handle the uninitialized state
   }
 }
 
@@ -50,11 +57,15 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
  * - '/(tabs)' if user is subscribed or subscription check fails
  */
 export async function getPostOnboardingRoute(userId?: string): Promise<string> {
+  console.log('🚀 Starting post-onboarding route check for user:', userId);
+  
   try {
     // Initialize RevenueCat if needed
+    console.log('🔄 Initializing RevenueCat if needed...');
     await initializeRevenueCatIfNeeded(userId);
     
     // Check subscription status
+    console.log('🔍 Checking subscription status...');
     const isSubscribed = await checkSubscriptionStatus();
     
     if (isSubscribed) {
@@ -66,6 +77,12 @@ export async function getPostOnboardingRoute(userId?: string): Promise<string> {
     }
   } catch (error) {
     console.error('❌ Error checking post-onboarding route:', error);
+    console.log('❌ Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : typeof error
+    });
+    
     // Be strict - if we can't verify subscription, require paywall
     // This ensures proper subscription enforcement
     console.log('🔒 Cannot verify subscription due to error, requiring paywall for safety');

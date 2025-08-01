@@ -43,7 +43,18 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export function useNotifications(): NotificationContextType {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    console.error('❌ useNotifications must be used within a NotificationProvider');
+    // Return a safe default instead of throwing
+    return {
+      expoPushToken: null,
+      notificationSettings: defaultSettings,
+      updateNotificationSettings: async () => {},
+      requestPermissions: async () => false,
+      sendAchievementNotification: async () => {},
+      sendMoneySavedNotification: async () => {},
+      sendDailyReminderNotification: async () => {},
+      hasPermissions: false,
+    };
   }
   return context;
 }

@@ -24,7 +24,9 @@ export default function SignUpScreen() {
       const result = await signUp(email, password);
       
       if (result.error) {
-        throw new Error(result.error);
+        console.error('❌ Sign up failed:', result.error);
+        Alert.alert('Sign Up Failed', result.error || 'Please try again');
+        return;
       }
       
       router.replace('/onboarding/quit-date');

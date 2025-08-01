@@ -181,7 +181,16 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 export function useOnboarding() {
   const context = useContext(OnboardingContext);
   if (context === undefined) {
-    throw new Error('useOnboarding must be used within an OnboardingProvider');
+    console.error('❌ useOnboarding must be used within an OnboardingProvider');
+    // Return a safe default instead of throwing
+    return {
+      data: defaultData,
+      updateData: () => {},
+      addVapeType: () => {},
+      updateVapeType: () => {},
+      removeVapeType: () => {},
+      resetData: () => {},
+    };
   }
   return context;
 } 

@@ -5,6 +5,7 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { View, StyleSheet } from 'react-native';
 
 function AppContent() {
@@ -24,19 +25,21 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <View style={styles.container}>
-      <ToastProvider>
-        <AuthProvider>
-          <OnboardingProvider>
-            <SettingsProvider>
-              <NotificationProvider>
-                <AppContent />
-              </NotificationProvider>
-            </SettingsProvider>
-          </OnboardingProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </View>
+    <ErrorBoundary>
+      <View style={styles.container}>
+        <ToastProvider>
+          <AuthProvider>
+            <OnboardingProvider>
+              <SettingsProvider>
+                <NotificationProvider>
+                  <AppContent />
+                </NotificationProvider>
+              </SettingsProvider>
+            </OnboardingProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </View>
+    </ErrorBoundary>
   );
 }
 

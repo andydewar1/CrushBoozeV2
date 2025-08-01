@@ -23,7 +23,11 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { error } = await signIn(email, password);
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Sign in failed:', error);
+        Alert.alert('Sign In Failed', error || 'Please check your credentials and try again');
+        return;
+      }
       
       // Check if user has completed onboarding
       try {

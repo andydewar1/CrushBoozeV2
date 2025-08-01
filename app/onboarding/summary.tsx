@@ -24,7 +24,11 @@ export default function SummaryScreen() {
   // Safety check for incomplete onboarding data
   if (!data || !data.quitDate) {
     console.warn('⚠️ Incomplete onboarding data, redirecting to start');
-    router.replace('/onboarding/quit-date');
+    try {
+      router.replace('/onboarding/quit-date');
+    } catch (navError) {
+      console.error('❌ Navigation error:', navError);
+    }
     return null;
   }
 
@@ -75,23 +79,44 @@ export default function SummaryScreen() {
         toast.showSuccess('Welcome!', 'Your quit journey starts now!');
         
         // Check subscription status and navigate accordingly
-        const route = await getPostOnboardingRoute(user.id);
-        router.replace(route as any);
+        try {
+          const route = await getPostOnboardingRoute(user.id);
+          console.log('🧭 Navigating to route:', route);
+          router.replace(route as any);
+        } catch (routeError) {
+          console.error('❌ Failed to get post-onboarding route:', routeError);
+          // Fallback to paywall on error
+          router.replace('/paywall');
+        }
       } else {
         console.error('❌ Failed to save onboarding data:', result.error);
         // Still check subscription even if save fails
         toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
         
-        const route = await getPostOnboardingRoute(user.id);
-        router.replace(route as any);
+        try {
+          const route = await getPostOnboardingRoute(user.id);
+          console.log('🧭 Navigating to route:', route);
+          router.replace(route as any);
+        } catch (routeError) {
+          console.error('❌ Failed to get post-onboarding route:', routeError);
+          // Fallback to paywall on error
+          router.replace('/paywall');
+        }
       }
     } catch (error) {
       console.error('❌ Unexpected error during onboarding save:', error);
       // Still check subscription to avoid user getting stuck
       toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
       
-      const route = await getPostOnboardingRoute(user.id);
-      router.replace(route as any);
+      try {
+        const route = await getPostOnboardingRoute(user.id);
+        console.log('🧭 Navigating to route:', route);
+        router.replace(route as any);
+      } catch (routeError) {
+        console.error('❌ Failed to get post-onboarding route:', routeError);
+        // Fallback to paywall on error
+        router.replace('/paywall');
+      }
     } finally {
       setIsSaving(false);
     }
