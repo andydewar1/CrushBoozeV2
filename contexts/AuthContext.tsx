@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { useRouter, useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { signUp, signIn, signOut, getCurrentSession } from '@/lib/auth';
+import RevenueCatService from '@/services/RevenueCatService';
 
 interface AuthContextType {
   // Auth state
@@ -149,6 +150,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Force clear local state first
       setUser(null);
       setSession(null);
+
+      // Also clear RevenueCat user data and force cache clear
+      try {
+        await RevenueCatService.signOut();
+        // Force invalidate all RevenueCat caches
+        await RevenueCatService.invalidateAllCaches();
+      } catch (error) {
+        console.error('⚠️ RevenueCat signOut failed, continuing with regular signOut:', error);
+      }
 
       const result = await signOut();
       

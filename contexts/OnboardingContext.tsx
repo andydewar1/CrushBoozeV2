@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface VapeType {
   type: 'disposable' | 'pod' | 'liquid' | 'other';
@@ -49,6 +50,15 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 export function OnboardingProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<OnboardingData>(defaultData);
+  const { user } = useAuth();
+
+  // Reset onboarding data when user signs out
+  useEffect(() => {
+    if (!user) {
+      console.log('🧹 User signed out, clearing onboarding data');
+      setData(defaultData);
+    }
+  }, [user]);
 
   const updateData = (newData: Partial<OnboardingData>) => {
     setData(prev => {

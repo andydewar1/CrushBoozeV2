@@ -7,6 +7,7 @@ import { saveOnboardingData } from '@/lib/onboarding';
 import { useToast } from '@/contexts/ToastContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
+import { getPostOnboardingRoute } from '@/lib/subscription';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -72,18 +73,25 @@ export default function SummaryScreen() {
         // Force refresh the settings context so homepage gets fresh data
         await refetchProfile();
         toast.showSuccess('Welcome!', 'Your quit journey starts now!');
-        router.replace('/(tabs)');
+        
+        // Check subscription status and navigate accordingly
+        const route = await getPostOnboardingRoute(user.id);
+        router.replace(route as any);
       } else {
         console.error('❌ Failed to save onboarding data:', result.error);
-        // Still redirect to tabs even if save fails, as the user can update data later
+        // Still check subscription even if save fails
         toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
-        router.replace('/(tabs)');
+        
+        const route = await getPostOnboardingRoute(user.id);
+        router.replace(route as any);
       }
     } catch (error) {
       console.error('❌ Unexpected error during onboarding save:', error);
-      // Still redirect to tabs to avoid user getting stuck
+      // Still check subscription to avoid user getting stuck
       toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
-      router.replace('/(tabs)');
+      
+      const route = await getPostOnboardingRoute(user.id);
+      router.replace(route as any);
     } finally {
       setIsSaving(false);
     }

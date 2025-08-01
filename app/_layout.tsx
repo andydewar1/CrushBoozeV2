@@ -4,7 +4,23 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import { View, StyleSheet } from 'react-native';
+
+function AppContent() {
+  // Initialize subscription gating throughout the app
+  useSubscriptionGate();
+  
+  return (
+    <Stack screenOptions={{
+      headerShown: false,
+      contentStyle: {
+        backgroundColor: '#35998d',
+      },
+      animation: 'slide_from_right',
+    }} />
+  );
+}
 
 export default function RootLayout() {
   return (
@@ -14,13 +30,7 @@ export default function RootLayout() {
           <OnboardingProvider>
             <SettingsProvider>
               <NotificationProvider>
-                <Stack screenOptions={{
-                  headerShown: false,
-                  contentStyle: {
-                    backgroundColor: '#35998d',
-                  },
-                  animation: 'slide_from_right',
-                }} />
+                <AppContent />
               </NotificationProvider>
             </SettingsProvider>
           </OnboardingProvider>

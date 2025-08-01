@@ -61,6 +61,8 @@ export class RevenueCatService {
       // Set user ID if provided
       if (userId) {
         console.log('Debug: Setting RevenueCat user ID:', userId);
+        // Clear any cached data before switching users
+        await Purchases.invalidateCustomerInfoCache();
         await Purchases.logIn(userId);
       }
       
@@ -213,6 +215,62 @@ export class RevenueCatService {
    */
   public isInitialized(): boolean {
     return this.isConfigured;
+  }
+
+  /**
+   * Sign out the current user from RevenueCat
+   */
+  public async signOut(): Promise<void> {
+    if (!this.isConfigured) {
+      return;
+    }
+
+    try {
+      console.log('🔐 Signing out RevenueCat user');
+      await Purchases.logOut();
+      console.log('✅ RevenueCat user signed out successfully');
+    } catch (error) {
+      console.error('❌ RevenueCat signOut failed:', error);
+      // Don't throw - this shouldn't block the signout process
+    }
+  }
+
+  /**
+   * Force refresh offerings to get latest paywall configuration
+   */
+  public async refreshOfferings(): Promise<void> {
+    if (!this.isConfigured) {
+      return;
+    }
+
+    try {
+      console.log('🔄 Force refreshing RevenueCat offerings and clearing cache...');
+      // Force a fresh fetch from RevenueCat servers
+      await Purchases.invalidateCustomerInfoCache();
+      await Purchases.getOfferings();
+      console.log('✅ RevenueCat offerings refreshed and cache cleared');
+    } catch (error) {
+      console.error('❌ Failed to refresh RevenueCat offerings:', error);
+      // Don't throw - this shouldn't block the paywall
+    }
+  }
+
+  /**
+   * Invalidate all RevenueCat caches to force fresh data
+   */
+  public async invalidateAllCaches(): Promise<void> {
+    if (!this.isConfigured) {
+      return;
+    }
+
+    try {
+      console.log('🧹 Invalidating all RevenueCat caches...');
+      await Purchases.invalidateCustomerInfoCache();
+      console.log('✅ All RevenueCat caches invalidated');
+    } catch (error) {
+      console.error('❌ Failed to invalidate RevenueCat caches:', error);
+      // Don't throw - this shouldn't block the signout process
+    }
   }
 
   /**
