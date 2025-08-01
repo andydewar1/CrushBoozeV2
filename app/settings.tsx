@@ -35,6 +35,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { supabase } from '@/lib/supabase';
 import MedicalDisclaimer from '@/components/MedicalDisclaimer';
 import { useNotifications } from '@/contexts/NotificationContext';
+import RevenueCatService from '@/services/RevenueCatService';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as WebBrowser from 'expo-web-browser';
@@ -106,6 +107,13 @@ export default function SettingsScreen() {
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
+  
+  // RevenueCat states
+  const [subscriptionStatus, setSubscriptionStatus] = useState({
+    isSubscribed: false,
+    loading: true,
+    error: null as string | null
+  });
 
   // Notification settings
   const { 
@@ -161,6 +169,29 @@ export default function SettingsScreen() {
       setTempDailyCost(profile.daily_cost.toString());
     }
   }, [motivation, quitDate, currency, profile]);
+
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const status = await RevenueCatService.getSubscriptionStatus();
+        setSubscriptionStatus({
+          isSubscribed: status.isSubscribed,
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error('Failed to check subscription:', error);
+        setSubscriptionStatus(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load subscription status'
+        }));
+      }
+    };
+
+    checkSubscription();
+  }, []);
 
   // Load onboarding data
   useEffect(() => {
@@ -667,6 +698,55 @@ export default function SettingsScreen() {
     setShowMedicalDisclaimer(true);
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      await RevenueCatService.openManageSubscriptions();
+    } catch (error) {
+      console.error('Failed to open subscription management:', error);
+      showError(
+        'Error',
+        'Unable to open subscription management. Please try again later.'
+      );
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      const result = await RevenueCatService.restorePurchases();
+      if (result.success) {
+        if (Object.keys(result.customerInfo?.entitlements.active || {}).length > 0) {
+          showSuccess(
+            'Success',
+            'Your purchases have been restored successfully!'
+          );
+          // Refresh subscription status
+          const status = await RevenueCatService.getSubscriptionStatus();
+          setSubscriptionStatus({
+            isSubscribed: status.isSubscribed,
+            loading: false,
+            error: null
+          });
+        } else {
+          showInfo(
+            'No Purchases Found',
+            'No previous purchases were found for this account.'
+          );
+        }
+      } else {
+        showError(
+          'Restore Failed',
+          result.error || 'Failed to restore purchases. Please try again.'
+        );
+      }
+    } catch (error) {
+      console.error('Failed to restore purchases:', error);
+      showError(
+        'Error',
+        'Unable to restore purchases. Please try again later.'
+      );
+    }
+  };
+
   const handleExportData = async () => {
     try {
       setSaving(true);
@@ -996,6 +1076,39 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.settingItem} onPress={handleDeleteAccount}>
             <Text style={[styles.settingLabel, styles.warningText]}>Delete Account</Text>
             <ChevronRight size={16} color="#FF6B47" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Subscription Management */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Crown size={20} color="#35998d" />
+            <Text style={styles.sectionTitle}>Subscription</Text>
+          </View>
+
+          {subscriptionStatus.isSubscribed && (
+            <View style={styles.subscriptionCard}>
+              <Text style={styles.subscriptionTitle}>✨ Premium Active</Text>
+              <Text style={styles.subscriptionText}>
+                You have access to all premium features
+              </Text>
+            </View>
+          )}
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={handleManageSubscription}
+          >
+            <Text style={styles.settingLabel}>Manage Subscription</Text>
+            <ChevronRight size={16} color="#C7C7CC" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.settingItem}
+            onPress={handleRestorePurchases}
+          >
+            <Text style={styles.settingLabel}>Restore Purchases</Text>
+            <ChevronRight size={16} color="#C7C7CC" />
           </TouchableOpacity>
         </View>
 
