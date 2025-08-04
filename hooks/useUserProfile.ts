@@ -62,7 +62,7 @@ export function useUserProfile(): UseUserProfileResult {
       if (profileError) {
         // If profile doesn't exist (PGRST116), just set null - don't error
         if (profileError.code === 'PGRST116') {
-          console.log('No profile found for user, will be created during onboarding')
+  
           setProfile(null)
           setError(null)
         } else {

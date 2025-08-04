@@ -18,8 +18,6 @@ export function useSubscriptionGate() {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       // Only check when app becomes active from background
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('📱 App resumed from background, will check subscription status after delay...');
-        
         // Add delay to avoid race conditions with purchase processing
         setTimeout(async () => {
           // Only check subscription if user is authenticated and in main app area
@@ -35,13 +33,9 @@ export function useSubscriptionGate() {
               const isSubscribed = await checkSubscriptionStatus();
               
               if (!isSubscribed) {
-                console.log('🔒 User lost subscription, redirecting to paywall');
                 router.replace('/paywall');
-              } else {
-                console.log('✅ User still subscribed, continuing in app');
               }
             } catch (error) {
-              console.error('❌ Error checking subscription on app resume:', error);
               // Don't redirect on error to avoid breaking user experience
             }
           } else if (user && inPaywallGroup) {
@@ -51,11 +45,10 @@ export function useSubscriptionGate() {
               const isSubscribed = await checkSubscriptionStatus();
               
               if (isSubscribed) {
-                console.log('✅ User now subscribed, allowing access to app');
                 router.replace('/(tabs)');
               }
             } catch (error) {
-              console.error('❌ Error checking subscription from paywall:', error);
+              // Silent error handling
             }
           }
         }, 4000); // 4 second delay to allow purchase processing
@@ -83,11 +76,9 @@ export function useSubscriptionGate() {
           const isSubscribed = await checkSubscriptionStatus();
           
           if (!isSubscribed) {
-            console.log('🔒 User not subscribed, redirecting to paywall');
             router.replace('/paywall');
           }
         } catch (error) {
-          console.error('❌ Error checking initial subscription:', error);
           // Don't redirect on error to avoid breaking user experience
         }
       }

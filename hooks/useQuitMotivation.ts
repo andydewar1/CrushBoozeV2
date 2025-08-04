@@ -21,7 +21,7 @@ export function useQuitMotivation() {
       });
     } else {
       // Clear motivation when settings are cleared
-      console.log('💭 No settings found - clearing motivation data');
+;
       setMotivation(null);
     }
   }, [settings]);

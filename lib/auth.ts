@@ -26,78 +26,119 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export interface SignUpResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface SignInResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface SignOutResult {
+  success: boolean;
+  error?: string;
+}
+
 /**
  * Sign up a new user with email and password
  * Automatically creates a user profile via database trigger
  */
-export async function signUp(email: string, password: string): Promise<AuthResult> {
+export async function signUp(email: string, password: string): Promise<SignUpResult> {
   try {
-    console.log('🔐 Starting signup for:', email);
+    // Clean up email
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (!cleanEmail) {
+      return {
+        success: false,
+        error: 'Email is required'
+      };
+    }
 
-    // Add network timeout
-    const signUpPromise = supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password: password.trim(),
+    if (!password) {
+      return {
+        success: false,
+        error: 'Password is required'
+      };
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return {
+        success: false,
+        error: 'Please enter a valid email address'
+      };
+    }
+
+    if (password.length < 6) {
+      return {
+        success: false,
+        error: 'Password must be at least 6 characters'
+      };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: password,
+      options: {
+        emailRedirectTo: undefined // Don't use email confirmation for now
+      }
     });
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Network request timeout - please check your internet connection'));
-      }, 15000); // 15 second timeout
-    });
-
-    const { data, error } = await Promise.race([signUpPromise, timeoutPromise]);
 
     if (error) {
-      console.error('❌ Signup error:', error);
-      
       // Provide more specific error messages
-      if (error.message.includes('fetch')) {
-        return { success: false, error: 'Network error - please check your internet connection and try again' };
-      }
       if (error.message.includes('User already registered')) {
-        return { success: false, error: 'An account with this email already exists. Please sign in instead.' };
-      }
-      if (error.message.includes('Password')) {
-        return { success: false, error: 'Password must be at least 6 characters long' };
-      }
-      if (error.message.includes('Email')) {
-        return { success: false, error: 'Please enter a valid email address' };
+        return {
+          success: false,
+          error: 'An account with this email already exists. Please sign in instead.'
+        };
       }
       
-      return { success: false, error: error.message };
-    }
-
-    if (!data.user) {
-      return { success: false, error: 'Failed to create user account' };
-    }
-
-    console.log('✅ User signed up:', data.user.id);
-
-    return {
-      success: true,
-      user: data.user,
-      session: data.session || undefined,
-      requiresOnboarding: true
-    };
-
-  } catch (error) {
-    console.error('❌ Signup error:', error);
-    
-    // Handle network-specific errors
-    if (error instanceof Error) {
-      if (error.message.includes('timeout')) {
-        return { success: false, error: 'Request timed out - please check your internet connection and try again' };
+      if (error.message.includes('Password should be at least')) {
+        return {
+          success: false,
+          error: 'Password must be at least 6 characters long'
+        };
       }
-      if (error.message.includes('fetch') || error.message.includes('network')) {
-        return { success: false, error: 'Network error - please check your internet connection and try again' };
+
+      if (error.message.includes('Invalid email')) {
+        return {
+          success: false,
+          error: 'Please enter a valid email address'
+        };
       }
-      return { success: false, error: error.message };
+
+      // Handle network-specific errors
+      if (error.message.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Network error. Please check your connection and try again.'
+        };
+      }
+
+      return {
+        success: false,
+        error: error.message || 'Failed to create account'
+      };
     }
-    
+
+    if (data.user) {
+      return {
+        success: true
+      };
+    }
+
     return {
       success: false,
-      error: 'Signup failed - please try again'
+      error: 'Failed to create user account'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred during sign up'
     };
   }
 }
@@ -106,57 +147,58 @@ export async function signUp(email: string, password: string): Promise<AuthResul
  * Sign in an existing user
  * Checks if onboarding is completed
  */
-export async function signIn(email: string, password: string): Promise<AuthResult> {
+export async function signIn(email: string, password: string): Promise<SignInResult> {
   try {
-    console.log('🔐 Starting signin process for:', email);
-
-    // Validate inputs
-    if (!email?.trim()) {
-      return { success: false, error: 'Email is required' };
+    // Clean up email
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (!cleanEmail || !password) {
+      return {
+        success: false,
+        error: 'Email and password are required'
+      };
     }
-    if (!password?.trim()) {
-      return { success: false, error: 'Password is required' };
-    }
 
-    // Sign in user
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password: password.trim(),
+      email: cleanEmail,
+      password: password
     });
 
     if (error) {
-      console.error('❌ Signin error:', error);
-      return { success: false, error: error.message };
+      if (error.message.includes('Invalid login credentials')) {
+        return {
+          success: false,
+          error: 'Invalid email or password. Please check your credentials and try again.'
+        };
+      }
+
+      if (error.message.includes('Email not confirmed')) {
+        return {
+          success: false,
+          error: 'Please check your email and confirm your account before signing in.'
+        };
+      }
+
+      return {
+        success: false,
+        error: error.message || 'Failed to sign in'
+      };
     }
 
-    if (!data.user || !data.session) {
-      console.error('❌ No user/session returned from signin');
-      return { success: false, error: 'Failed to sign in' };
+    if (data.user) {
+      return {
+        success: true
+      };
     }
 
-    console.log('✅ User signed in successfully:', data.user.id);
-
-    // Get user profile and check onboarding status
-    const profileResult = await getUserProfile(data.user.id);
-    if (!profileResult.success) {
-      console.error('❌ Failed to get user profile after signin');
-      return { success: false, error: 'Failed to load user profile' };
-    }
-
-    const requiresOnboarding = !profileResult.profile?.onboarding_completed;
-
-    return {
-      success: true,
-      user: data.user,
-      session: data.session,
-      requiresOnboarding
-    };
-
-  } catch (error) {
-    console.error('❌ Unexpected signin error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error: 'Authentication failed'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred during sign in'
     };
   }
 }
@@ -164,25 +206,24 @@ export async function signIn(email: string, password: string): Promise<AuthResul
 /**
  * Sign out the current user
  */
-export async function signOut(): Promise<{ success: boolean; error?: string }> {
+export async function signOut(): Promise<SignOutResult> {
   try {
-    console.log('🔐 Signing out user');
-
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      console.error('❌ Signout error:', error);
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: error.message || 'Failed to sign out'
+      };
     }
 
-    console.log('✅ User signed out successfully');
-    return { success: true };
-
+    return {
+      success: true
+    };
   } catch (error) {
-    console.error('❌ Unexpected signout error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error: error instanceof Error ? error.message : 'An unexpected error occurred during sign out'
     };
   }
 }
@@ -190,22 +231,25 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
 /**
  * Get current session
  */
-export async function getCurrentSession(): Promise<{ session: Session | null; error?: string }> {
+export async function getCurrentSession() {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-
+    const { data, error } = await supabase.auth.getSession();
+    
     if (error) {
-      console.error('❌ Get session error:', error);
-      return { session: null, error: error.message };
+      return {
+        session: null,
+        error: error.message || 'Failed to get current session'
+      };
     }
-
-    return { session };
-
+    
+    return {
+      session: data.session,
+      error: null
+    };
   } catch (error) {
-    console.error('❌ Unexpected get session error:', error);
     return {
       session: null,
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error: error instanceof Error ? error.message : 'Failed to get current session'
     };
   }
 }
@@ -239,61 +283,42 @@ export async function getUserProfile(userId: string): Promise<{ success: boolean
 /**
  * Create a backup profile if the database trigger failed
  */
-export async function createBackupProfile(userId: string): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+export async function createBackupProfile(userId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('🔧 Creating backup profile for:', userId);
-    
-    const profileData = {
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+
+    if (existingProfile) {
+      return { success: true };
+    }
+
+    const defaultProfile = {
       id: userId,
       quit_date: new Date().toISOString(),
       has_quit: false,
-      personal_goals: [],
-      quit_reasons: [],
-      quit_reason: '',
-      vape_types: [],
       currency: 'USD',
-      daily_cost: 0.00,
-      financial_goal_description: '',
-      financial_goal_amount: 0.00,
-      onboarding_completed: false,
+      daily_cost: 0,
+      personal_goals: [],
+      quit_reason: '',
+      quit_reasons: [],
+      vape_types: [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    // Add timeout to prevent hanging
-    const insertPromise = supabase
+    const { error } = await supabase
       .from('profiles')
-      .insert(profileData)
-      .select()
-      .single();
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        console.error('❌ Profile creation timed out');
-        reject(new Error('Profile creation timeout'));
-      }, 10000);
-    });
-
-    let data, error;
-    try {
-      const result = await Promise.race([insertPromise, timeoutPromise]);
-      data = result.data;
-      error = result.error;
-    } catch (timeoutError) {
-      console.error('❌ Profile creation timeout or error:', timeoutError);
-      return { success: false, error: 'Profile creation failed' };
-    }
+      .insert([defaultProfile]);
 
     if (error) {
-      console.error('❌ Failed to create backup profile:', error);
-      return { success: false, error: error.message };
+      throw error;
     }
 
-    console.log('✅ Backup profile created successfully');
-    return { success: true, profile: data as UserProfile };
-    
+    return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected backup profile creation error:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create backup profile'
@@ -306,50 +331,28 @@ export async function createBackupProfile(userId: string): Promise<{ success: bo
  */
 export async function updateUserProfile(
   userId: string, 
-  updates: Partial<UserProfile>
-): Promise<{ success: boolean; profile?: UserProfile; error?: string }> {
+  updates: Record<string, any>
+): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('📝 Updating user profile for:', userId, updates);
-
-    if (!userId?.trim()) {
-      return { success: false, error: 'User ID is required' };
-    }
-
-    if (!updates || Object.keys(updates).length === 0) {
-      return { success: false, error: 'No updates provided' };
-    }
-
-    // Add updated_at timestamp
-    const updatesWithTimestamp = {
+    const updateData = {
       ...updates,
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('profiles')
-      .update(updatesWithTimestamp)
-      .eq('id', userId)
-      .select()
-      .single();
+      .update(updateData)
+      .eq('id', userId);
 
     if (error) {
-      console.error('❌ Update profile error:', error);
-      return { success: false, error: error.message };
+      throw error;
     }
 
-    if (!data) {
-      console.error('❌ No data returned from profile update');
-      return { success: false, error: 'Failed to update profile' };
-    }
-
-    console.log('✅ Profile updated successfully');
-    return { success: true, profile: data as UserProfile };
-
+    return { success: true };
   } catch (error) {
-    console.error('❌ Unexpected update profile error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'An unexpected error occurred'
+      error: error instanceof Error ? error.message : 'Failed to update profile'
     };
   }
 } 

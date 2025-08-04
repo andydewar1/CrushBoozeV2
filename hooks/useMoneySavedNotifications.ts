@@ -43,9 +43,9 @@ export function useMoneySavedNotifications() {
           await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(reachedMilestones));
         }
 
-      } catch (error) {
-        console.log('Error checking for money saved milestones:', error);
-      }
+          } catch (error) {
+      // Silent error handling
+    }
     };
 
     checkForMilestones();

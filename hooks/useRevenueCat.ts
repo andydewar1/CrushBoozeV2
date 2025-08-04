@@ -23,13 +23,13 @@ export function useRevenueCat() {
       const initRevenueCat = async () => {
         try {
           setIsInitializing(true);
-          console.log('🚀 Starting RevenueCat initialization after onboarding completion');
+    
           
           // Actually initialize RevenueCat with user ID
           await initializeRevenueCatIfNeeded(session.user.id);
           
           setIsInitialized(true);
-          console.log('✅ RevenueCat initialized successfully after onboarding completion');
+    
         } catch (error) {
           console.error('❌ RevenueCat initialization failed:', error);
           setIsInitialized(false);

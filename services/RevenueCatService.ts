@@ -20,15 +20,12 @@ export class RevenueCatService {
    */
   public async initialize(userId?: string): Promise<void> {
     if (this.isConfigured) {
-      console.log('✅ RevenueCat already configured');
       return;
     }
 
     let apiKey: string | undefined;
     
     try {
-      console.log('🚀 Starting RevenueCat initialization for', Platform.OS);
-      
       // HARD FAIL if .env loading is broken
       if (!Constants.expoConfig?.extra) {
         throw new Error('CRITICAL: Constants.expoConfig.extra is undefined - .env loading failed');
@@ -39,17 +36,8 @@ export class RevenueCatService {
       const iosKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_IOS;
       const androidKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_ANDROID;
       
-      console.log('🔑 API Key Status:', {
-        single: singleKey ? `Present (${singleKey.substring(0, 10)}...)` : '❌ MISSING',
-        ios: iosKey ? `Present (${iosKey.substring(0, 10)}...)` : '❌ MISSING',
-        android: androidKey ? `Present (${androidKey.substring(0, 10)}...)` : '❌ MISSING',
-        platform: Platform.OS,
-        expoConfigExtra: Object.keys(Constants.expoConfig.extra)
-      });
-      
       // Use platform-specific key or fall back to single key
       apiKey = Platform.OS === 'ios' ? iosKey : androidKey;
-      console.log(`🎯 Selected API Key for ${Platform.OS}:`, apiKey ? `${apiKey.substring(0, 10)}...` : '❌ NULL');
 
       // HARD FAIL if API key is missing or invalid - NO SILENT RETURNS
       if (!apiKey) {
@@ -65,12 +53,9 @@ export class RevenueCatService {
       }
 
       // Configure RevenueCat with EXACT options from docs
-      console.log('⚙️ Configuring RevenueCat with API key:', `${apiKey.substring(0, 15)}...`);
-      
       // Set debug logs FIRST (before configure)
       if (__DEV__) {
         await Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-        console.log('🔧 Debug logging enabled');
       }
       
       const configOptions = {
@@ -81,35 +66,17 @@ export class RevenueCatService {
       };
 
       await Purchases.configure(configOptions);
-      console.log('✅ Purchases.configure() completed successfully');
       
       // Test that configuration worked by getting customer info
-      console.log('🧪 Testing RevenueCat configuration...');
       const customerInfo = await Purchases.getCustomerInfo();
       
       if (!customerInfo) {
         throw new Error('CRITICAL: getCustomerInfo() returned null - RevenueCat configuration failed');
       }
       
-      console.log('✅ RevenueCat configuration test passed:', {
-        originalAppUserId: customerInfo.originalAppUserId,
-        entitlements: Object.keys(customerInfo.entitlements.active),
-        activeSubscriptions: customerInfo.activeSubscriptions.length
-      });
-      
       this.isConfigured = true;
-      console.log(`🎉 RevenueCat initialized successfully for ${Platform.OS} platform`);
       
     } catch (error: any) {
-      console.error('❌ CRITICAL: RevenueCat initialization failed:', error);
-      console.error('❌ Error details:', {
-        message: error?.message,
-        code: error?.code,
-        platform: Platform.OS,
-        apiKeyPresent: !!apiKey,
-        apiKeyLength: apiKey?.length
-      });
-      
       this.isConfigured = false;
       throw new Error(`RevenueCat initialization failed: ${error?.message || error}`);
     }
@@ -127,7 +94,6 @@ export class RevenueCatService {
       const customerInfo = await Purchases.getCustomerInfo();
       return customerInfo;
     } catch (error) {
-      console.error('Failed to get customer info:', error);
       throw error;
     }
   }
@@ -141,24 +107,14 @@ export class RevenueCatService {
     }
 
     try {
-      console.log('🛍️ Fetching offerings from RevenueCat...');
       const offerings = await Purchases.getOfferings();
       
-      console.log('🛍️ Raw offerings response:', {
-        current: offerings.current ? 'Present' : 'Missing',
-        all: Object.keys(offerings.all || {}),
-        currentPackages: offerings.current?.availablePackages?.length || 0
-      });
-      
       if (!offerings.current || !offerings.current.availablePackages.length) {
-        console.warn('⚠️ No current offering or packages found');
         return [];
       }
       
-      console.log('✅ Offerings fetched successfully:', offerings.current.availablePackages.length, 'packages');
       return offerings.all ? Object.values(offerings.all) : [];
     } catch (error) {
-      console.error('Failed to get offerings:', error);
       throw error;
     }
   }
@@ -175,14 +131,7 @@ export class RevenueCatService {
     }
 
     try {
-      console.log('🔄 Restoring purchases...');
       const customerInfo = await Purchases.restorePurchases();
-      console.log('🔄 Restore result:', {
-        originalAppUserId: customerInfo.originalAppUserId,
-        activeSubscriptions: customerInfo.activeSubscriptions.length,
-        entitlements: Object.keys(customerInfo.entitlements.active),
-        allPurchasedProducts: customerInfo.allPurchasedProductIdentifiers.length
-      });
       
       // Check if there are any active subscriptions or past purchases
       const hasActiveSubs = customerInfo.activeSubscriptions.length > 0;
@@ -196,13 +145,11 @@ export class RevenueCatService {
         };
       }
       
-      console.log('✅ Purchases restored successfully');
       return { 
         success: true, 
         customerInfo
       };
     } catch (error) {
-      console.error('Failed to restore purchases:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to restore purchases' 
@@ -215,14 +162,12 @@ export class RevenueCatService {
    */
   public async openManageSubscriptions(): Promise<void> {
     if (!this.isConfigured) {
-      console.warn('RevenueCat not configured. Call initialize() first.');
       throw new Error('RevenueCat not configured');
     }
 
     try {
       // First try to get customer info to ensure connection
       const customerInfo = await this.getCustomerInfo();
-      console.log('Debug: Customer info before opening management:', customerInfo);
       
       if (!customerInfo) {
         throw new Error('Unable to get customer information');
@@ -252,7 +197,6 @@ export class RevenueCatService {
         }
       }
     } catch (error) {
-      console.error('Failed to open subscription management:', error);
       throw error;
     }
   }
@@ -273,11 +217,8 @@ export class RevenueCatService {
     }
 
     try {
-      console.log('🔐 Signing out RevenueCat user');
       await Purchases.logOut();
-      console.log('✅ RevenueCat user signed out successfully');
     } catch (error) {
-      console.error('❌ RevenueCat signOut failed:', error);
       // Don't throw - this shouldn't block the signout process
     }
   }
@@ -291,13 +232,10 @@ export class RevenueCatService {
     }
 
     try {
-      console.log('🔄 Force refreshing RevenueCat offerings and clearing cache...');
       // Force a fresh fetch from RevenueCat servers
       await Purchases.invalidateCustomerInfoCache();
       await Purchases.getOfferings();
-      console.log('✅ RevenueCat offerings refreshed and cache cleared');
     } catch (error) {
-      console.error('❌ Failed to refresh RevenueCat offerings:', error);
       // Don't throw - this shouldn't block the paywall
     }
   }
@@ -311,11 +249,8 @@ export class RevenueCatService {
     }
 
     try {
-      console.log('🧹 Invalidating all RevenueCat caches...');
       await Purchases.invalidateCustomerInfoCache();
-      console.log('✅ All RevenueCat caches invalidated');
     } catch (error) {
-      console.error('❌ Failed to invalidate RevenueCat caches:', error);
       // Don't throw - this shouldn't block the signout process
     }
   }
@@ -344,8 +279,6 @@ export class RevenueCatService {
         return defaultStatus;
       }
 
-      console.log('Debug: Full customer info:', customerInfo);
-
       const activeEntitlements = Object.keys(customerInfo.entitlements.active);
       const activeSubscriptions = customerInfo.activeSubscriptions;
 
@@ -355,7 +288,6 @@ export class RevenueCatService {
         entitlements: activeEntitlements
       };
     } catch (error) {
-      console.error('Failed to get subscription status:', error);
       return defaultStatus;
     }
   }

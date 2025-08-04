@@ -256,13 +256,13 @@ export function useGoals(): UseGoalsReturn {
 
       // Batch update achieved goals
       for (const goal of goalsToAchieve) {
-        console.log(`Auto-achieving goal: ${goal.name}`);
+
         await markGoalAchieved(goal.id);
       }
 
       // Batch update unachieved goals (if needed)
       for (const goal of goalsToUnachieve) {
-        console.log(`Auto-unachieving goal: ${goal.name}`);
+
         await markGoalUnachieved(goal.id);
       }
 

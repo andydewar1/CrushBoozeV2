@@ -39,7 +39,7 @@ export function useMoneySaved(): MoneySaved {
 
     const updateSavings = () => {
       if (!settings?.quit_date) {
-        console.log('💰 No quit date found - resetting money saved to zero');
+
         setMoneySaved(prev => ({
           ...prev,
           totalSaved: 0,

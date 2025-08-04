@@ -774,7 +774,7 @@ export default function SettingsScreen() {
         goals: goalsResult.data || [],
         craving_logs: logsResult.data || [],
         exported_at: new Date().toISOString(),
-        app_version: '1.0.0',
+        app_version: '1.0.58',
         export_format: 'CrushNic_Data_Export_v1'
       };
 
@@ -1195,7 +1195,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.settingValue}>1.0.0</Text>
+            <Text style={styles.settingValue}>1.0.58</Text>
           </View>
         </View>
 
@@ -2657,5 +2657,23 @@ const styles = StyleSheet.create({
   },
   toggleSliderActive: {
     transform: [{ translateX: 18 }],
+  },
+  subscriptionCard: {
+    backgroundColor: '#F8FBFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(53, 153, 141, 0.2)',
+  },
+  subscriptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#35998d',
+    marginBottom: 4,
+  },
+  subscriptionText: {
+    fontSize: 14,
+    color: '#8E8E93',
   },
 }); 

@@ -1,10 +1,11 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import Constants from 'expo-constants';
 
-// Supabase configuration  
-const supabaseUrl = 'hpyufwwaqgrpwgeojhmu.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweXVmd3dhcWdycHdnZW9qaG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0ODA4NDEsImV4cCI6MjA2OTA1Njg0MX0.wJdbABtWMKdVkYm3N01loGpP6o-qYCUqkIxb405w7hg';
+// Supabase configuration from environment variables with fallbacks
+const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL || process.env.SUPABASE_URL || 'hpyufwwaqgrpwgeojhmu.supabase.co';
+const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweXVmd3dhcWdycHdnZW9qaG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0ODA4NDEsImV4cCI6MjA2OTA1Njg0MX0.wJdbABtWMKdVkYm3N01loGpP6o-qYCUqkIxb405w7hg';
 
 export const supabase = createClient(`https://${supabaseUrl}`, supabaseAnonKey, {
   auth: {
@@ -45,7 +46,6 @@ export const checkInactivityLogout = async () => {
     await AsyncStorage.setItem('last_activity', now.toString());
     return false; // Don't log out
   } catch (error) {
-    console.log('Error checking inactivity:', error);
     return false; // Don't log out on error
   }
 }; 

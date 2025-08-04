@@ -7,28 +7,25 @@ import RevenueCatService from '@/services/RevenueCatService';
 export async function checkSubscriptionStatus(): Promise<boolean> {
   try {
     if (!RevenueCatService.isInitialized()) {
-      console.warn('RevenueCat not initialized when checking subscription');
       return false;
     }
 
     const status = await RevenueCatService.getSubscriptionStatus();
-    console.log('🔐 Subscription status check:', status);
     
     // Ensure status is valid before checking entitlements
     if (!status || !Array.isArray(status.entitlements)) {
-      console.warn('Invalid subscription status response:', status);
       return false;
     }
     
     // Check if user has premium entitlement (case-insensitive)
+    // Must have both: isSubscribed flag AND active premium entitlement
     const hasSubscription = status.isSubscribed && status.entitlements.some(
       entitlement => typeof entitlement === 'string' && entitlement.toLowerCase() === 'premium'
     );
     
-    console.log(`🔐 User subscription status: ${hasSubscription ? 'SUBSCRIBED' : 'NOT SUBSCRIBED'}`);
     return hasSubscription;
   } catch (error) {
-    console.error('❌ Failed to check subscription status:', error);
+    // On error, assume no subscription to enforce proper gating
     return false;
   }
 }
@@ -40,14 +37,9 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
 export async function initializeRevenueCatIfNeeded(userId?: string): Promise<void> {
   try {
     if (!RevenueCatService.isInitialized()) {
-      console.log('🚀 Initializing RevenueCat for subscription check...');
       await RevenueCatService.initialize(userId);
-      console.log('✅ RevenueCat initialization completed');
-    } else {
-      console.log('✅ RevenueCat already initialized');
     }
   } catch (error) {
-    console.error('❌ Failed to initialize RevenueCat:', error);
     throw error; // Re-throw to ensure calling code knows initialization failed
   }
 }
@@ -59,35 +51,21 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
  * - '/(tabs)' if user is subscribed or subscription check fails
  */
 export async function getPostOnboardingRoute(userId?: string): Promise<string> {
-  console.log('🚀 Starting post-onboarding route check for user:', userId);
-  
   try {
     // Initialize RevenueCat if needed
-    console.log('🔄 Initializing RevenueCat if needed...');
     await initializeRevenueCatIfNeeded(userId);
     
     // Check subscription status
-    console.log('🔍 Checking subscription status...');
     const isSubscribed = await checkSubscriptionStatus();
     
     if (isSubscribed) {
-      console.log('✅ User is subscribed, allowing access to main app');
       return '/(tabs)';
     } else {
-      console.log('🔒 User needs subscription, redirecting to paywall');
       return '/paywall';
     }
   } catch (error) {
-    console.error('❌ Error checking post-onboarding route:', error);
-    console.log('❌ Error details:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : typeof error
-    });
-    
     // Be strict - if we can't verify subscription, require paywall
     // This ensures proper subscription enforcement
-    console.log('🔒 Cannot verify subscription due to error, requiring paywall for safety');
     return '/paywall';
   }
 } 

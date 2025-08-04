@@ -46,9 +46,9 @@ export function useAchievementNotifications() {
           await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(currentlyAchieved));
         }
 
-      } catch (error) {
-        console.log('Error checking for new achievements:', error);
-      }
+          } catch (error) {
+      // Silent error handling
+    }
     };
 
     checkForNewAchievements();
