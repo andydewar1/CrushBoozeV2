@@ -20,70 +20,98 @@ export class RevenueCatService {
    */
   public async initialize(userId?: string): Promise<void> {
     if (this.isConfigured) {
-      console.log('RevenueCat already configured');
+      console.log('✅ RevenueCat already configured');
       return;
     }
 
+    let apiKey: string | undefined;
+    
     try {
-      // Get platform-specific API key from environment variables
-      const iosKey = Constants.expoConfig?.extra?.REVENUECAT_API_KEY_IOS;
-      const androidKey = Constants.expoConfig?.extra?.REVENUECAT_API_KEY_ANDROID;
+      console.log('🚀 Starting RevenueCat initialization for', Platform.OS);
       
-      console.log('Debug: Available API Keys:', {
-        ios: iosKey ? 'Present' : 'Missing',
-        android: androidKey ? 'Present' : 'Missing'
-      });
-      
-      const apiKey = Platform.OS === 'ios' ? iosKey : androidKey;
-
-      if (!apiKey || 
-          apiKey === 'your_ios_revenuecat_key_here' || 
-          apiKey === 'your_android_revenuecat_key_here') {
-        console.warn(`RevenueCat API key not configured for ${Platform.OS}. Please set REVENUECAT_API_KEY_${Platform.OS.toUpperCase()} in your .env file`);
-        return;
+      // HARD FAIL if .env loading is broken
+      if (!Constants.expoConfig?.extra) {
+        throw new Error('CRITICAL: Constants.expoConfig.extra is undefined - .env loading failed');
       }
 
-      // Configure RevenueCat with debug options
+      // Get platform-specific API key from environment variables with fallback
+      const singleKey = Constants.expoConfig.extra.REVENUECAT_API_KEY;
+      const iosKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_IOS;
+      const androidKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_ANDROID;
+      
+      console.log('🔑 API Key Status:', {
+        single: singleKey ? `Present (${singleKey.substring(0, 10)}...)` : '❌ MISSING',
+        ios: iosKey ? `Present (${iosKey.substring(0, 10)}...)` : '❌ MISSING',
+        android: androidKey ? `Present (${androidKey.substring(0, 10)}...)` : '❌ MISSING',
+        platform: Platform.OS,
+        expoConfigExtra: Object.keys(Constants.expoConfig.extra)
+      });
+      
+      // Use platform-specific key or fall back to single key
+      apiKey = Platform.OS === 'ios' ? iosKey : androidKey;
+      console.log(`🎯 Selected API Key for ${Platform.OS}:`, apiKey ? `${apiKey.substring(0, 10)}...` : '❌ NULL');
+
+      // HARD FAIL if API key is missing or invalid - NO SILENT RETURNS
+      if (!apiKey) {
+        throw new Error(`CRITICAL: RevenueCat API key is NULL for ${Platform.OS}. Check .env file and app.config.js`);
+      }
+      
+      if (apiKey === 'your_revenuecat_public_key_here' || apiKey === 'your_ios_revenuecat_key_here' || apiKey === 'your_android_revenuecat_key_here') {
+        throw new Error(`CRITICAL: RevenueCat API key is placeholder value for ${Platform.OS}. Update .env file with real key`);
+      }
+
+      if (apiKey.length < 20) {
+        throw new Error(`CRITICAL: RevenueCat API key too short (${apiKey.length} chars) for ${Platform.OS}. Key: ${apiKey}`);
+      }
+
+      // Configure RevenueCat with EXACT options from docs
+      console.log('⚙️ Configuring RevenueCat with API key:', `${apiKey.substring(0, 15)}...`);
+      
+      // Set debug logs FIRST (before configure)
+      if (__DEV__) {
+        await Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+        console.log('🔧 Debug logging enabled');
+      }
+      
       const configOptions = {
-        apiKey,
+        apiKey: apiKey,
+        appUserID: userId || null,
         observerMode: false,
         useAmazon: false
       };
-      
-      console.log('Debug: Configuring RevenueCat with options:', {
-        platform: Platform.OS,
-        observerMode: configOptions.observerMode,
-        useAmazon: configOptions.useAmazon
-      });
 
       await Purchases.configure(configOptions);
+      console.log('✅ Purchases.configure() completed successfully');
       
-      // Set user ID if provided
-      if (userId) {
-        console.log('Debug: Setting RevenueCat user ID:', userId);
-        // Clear any cached data before switching users
-        await Purchases.invalidateCustomerInfoCache();
-        await Purchases.logIn(userId);
+      // Test that configuration worked by getting customer info
+      console.log('🧪 Testing RevenueCat configuration...');
+      const customerInfo = await Purchases.getCustomerInfo();
+      
+      if (!customerInfo) {
+        throw new Error('CRITICAL: getCustomerInfo() returned null - RevenueCat configuration failed');
       }
+      
+      console.log('✅ RevenueCat configuration test passed:', {
+        originalAppUserId: customerInfo.originalAppUserId,
+        entitlements: Object.keys(customerInfo.entitlements.active),
+        activeSubscriptions: customerInfo.activeSubscriptions.length
+      });
       
       this.isConfigured = true;
-      console.log(`RevenueCat initialized successfully for ${Platform.OS} platform`);
-
-      // Set debug logs in development
-      if (__DEV__) {
-        await Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-        
-        // Get initial state
-        const customerInfo = await Purchases.getCustomerInfo();
-        console.log('Debug: Initial customer info:', {
-          originalAppUserId: customerInfo.originalAppUserId,
-          entitlements: Object.keys(customerInfo.entitlements.active),
-          activeSubscriptions: customerInfo.activeSubscriptions
-        });
-      }
-    } catch (error) {
-      console.error('Failed to initialize RevenueCat:', error);
-      throw error;
+      console.log(`🎉 RevenueCat initialized successfully for ${Platform.OS} platform`);
+      
+    } catch (error: any) {
+      console.error('❌ CRITICAL: RevenueCat initialization failed:', error);
+      console.error('❌ Error details:', {
+        message: error?.message,
+        code: error?.code,
+        platform: Platform.OS,
+        apiKeyPresent: !!apiKey,
+        apiKeyLength: apiKey?.length
+      });
+      
+      this.isConfigured = false;
+      throw new Error(`RevenueCat initialization failed: ${error?.message || error}`);
     }
   }
 
@@ -92,8 +120,7 @@ export class RevenueCatService {
    */
   public async getCustomerInfo(): Promise<CustomerInfo | null> {
     if (!this.isConfigured) {
-      console.warn('RevenueCat not configured. Call initialize() first.');
-      return null;
+      throw new Error('RevenueCat not configured. Call initialize() first.');
     }
 
     try {
@@ -101,7 +128,7 @@ export class RevenueCatService {
       return customerInfo;
     } catch (error) {
       console.error('Failed to get customer info:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -110,16 +137,29 @@ export class RevenueCatService {
    */
   public async getOfferings(): Promise<PurchasesOffering[] | null> {
     if (!this.isConfigured) {
-      console.warn('RevenueCat not configured. Call initialize() first.');
-      return null;
+      throw new Error('RevenueCat not configured. Call initialize() first.');
     }
 
     try {
+      console.log('🛍️ Fetching offerings from RevenueCat...');
       const offerings = await Purchases.getOfferings();
+      
+      console.log('🛍️ Raw offerings response:', {
+        current: offerings.current ? 'Present' : 'Missing',
+        all: Object.keys(offerings.all || {}),
+        currentPackages: offerings.current?.availablePackages?.length || 0
+      });
+      
+      if (!offerings.current || !offerings.current.availablePackages.length) {
+        console.warn('⚠️ No current offering or packages found');
+        return [];
+      }
+      
+      console.log('✅ Offerings fetched successfully:', offerings.current.availablePackages.length, 'packages');
       return offerings.all ? Object.values(offerings.all) : [];
     } catch (error) {
       console.error('Failed to get offerings:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -135,8 +175,14 @@ export class RevenueCatService {
     }
 
     try {
+      console.log('🔄 Restoring purchases...');
       const customerInfo = await Purchases.restorePurchases();
-      console.log('Debug: Restore result:', customerInfo);
+      console.log('🔄 Restore result:', {
+        originalAppUserId: customerInfo.originalAppUserId,
+        activeSubscriptions: customerInfo.activeSubscriptions.length,
+        entitlements: Object.keys(customerInfo.entitlements.active),
+        allPurchasedProducts: customerInfo.allPurchasedProductIdentifiers.length
+      });
       
       // Check if there are any active subscriptions or past purchases
       const hasActiveSubs = customerInfo.activeSubscriptions.length > 0;
@@ -150,6 +196,7 @@ export class RevenueCatService {
         };
       }
       
+      console.log('✅ Purchases restored successfully');
       return { 
         success: true, 
         customerInfo

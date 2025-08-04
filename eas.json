@@ -9,10 +9,18 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "REVENUECAT_API_KEY_IOS": "appl_acqtvMQYwixBkxfQviZTLqKKJKc",
+        "REVENUECAT_API_KEY_ANDROID": "goog_CgXPzjcynVrqUtQBoQAwKhqpOcF"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "REVENUECAT_API_KEY_IOS": "appl_acqtvMQYwixBkxfQviZTLqKKJKc",
+        "REVENUECAT_API_KEY_ANDROID": "goog_CgXPzjcynVrqUtQBoQAwKhqpOcF"
+      }
     }
   },
   "submit": {

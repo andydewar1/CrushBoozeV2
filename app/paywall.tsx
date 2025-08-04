@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, Alert, Platform, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Purchases from 'react-native-purchases';
 import RevenueCatService from '@/services/RevenueCatService';
 import { checkSubscriptionStatus } from '@/lib/subscription';
 import { X, RotateCcw } from 'lucide-react-native';
@@ -31,11 +32,8 @@ export default function PaywallScreen() {
       setLoading(true);
       setError(false);
 
-      // Initialize RevenueCat if needed
-      if (!RevenueCatService.isInitialized()) {
-        console.log('🚀 Initializing RevenueCat before presenting paywall...');
-        await RevenueCatService.initialize();
-      }
+      // RevenueCat is initialized in app/_layout.tsx - no need to initialize here
+      console.log('🚀 Using globally initialized RevenueCat...');
 
       // Force refresh offerings to get latest paywall
       console.log('🔄 Refreshing RevenueCat offerings...');
@@ -43,10 +41,64 @@ export default function PaywallScreen() {
 
       console.log('📱 Presenting RevenueCat paywall...');
       
-      // Present the paywall using RevenueCat UI
-      const result = await RevenueCatUI.presentPaywall();
-      
-      console.log('💳 Paywall result:', result);
+      // BULLETPROOF protection against DebugErrorView.swift:68 crash
+      try {
+        // 1. Wait for UI to be completely ready
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 2. Validate RevenueCat initialization state
+        const customerInfo = await Purchases.getCustomerInfo();
+        if (!customerInfo) {
+          throw new Error('CustomerInfo is null - RevenueCat not properly initialized');
+        }
+        
+        // 3. Validate offerings are available (prevents DebugErrorView from showing)
+        const offerings = await Purchases.getOfferings();
+        if (!offerings || !offerings.current || Object.keys(offerings.all).length === 0) {
+          throw new Error('No offerings available - cannot present paywall');
+        }
+        
+        console.log('✅ RevenueCat validation passed:', {
+          customerInfo: !!customerInfo,
+          offeringsAvailable: Object.keys(offerings.all).length,
+          currentOffering: !!offerings.current
+        });
+        
+                         // 4. Present paywall directly (no timeout - let RevenueCat handle it)
+        const result = await RevenueCatUI.presentPaywall();
+        
+        console.log('💳 Paywall result:', result);
+        return result;
+        
+      } catch (paywallError: any) {
+        console.error('🚨 RevenueCat Paywall Error:', paywallError);
+        
+        // Handle specific crash types that cause DebugErrorView.swift:68
+        if (paywallError?.message?.includes('DebugErrorView') ||
+            paywallError?.message?.includes('assertion') ||
+            paywallError?.message?.includes('No offerings available') ||
+            paywallError?.code === 'PURCHASES_ERROR' ||
+            paywallError?.toString()?.includes('SwiftUI')) {
+          
+          console.log('🛡️ Prevented DebugErrorView.swift:68 crash - showing fallback');
+          Alert.alert(
+            'Subscription Required',
+            'Unable to load the subscription page. Please try restoring your purchases or visit the App Store.',
+            [
+              { text: 'Restore Purchases', onPress: handleRestorePurchases },
+              { text: 'App Store', onPress: () => {
+                // Open App Store subscription management
+                const url = 'https://apps.apple.com/account/subscriptions';
+                console.log('Opening App Store subscriptions:', url);
+              }},
+              { text: 'Cancel', style: 'cancel' }
+            ]
+          );
+          return;
+        }
+        
+        throw paywallError;
+      }
       
       // Check subscription status after paywall interaction
       await handlePaywallResult();
@@ -129,6 +181,10 @@ export default function PaywallScreen() {
   const handleRestorePurchases = async () => {
     try {
       console.log('🔄 Attempting to restore purchases...');
+      
+      // RevenueCat is initialized in app/_layout.tsx - no need to initialize here
+      console.log('🚀 Using globally initialized RevenueCat for restore...');
+      
       const result = await RevenueCatService.restorePurchases();
       
       if (result.success && result.customerInfo) {

@@ -42,11 +42,13 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
     if (!RevenueCatService.isInitialized()) {
       console.log('🚀 Initializing RevenueCat for subscription check...');
       await RevenueCatService.initialize(userId);
+      console.log('✅ RevenueCat initialization completed');
+    } else {
+      console.log('✅ RevenueCat already initialized');
     }
   } catch (error) {
     console.error('❌ Failed to initialize RevenueCat:', error);
-    // Don't throw - just log the error to prevent crashes
-    // The subscription check will handle the uninitialized state
+    throw error; // Re-throw to ensure calling code knows initialization failed
   }
 }
 

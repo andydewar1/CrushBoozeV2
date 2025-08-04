@@ -1,12 +1,18 @@
 import 'dotenv/config';
 
 export default ({ config }) => {
+  // Get the single API key or platform-specific keys
+  const singleApiKey = process.env.REVENUECAT_API_KEY;
+  const iosKey = process.env.REVENUECAT_API_KEY_IOS || singleApiKey;
+  const androidKey = process.env.REVENUECAT_API_KEY_ANDROID || singleApiKey;
+
   return {
     ...config,
     extra: {
       ...config.extra,
-      REVENUECAT_API_KEY_IOS: process.env.REVENUECAT_API_KEY_IOS,
-      REVENUECAT_API_KEY_ANDROID: process.env.REVENUECAT_API_KEY_ANDROID,
+      REVENUECAT_API_KEY: singleApiKey,
+      REVENUECAT_API_KEY_IOS: iosKey,
+      REVENUECAT_API_KEY_ANDROID: androidKey,
     },
   };
 }; 

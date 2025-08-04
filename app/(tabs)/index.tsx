@@ -35,7 +35,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const initRevenueCat = async () => {
       try {
-        await RevenueCatService.initialize();
+        // RevenueCat is initialized in app/_layout.tsx - no duplicate init needed
       } catch (error) {
         // Silently fail - don't break the app if RevenueCat fails
         console.error('RevenueCat init failed:', error);

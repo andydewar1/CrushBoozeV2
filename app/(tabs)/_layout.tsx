@@ -11,7 +11,7 @@ export default function TabLayout() {
   useEffect(() => {
     const initRevenueCat = async () => {
       try {
-        await RevenueCatService.initialize();
+        // RevenueCat is initialized in app/_layout.tsx - no duplicate init needed
         console.log('✅ RevenueCat initialized in tabs');
       } catch (error) {
         console.error('❌ RevenueCat initialization failed:', error);

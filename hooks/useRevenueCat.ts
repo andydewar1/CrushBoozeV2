@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import RevenueCatService from '@/services/RevenueCatService';
+import { initializeRevenueCatIfNeeded } from '@/lib/subscription';
 
 export function useRevenueCat() {
   const [isInitialized, setIsInitialized] = useState(false);
@@ -23,12 +23,17 @@ export function useRevenueCat() {
       const initRevenueCat = async () => {
         try {
           setIsInitializing(true);
-          await RevenueCatService.initialize();
+          console.log('🚀 Starting RevenueCat initialization after onboarding completion');
+          
+          // Actually initialize RevenueCat with user ID
+          await initializeRevenueCatIfNeeded(session.user.id);
+          
           setIsInitialized(true);
-          console.log('✅ RevenueCat initialized after onboarding completion');
+          console.log('✅ RevenueCat initialized successfully after onboarding completion');
         } catch (error) {
           console.error('❌ RevenueCat initialization failed:', error);
-          // Don't throw error to prevent app crash
+          setIsInitialized(false);
+          // Don't throw error to prevent app crash, but log it properly
         } finally {
           setIsInitializing(false);
         }
