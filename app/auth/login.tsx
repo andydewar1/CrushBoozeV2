@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { checkSubscriptionStatus, initializeRevenueCatIfNeeded } from '@/lib/subscription';
 import { Eye, EyeOff } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -25,149 +26,111 @@ export default function LoginScreen() {
       const { error } = await signIn(email, password);
       if (error) {
         console.error('❌ Sign in failed:', error);
-        Alert.alert('Sign In Failed', error || 'Please check your credentials and try again');
+        Alert.alert('Sign In Failed', error || 'Please check your credentials and try again.');
         return;
       }
+
+      // Clear the form
+      setEmail('');
+      setPassword('');
       
-      // Check if user has completed onboarding
-      try {
-        const onboardingCompleted = await AsyncStorage.getItem(`onboarding_completed_${email}`);
-        if (onboardingCompleted !== 'true') {
-          router.replace('/onboarding/quit-date');
-          return;
-        }
-      } catch (storageError) {
-        console.log('Storage check failed, proceeding to main app:', storageError);
-      }
+      // Save timestamp for auto-logout
+      await AsyncStorage.setItem('last_activity', Date.now().toString());
       
-      // Default: go to main app
-      router.replace('/(tabs)');
-    } catch (error: any) {
-      console.error('Error logging in:', error);
-      Alert.alert(
-        'Sign In Failed',
-        error.message || 'Please check your internet connection and try again'
-      );
+      // SECURITY FIX: Check subscription status after successful login
+      // Don't route directly to main app - let the main index handle routing securely
+      console.log('✅ Login successful - redirecting to secure routing');
+      router.replace('/');
+
+    } catch (error) {
+      console.error('❌ Login error:', error);
+      Alert.alert('Login Error', 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmailChange = (text: string) => {
-    setEmail(text.trim());
-  };
-
-  const handlePasswordChange = (text: string) => {
-    setPassword(text.trim());
-  };
-
-  const navigateToSignup = () => {
-    if (!loading) {
-      router.push('/auth/signup');
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
-      >
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          bounces={false}
-        >
-          <View style={styles.content}>
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('@/assets/images/CrushNic Logo (1).png')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerContainer}>
+          <Image
+            source={require('@/assets/images/CrushNic Logo (2).png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your quit journey</Text>
+        </View>
 
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to continue your quit journey
-            </Text>
-            
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={handleEmailChange}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  placeholder="Enter your email"
-                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
-                  returnKeyType="next"
-                  textContentType="emailAddress"
-                  autoComplete="email"
-                  editable={!loading}
-                />
-              </View>
-              
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.passwordContainer}>
-                  <TextInput
-                    style={styles.passwordInput}
-                    value={password}
-                    onChangeText={handlePasswordChange}
-                    secureTextEntry={!showPassword}
-                    placeholder="Enter your password"
-                    placeholderTextColor="rgba(255, 255, 255, 0.4)"
-                    returnKeyType="go"
-                    textContentType="password"
-                    autoComplete="password"
-                    editable={!loading}
-                  />
-                  <TouchableOpacity
-                    style={styles.eyeButton}
-                    onPress={() => setShowPassword(!showPassword)}
-                    disabled={loading}
-                  >
-                    {showPassword ? (
-                      <EyeOff size={20} color="#FFFFFF" />
-                    ) : (
-                      <Eye size={20} color="#FFFFFF" />
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-            
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#35998d" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.linkButton}
-              onPress={navigateToSignup}
-              disabled={loading}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.linkText}>
-                Don't have an account? <Text style={styles.linkTextBold}>Sign up</Text>
-              </Text>
-            </TouchableOpacity>
+        <View style={styles.formContainer}>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholder="Enter your email"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+            />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                placeholder="Enter your password"
+                placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
+                ) : (
+                  <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#35998d" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => router.push('/auth/signup')}
+          >
+            <Text style={styles.linkText}>
+              Don't have an account? <Text style={styles.linkTextBold}>Sign up</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -176,107 +139,112 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#35998d',
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
   },
-  content: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-  },
-  logoContainer: {
+  headerContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 200,
+    height: 40,
     tintColor: '#FFFFFF',
+    marginBottom: 24,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
-    textAlign: 'center',
     marginBottom: 8,
+    textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   subtitle: {
-    fontSize: 17,
-    color: 'rgba(255, 255, 255, 0.8)', // Increased from 0.6
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
-    marginBottom: 32,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  form: {
-    marginBottom: 24,
+  formContainer: {
+    gap: 20,
   },
   inputContainer: {
-    marginBottom: 20,
+    gap: 8,
   },
   label: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 8,
+    marginLeft: 4,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   input: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    fontSize: 17,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
     color: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   passwordInput: {
     flex: 1,
-    padding: 20,
-    fontSize: 17,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
     color: '#FFFFFF',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   eyeButton: {
-    padding: 20,
+    padding: 16,
   },
   button: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 100,
-    height: 56,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
+    marginTop: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: '600',
     color: '#35998d',
+    fontSize: 18,
+    fontWeight: '600',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   linkButton: {
     alignItems: 'center',
-    padding: 8,
+    padding: 12,
+    marginTop: 8,
   },
   linkText: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.8)', // Increased from 0.6
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 16,
+    textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   linkTextBold: {

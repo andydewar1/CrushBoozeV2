@@ -40,6 +40,10 @@ export function useUserData() {
         setLoading(true);
 
         // Get user data from Supabase
+        if (!session?.user?.id) {
+          throw new Error('No valid session');
+        }
+        
         const { data: user, error: userError } = await supabase
           .from('users')
           .select('*')

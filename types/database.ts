@@ -1,4 +1,11 @@
-import { Database } from '@supabase/supabase-js'
+// Database types for CrushNic
+export interface Database {
+  public: {
+    Tables: {
+      [key: string]: any;
+    };
+  };
+}
 
 export type Tables = Database['public']['Tables']
 

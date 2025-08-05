@@ -1,92 +1,117 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { checkSubscriptionStatus, initializeRevenueCatIfNeeded } from '@/lib/subscription';
+import { checkSubscriptionStatus } from '@/lib/subscription';
 
 /**
- * Hook that enforces subscription gating when the app resumes from background
- * Only checks subscription for authenticated users in the main app area
+ * BULLETPROOF subscription gate - prevents double checks and paywall bypass
  */
 export function useSubscriptionGate() {
   const router = useRouter();
   const segments = useSegments();
   const { user } = useAuth();
   const appState = useRef(AppState.currentState);
+  const [isChecking, setIsChecking] = useState(false);
+  const [hasCheckedOnEntry, setHasCheckedOnEntry] = useState(false);
+  const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Prevent multiple simultaneous checks with timeout protection
+  const checkSubscription = async (reason: string) => {
+    // Clear any pending checks
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+      checkTimeoutRef.current = null;
+    }
+
+    if (isChecking) {
+      console.log('⏭️ Subscription check already in progress, skipping...', reason);
+      return;
+    }
+
+    console.log(`🔍 Starting subscription check (${reason})...`);
+    setIsChecking(true);
+
+    try {
+      // CRITICAL: Force fresh data every time - no caching bypass
+      const isSubscribed = await checkSubscriptionStatus();
+      
+      console.log(`📊 Subscription check result (${reason}):`, { isSubscribed });
+      
+      if (!isSubscribed) {
+        console.log('🚨 No subscription - redirecting to paywall');
+        // Use replace to prevent back navigation bypass
+        router.replace('/paywall');
+      } else {
+        console.log('✅ Subscription valid - access granted');
+      }
+    } catch (error) {
+      console.error('❌ Subscription check failed:', error);
+      // CRITICAL: On error, always redirect to paywall
+      router.replace('/paywall');
+    } finally {
+      setIsChecking(false);
+    }
+  };
+
+  // Check on app resume (but not on first launch)
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      // Only check when app becomes active from background
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        // Add delay to avoid race conditions with purchase processing
-        setTimeout(async () => {
-          // Only check subscription if user is authenticated and in main app area
-          const inTabsGroup = segments[0] === '(tabs)';
-          const inPaywallGroup = segments[0] === 'paywall';
-          
-          if (user && inTabsGroup) {
-            try {
-              // Initialize RevenueCat if needed
-              await initializeRevenueCatIfNeeded(user.id);
-              
-              // Check subscription status
-              const isSubscribed = await checkSubscriptionStatus();
-              
-              if (!isSubscribed) {
-                router.replace('/paywall');
-              }
-            } catch (error) {
-              // Don't redirect on error to avoid breaking user experience
-            }
-          } else if (user && inPaywallGroup) {
-            // If user is on paywall, check if they now have subscription
-            try {
-              await initializeRevenueCatIfNeeded(user.id);
-              const isSubscribed = await checkSubscriptionStatus();
-              
-              if (isSubscribed) {
-                router.replace('/(tabs)');
-              }
-            } catch (error) {
-              // Silent error handling
-            }
-          }
-        }, 4000); // 4 second delay to allow purchase processing
+        const inTabsGroup = segments[0] === '(tabs)';
+        
+        // Only check on resume if user is logged in, in main app, and we've already done initial check
+        if (user && inTabsGroup && hasCheckedOnEntry) {
+          // Add small delay to prevent race conditions
+          checkTimeoutRef.current = setTimeout(() => {
+            checkSubscription('app resume');
+          }, 500);
+        }
       }
 
       appState.current = nextAppState;
     };
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-
     return () => {
       subscription?.remove();
-    };
-  }, [user, segments, router]);
-
-  // Also check subscription when user first enters the main app area
-  useEffect(() => {
-    const checkInitialSubscription = async () => {
-      const inTabsGroup = segments[0] === '(tabs)';
-      
-      // Only check if user is authenticated and just entered the tabs area
-      if (user && inTabsGroup) {
-        try {
-          await initializeRevenueCatIfNeeded(user.id);
-          const isSubscribed = await checkSubscriptionStatus();
-          
-          if (!isSubscribed) {
-            router.replace('/paywall');
-          }
-        } catch (error) {
-          // Don't redirect on error to avoid breaking user experience
-        }
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
       }
     };
+  }, [user, segments, hasCheckedOnEntry]);
 
-    // Small delay to avoid conflicts with other navigation
-    const timer = setTimeout(checkInitialSubscription, 2000);
+  // Check when entering main app (ONLY ONCE per session)
+  useEffect(() => {
+    const inTabsGroup = segments[0] === '(tabs)';
+    const isOnPaywall = segments[0] === 'paywall';
     
-    return () => clearTimeout(timer);
-  }, [user, segments, router]);
+    // CRITICAL: Don't interfere if user is already on paywall or navigating from onboarding
+    if (isOnPaywall) {
+      console.log('⚠️ User on paywall - subscription gate will not interfere');
+      return;
+    }
+    
+    if (user && inTabsGroup && !hasCheckedOnEntry && !isChecking) {
+      setHasCheckedOnEntry(true);
+      // Small delay to prevent race conditions with paywall navigation
+      checkTimeoutRef.current = setTimeout(() => {
+        checkSubscription('main app entry');
+      }, 100);
+    }
+
+    // Reset check flag when user logs out or leaves main app
+    if (!user || !inTabsGroup) {
+      setHasCheckedOnEntry(false);
+    }
+  }, [user, segments, hasCheckedOnEntry, isChecking]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+    };
+  }, []);
 } 

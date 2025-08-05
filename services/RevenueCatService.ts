@@ -5,6 +5,7 @@ import { Platform, Linking } from 'react-native';
 export class RevenueCatService {
   private static instance: RevenueCatService;
   private isConfigured = false;
+  private static isPaywallCurrentlyActive = false; // GLOBAL SINGLETON GUARD
 
   private constructor() {}
 
@@ -13,6 +14,21 @@ export class RevenueCatService {
       RevenueCatService.instance = new RevenueCatService();
     }
     return RevenueCatService.instance;
+  }
+
+  /**
+   * GLOBAL SINGLETON: Check if any paywall is currently active
+   */
+  public static isPaywallActive(): boolean {
+    return RevenueCatService.isPaywallCurrentlyActive;
+  }
+
+  /**
+   * GLOBAL SINGLETON: Set paywall active state
+   */
+  public static setPaywallActive(active: boolean): void {
+    console.log(`🔒 Global paywall lock: ${active}`);
+    RevenueCatService.isPaywallCurrentlyActive = active;
   }
 
   /**
@@ -53,9 +69,13 @@ export class RevenueCatService {
       }
 
       // Configure RevenueCat with EXACT options from docs
-      // Set debug logs FIRST (before configure)
+      // CRITICAL: Disable debug logs in production/TestFlight to prevent caching issues
       if (__DEV__) {
+        console.log('🔧 Development mode: enabling verbose RevenueCat logs');
         await Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+      } else {
+        console.log('🔧 Production mode: setting minimal RevenueCat logs');
+        await Purchases.setLogLevel(LOG_LEVEL.ERROR);
       }
       
       const configOptions = {
@@ -64,6 +84,14 @@ export class RevenueCatService {
         observerMode: false,
         useAmazon: false
       };
+
+      console.log('🚀 Configuring RevenueCat with options:', {
+        hasApiKey: !!apiKey,
+        apiKeyLength: apiKey?.length,
+        hasUserId: !!userId,
+        observerMode: configOptions.observerMode,
+        isDevelopment: __DEV__
+      });
 
       await Purchases.configure(configOptions);
       
@@ -120,7 +148,8 @@ export class RevenueCatService {
   }
 
   /**
-   * Restore previous purchases
+   * Restore purchases and validate they are currently active
+   * BULLETPROOF FOR TESTFLIGHT: Only trusts expiration dates, ignores all cached data
    */
   public async restorePurchases(): Promise<{ success: boolean; customerInfo?: CustomerInfo; error?: string }> {
     if (!this.isConfigured) {
@@ -131,25 +160,83 @@ export class RevenueCatService {
     }
 
     try {
+      console.log('🔄 BULLETPROOF restore with extreme validation...');
+      
+      // CRITICAL: SUPER AGGRESSIVE cache clearing for TestFlight
+      await this.invalidateAllCaches();
+      await new Promise(resolve => setTimeout(resolve, 500)); // Extra delay
+      await this.invalidateAllCaches(); // Clear again
+      
       const customerInfo = await Purchases.restorePurchases();
       
-      // Check if there are any active subscriptions or past purchases
-      const hasActiveSubs = customerInfo.activeSubscriptions.length > 0;
-      const hasPastPurchases = customerInfo.allPurchasedProductIdentifiers.length > 0;
+      // TESTFLIGHT SECURITY: ONLY trust expiration dates, ignore everything else
+      console.log('🛡️ SECURITY CHECK: Validating with expiration dates only...');
       
-      if (!hasActiveSubs && !hasPastPurchases) {
-        return {
-          success: true,
-          customerInfo,
-          error: 'No previous purchases found'
-        };
+      const now = new Date();
+      let hasValidSubscription = false;
+      let validationDetails = {
+        hasAnyEntitlements: false,
+        premiumEntitlementExists: false,
+        premiumExpiryDate: null as string | null,
+        isValidByExpiry: false,
+        latestExpiryDate: null as string | null,
+        isLatestExpiryValid: false,
+        minutesUntilExpiry: 0
+      };
+      
+      // Check if Premium entitlement exists at all
+      validationDetails.hasAnyEntitlements = Object.keys(customerInfo.entitlements.active).length > 0;
+      validationDetails.premiumEntitlementExists = !!customerInfo.entitlements.active.Premium;
+      
+      if (customerInfo.entitlements.active.Premium) {
+        const premiumEntitlement = customerInfo.entitlements.active.Premium;
+        validationDetails.premiumExpiryDate = premiumEntitlement.expirationDate;
+        
+        if (premiumEntitlement.expirationDate) {
+          const expiryDate = new Date(premiumEntitlement.expirationDate);
+          validationDetails.isValidByExpiry = expiryDate > now;
+          validationDetails.minutesUntilExpiry = Math.round((expiryDate.getTime() - now.getTime()) / (1000 * 60));
+        } else {
+          // TESTFLIGHT SECURITY: No expiry date is suspicious in TestFlight - be very careful
+          console.log('⚠️ Premium entitlement has no expiry date - treating as invalid in TestFlight');
+          validationDetails.isValidByExpiry = false;
+        }
       }
       
-      return { 
-        success: true, 
-        customerInfo
-      };
+      // DOUBLE CHECK: Also validate latest expiration date
+      if (customerInfo.latestExpirationDate) {
+        validationDetails.latestExpiryDate = customerInfo.latestExpirationDate;
+        const latestExpiry = new Date(customerInfo.latestExpirationDate);
+        validationDetails.isLatestExpiryValid = latestExpiry > now;
+      }
+      
+      // BULLETPROOF LOGIC: Must pass ALL validation checks
+      hasValidSubscription = validationDetails.premiumEntitlementExists && 
+                           validationDetails.isValidByExpiry && 
+                           (validationDetails.latestExpiryDate ? validationDetails.isLatestExpiryValid : true);
+      
+      console.log('🛡️ BULLETPROOF validation result:', {
+        ...validationDetails,
+        hasValidSubscription,
+        currentTime: now.toISOString()
+      });
+
+      if (hasValidSubscription) {
+        console.log('✅ BULLETPROOF restore successful - subscription is GENUINELY active');
+        return { 
+          success: true, 
+          customerInfo 
+        };
+      } else {
+        console.log('🚨 BULLETPROOF restore failed - subscription is NOT genuinely active');
+        return {
+          success: false,
+          customerInfo,
+          error: 'No active subscription found. Please purchase a subscription to continue.'
+        };
+      }
     } catch (error) {
+      console.error('❌ BULLETPROOF restore failed with error:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to restore purchases' 
@@ -242,6 +329,7 @@ export class RevenueCatService {
 
   /**
    * Invalidate all RevenueCat caches to force fresh data
+   * CRITICAL: This must work in TestFlight to detect subscription changes
    */
   public async invalidateAllCaches(): Promise<void> {
     if (!this.isConfigured) {
@@ -249,9 +337,24 @@ export class RevenueCatService {
     }
 
     try {
+      console.log('🧹 AGGRESSIVELY clearing ALL RevenueCat caches...');
+      
+      // CRITICAL: Multiple cache invalidation methods for TestFlight
       await Purchases.invalidateCustomerInfoCache();
+      
+      // Force a fresh network call by getting customer info twice
+      try {
+        await Purchases.getCustomerInfo();
+        await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+        await Purchases.getCustomerInfo();
+      } catch (error) {
+        console.log('Cache refresh network calls failed, continuing...');
+      }
+      
+      console.log('✅ All caches invalidated');
     } catch (error) {
-      // Don't throw - this shouldn't block the signout process
+      console.error('⚠️ Error invalidating caches:', error);
+      // Don't throw - this shouldn't block operations
     }
   }
 
@@ -293,5 +396,8 @@ export class RevenueCatService {
   }
 }
 
-// Export singleton instance
-export default RevenueCatService.getInstance(); 
+  // Export singleton instance
+export default RevenueCatService.getInstance();
+
+// Export class for static method access
+export { RevenueCatService as RevenueCatServiceClass }; 

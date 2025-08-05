@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Alert, Platform, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Purchases from 'react-native-purchases';
-import RevenueCatService from '@/services/RevenueCatService';
+import RevenueCatService, { RevenueCatServiceClass } from '@/services/RevenueCatService';
 import { checkSubscriptionStatus } from '@/lib/subscription';
 import { X, RotateCcw } from 'lucide-react-native';
 import RevenueCatUI from 'react-native-purchases-ui';
@@ -13,24 +13,49 @@ export default function PaywallScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isPaywallActive, setIsPaywallActive] = useState(false);
+  const hasAttemptedPresentation = useRef(false);
 
-  // Present the RevenueCat paywall when component mounts
+  // BULLETPROOF: Present the RevenueCat paywall when component mounts
   useEffect(() => {
-    if (!isPaywallActive) {
+    // GLOBAL SINGLETON GUARD: Prevent multiple paywall presentations across ALL components
+    if (RevenueCatServiceClass.isPaywallActive()) {
+      console.log('🚫 GLOBAL GUARD: Paywall already active globally, skipping presentation');
+      return;
+    }
+
+    if (!isPaywallActive && !hasAttemptedPresentation.current) {
+      hasAttemptedPresentation.current = true;
       presentPaywall();
     }
   }, []);
 
   const presentPaywall = async () => {
+    // BULLETPROOF: Global singleton check
+    if (RevenueCatServiceClass.isPaywallActive()) {
+      console.log('🚫 GLOBAL GUARD: Paywall already active globally, aborting');
+      return;
+    }
+
     if (isPaywallActive) {
-      console.log('⚠️ Paywall already active, skipping presentation');
+      console.log('⚠️ Paywall already active locally, skipping presentation');
       return;
     }
 
     try {
+      // SET GLOBAL LOCK IMMEDIATELY
+      RevenueCatServiceClass.setPaywallActive(true);
       setIsPaywallActive(true);
       setLoading(true);
       setError(false);
+
+      // BULLETPROOF: Double-check subscription before showing paywall
+      console.log('🔍 Pre-paywall subscription check...');
+      const alreadySubscribed = await checkSubscriptionStatus();
+      if (alreadySubscribed) {
+        console.log('✅ Already subscribed, navigating to app');
+        router.replace('/(tabs)');
+        return;
+      }
 
       // RevenueCat is initialized in app/_layout.tsx - no need to initialize here
       console.log('🚀 Using globally initialized RevenueCat...');
@@ -64,7 +89,13 @@ export default function PaywallScreen() {
           currentOffering: !!offerings.current
         });
         
-                         // 4. Present paywall directly (no timeout - let RevenueCat handle it)
+        // 4. FINAL GUARD: Check global lock one more time before RevenueCat call
+        if (RevenueCatServiceClass.isPaywallActive()) {
+          console.log('🚫 FINAL GUARD: Another paywall became active, aborting RevenueCat call');
+          return;
+        }
+
+        // 5. Present paywall directly (no timeout - let RevenueCat handle it)
         const result = await RevenueCatUI.presentPaywall();
         
         console.log('💳 Paywall result:', result);
@@ -107,6 +138,8 @@ export default function PaywallScreen() {
       console.error('❌ Failed to present paywall:', error);
       setError(true);
     } finally {
+      // CRITICAL: Always release global lock
+      RevenueCatServiceClass.setPaywallActive(false);
       setIsPaywallActive(false);
       setLoading(false);
     }
@@ -138,7 +171,15 @@ export default function PaywallScreen() {
             },
             {
               text: 'Try Again',
-              onPress: presentPaywall,
+              onPress: () => {
+                // GLOBAL GUARD: Prevent multiple paywall attempts
+                if (RevenueCatServiceClass.isPaywallActive()) {
+                  console.log('🚫 Try Again blocked: Global paywall already active');
+                  return;
+                }
+                hasAttemptedPresentation.current = false;
+                presentPaywall();
+              },
               style: 'cancel'
             }
           ]
@@ -153,13 +194,14 @@ export default function PaywallScreen() {
   const handleDismiss = useCallback(async () => {
     console.log('🚪 User attempted to dismiss paywall, checking subscription...');
     
+    // BULLETPROOF: Always check subscription before allowing dismiss
     const isSubscribed = await checkSubscriptionStatus();
     
     if (isSubscribed) {
       console.log('✅ User is subscribed, allowing access to app');
       router.replace('/(tabs)');
     } else {
-      console.log('❌ User not subscribed, showing soft lock alert');
+      console.log('❌ User not subscribed, blocking dismiss');
       Alert.alert(
         'Subscription Required',
         'A subscription is required to access CrushNic. Please subscribe to continue.',
@@ -188,7 +230,7 @@ export default function PaywallScreen() {
       const result = await RevenueCatService.restorePurchases();
       
       if (result.success && result.customerInfo) {
-        // Check subscription status after restore
+        // BULLETPROOF: Double-check subscription status after restore
         const isSubscribed = await checkSubscriptionStatus();
         
         if (isSubscribed) {
@@ -200,7 +242,7 @@ export default function PaywallScreen() {
         } else {
           Alert.alert(
             'No Active Subscription',
-            result.error || 'No active subscription found. Please purchase a subscription to continue.',
+            'No active subscription found. Please purchase a subscription to continue.',
             [{ text: 'OK' }]
           );
         }
@@ -222,7 +264,13 @@ export default function PaywallScreen() {
   };
 
   const handleRetry = () => {
+    // GLOBAL GUARD: Prevent multiple paywall attempts
+    if (RevenueCatServiceClass.isPaywallActive()) {
+      console.log('🚫 Retry blocked: Global paywall already active');
+      return;
+    }
     setError(false);
+    hasAttemptedPresentation.current = false;
     presentPaywall();
   };
 
@@ -286,7 +334,18 @@ export default function PaywallScreen() {
           Get full access to all CrushNic features with a premium subscription.
         </Text>
         
-        <TouchableOpacity style={styles.subscribeButton} onPress={presentPaywall}>
+        <TouchableOpacity 
+          style={styles.subscribeButton} 
+          onPress={() => {
+            // GLOBAL GUARD: Prevent multiple paywall attempts
+            if (RevenueCatServiceClass.isPaywallActive()) {
+              console.log('🚫 Fallback button blocked: Global paywall already active');
+              return;
+            }
+            hasAttemptedPresentation.current = false;
+            presentPaywall();
+          }}
+        >
           <Text style={styles.subscribeButtonText}>View Subscription Options</Text>
         </TouchableOpacity>
         
