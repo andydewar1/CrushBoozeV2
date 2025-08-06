@@ -1086,15 +1086,6 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Subscription</Text>
           </View>
 
-          {subscriptionStatus.isSubscribed && (
-            <View style={styles.subscriptionCard}>
-              <Text style={styles.subscriptionTitle}>✨ Premium Active</Text>
-              <Text style={styles.subscriptionText}>
-                You have access to all premium features
-              </Text>
-            </View>
-          )}
-
           <TouchableOpacity 
             style={styles.settingItem}
             onPress={handleManageSubscription}
@@ -2657,23 +2648,5 @@ const styles = StyleSheet.create({
   },
   toggleSliderActive: {
     transform: [{ translateX: 18 }],
-  },
-  subscriptionCard: {
-    backgroundColor: '#F8FBFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
-  },
-  subscriptionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#35998d',
-    marginBottom: 4,
-  },
-  subscriptionText: {
-    fontSize: 14,
-    color: '#8E8E93',
   },
 }); 

@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crushnic.quitvaping",
-      "buildNumber": "61",
+      "buildNumber": "93",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,

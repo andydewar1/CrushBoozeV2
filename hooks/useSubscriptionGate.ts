@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { checkSubscriptionStatus } from '@/lib/subscription';
 
 /**
- * BULLETPROOF subscription gate - prevents double checks and paywall bypass
+ * BULLETPROOF subscription gate - prevents bypass and ensures constant validation
  */
 export function useSubscriptionGate() {
   const router = useRouter();
@@ -15,6 +15,35 @@ export function useSubscriptionGate() {
   const [isChecking, setIsChecking] = useState(false);
   const [hasCheckedOnEntry, setHasCheckedOnEntry] = useState(false);
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // AGGRESSIVE: Check subscription every 30 seconds when in main app
+  useEffect(() => {
+    const inTabsGroup = segments[0] === '(tabs)';
+    
+    if (user && inTabsGroup && !intervalRef.current) {
+      console.log('🔄 Starting aggressive subscription validation (every 30s)');
+      intervalRef.current = setInterval(() => {
+        if (!isChecking) {
+          checkSubscription('periodic validation');
+        }
+      }, 30000); // Check every 30 seconds
+    }
+    
+    // Cleanup interval when leaving main app or user logs out
+    if ((!user || !inTabsGroup) && intervalRef.current) {
+      console.log('🛑 Stopping aggressive subscription validation');
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [user, segments, isChecking]);
 
   // Prevent multiple simultaneous checks with timeout protection
   const checkSubscription = async (reason: string) => {
@@ -29,25 +58,26 @@ export function useSubscriptionGate() {
       return;
     }
 
-    console.log(`🔍 Starting subscription check (${reason})...`);
+    console.log(`🔍 Starting AGGRESSIVE subscription check (${reason})...`);
     setIsChecking(true);
 
     try {
       // CRITICAL: Force fresh data every time - no caching bypass
       const isSubscribed = await checkSubscriptionStatus();
       
-      console.log(`📊 Subscription check result (${reason}):`, { isSubscribed });
+      console.log(`📊 AGGRESSIVE subscription check result (${reason}):`, { isSubscribed });
       
       if (!isSubscribed) {
-        console.log('🚨 No subscription - redirecting to paywall');
+        console.log('🚨 SECURITY BREACH: No subscription detected - IMMEDIATE redirect to paywall');
         // Use replace to prevent back navigation bypass
         router.replace('/paywall');
       } else {
         console.log('✅ Subscription valid - access granted');
       }
     } catch (error) {
-      console.error('❌ Subscription check failed:', error);
+      console.error('❌ Subscription check failed - SECURITY LOCKDOWN:', error);
       // CRITICAL: On error, always redirect to paywall
+      console.log('🔒 SECURITY LOCKDOWN: Redirecting to paywall due to check failure');
       router.replace('/paywall');
     } finally {
       setIsChecking(false);
@@ -60,12 +90,11 @@ export function useSubscriptionGate() {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         const inTabsGroup = segments[0] === '(tabs)';
         
-        // Only check on resume if user is logged in, in main app, and we've already done initial check
+        // AGGRESSIVE: Check on resume if user is in main app
         if (user && inTabsGroup && hasCheckedOnEntry) {
-          // Add small delay to prevent race conditions
-          checkTimeoutRef.current = setTimeout(() => {
-            checkSubscription('app resume');
-          }, 500);
+          console.log('📱 App resumed - IMMEDIATE subscription check');
+          // No delay - check immediately on resume
+          checkSubscription('app resume - IMMEDIATE');
         }
       }
 
@@ -94,10 +123,9 @@ export function useSubscriptionGate() {
     
     if (user && inTabsGroup && !hasCheckedOnEntry && !isChecking) {
       setHasCheckedOnEntry(true);
-      // Small delay to prevent race conditions with paywall navigation
-      checkTimeoutRef.current = setTimeout(() => {
-        checkSubscription('main app entry');
-      }, 100);
+      // AGGRESSIVE: No delay - check immediately
+      console.log('🚨 IMMEDIATE subscription check on main app entry');
+      checkSubscription('main app entry - IMMEDIATE');
     }
 
     // Reset check flag when user logs out or leaves main app
@@ -111,6 +139,10 @@ export function useSubscriptionGate() {
     return () => {
       if (checkTimeoutRef.current) {
         clearTimeout(checkTimeoutRef.current);
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
   }, []);

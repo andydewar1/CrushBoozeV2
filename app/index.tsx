@@ -11,63 +11,22 @@ export default function LandingScreen() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useSettings();
-  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
-  // SECURE: Check subscription before allowing main app access
-  useEffect(() => {
-    const secureAuthenticatedUserRouting = async () => {
-      if (!authLoading && !profileLoading && session && profile) {
-        setIsCheckingSubscription(true);
-        
-        try {
-          // Initialize RevenueCat and check subscription
-          await initializeRevenueCatIfNeeded(session.user.id);
-          const isSubscribed = await checkSubscriptionStatus();
-          
-          if (isSubscribed) {
-            console.log('✅ User has subscription - routing to main app');
-            router.replace('/(tabs)');
-          } else {
-            console.log('🚨 User has no subscription - routing to paywall');
-            router.replace('/paywall');
-          }
-        } catch (error) {
-          console.error('❌ Subscription check failed - routing to paywall:', error);
-          router.replace('/paywall');
-        } finally {
-          setIsCheckingSubscription(false);
-        }
-      }
-    };
 
-    secureAuthenticatedUserRouting();
-  }, [session, profile, authLoading, profileLoading, router]);
+  // SECURITY FIX: Removed automatic background routing - all users must go through paywall validation
 
   const handleGetStarted = async () => {
     // Don't redirect if still loading auth or profile data
-    if (authLoading || profileLoading || isCheckingSubscription) {
+    if (authLoading || profileLoading) {
       return;
     }
     
     if (session) {
       if (profile) {
-        // User has completed onboarding - check subscription
-        setIsCheckingSubscription(true);
-        
-        try {
-          await initializeRevenueCatIfNeeded(session.user.id);
-          const isSubscribed = await checkSubscriptionStatus();
-          
-          if (isSubscribed) {
-            router.replace('/(tabs)');
-          } else {
-            router.replace('/paywall');
-          }
-        } catch (error) {
-          router.replace('/paywall');
-        } finally {
-          setIsCheckingSubscription(false);
-        }
+        // CRITICAL SECURITY: Always route to paywall first for proper validation
+        // The paywall will handle subscription checking with bulletproof validation
+        console.log('🔒 Routing to paywall for security validation');
+        router.replace('/paywall');
       } else {
         // User is authenticated but hasn't completed onboarding
         router.push('/onboarding/quit-date');
@@ -81,17 +40,8 @@ export default function LandingScreen() {
     router.push('/auth/login');
   };
 
-  // Show loading while checking subscription for authenticated users
-  if ((!authLoading && !profileLoading && session && profile) || isCheckingSubscription) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
-        <Text style={styles.loadingText}>
-          {isCheckingSubscription ? 'Validating subscription...' : 'Loading...'}
-        </Text>
-      </View>
-    );
-  }
+  // REMOVED: No more automatic loading screen for subscription validation
+  // Show landing page immediately while background check happens
 
   return (
     <ImageBackground
@@ -121,12 +71,12 @@ export default function LandingScreen() {
 
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
-                  style={[styles.button, (authLoading || profileLoading || isCheckingSubscription) && styles.buttonDisabled]}
+                  style={[styles.button, (authLoading || profileLoading) && styles.buttonDisabled]}
                   onPress={handleGetStarted}
-                  disabled={authLoading || profileLoading || isCheckingSubscription}
+                  disabled={authLoading || profileLoading}
                 >
                   <Text style={styles.buttonText}>
-                    {isCheckingSubscription ? 'Checking...' : 'Get Started'}
+                    Get Started
                   </Text>
                 </TouchableOpacity>
 
@@ -239,17 +189,5 @@ const styles = StyleSheet.create({
   linkTextBold: {
     color: '#FFFFFF',
     fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#35998d',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-  },
-  loadingText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
   },
 }); 
