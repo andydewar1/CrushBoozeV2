@@ -16,7 +16,9 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
     console.log('🔄 AGGRESSIVELY forcing fresh subscription data...');
     await RevenueCatService.invalidateAllCaches();
     
-    // Extra delay to ensure cache is cleared
+    // TESTFLIGHT: Multiple cache clears with delays
+    await new Promise(resolve => setTimeout(resolve, 300));
+    await RevenueCatService.invalidateAllCaches();
     await new Promise(resolve => setTimeout(resolve, 200));
     
     // Get customer info with timeout protection and retry logic
@@ -96,6 +98,33 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
       }
     }
 
+    // TESTFLIGHT EXTRA VALIDATION: If we think user is subscribed, double-check with fresh data
+    if (isFullySubscribed) {
+      console.log('🔍 TESTFLIGHT: Double-checking subscription with fresh network call...');
+      try {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        await RevenueCatService.invalidateAllCaches();
+        const freshCustomerInfo = await RevenueCatService.getCustomerInfo();
+        
+        if (freshCustomerInfo && freshCustomerInfo.entitlements.active.Premium) {
+          const freshExpiry = freshCustomerInfo.entitlements.active.Premium.expirationDate;
+          if (freshExpiry && new Date(freshExpiry) > now) {
+            console.log('✅ TESTFLIGHT: Double-check confirmed subscription is valid');
+            return true;
+          } else {
+            console.error('🚨 TESTFLIGHT: Double-check FAILED - subscription expired');
+            return false;
+          }
+        } else {
+          console.error('🚨 TESTFLIGHT: Double-check FAILED - no active entitlement');
+          return false;
+        }
+      } catch (doubleCheckError) {
+        console.error('🚨 TESTFLIGHT: Double-check failed with error - denying access:', doubleCheckError);
+        return false;
+      }
+    }
+
     return isFullySubscribed;
 
   } catch (error) {
@@ -122,16 +151,14 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
 
 /**
  * Post-onboarding route decision - BULLETPROOF
+ * SECURITY: New users completing onboarding MUST go to paywall first
  */
 export async function getPostOnboardingRoute(userId?: string): Promise<string> {
   try {
-    await initializeRevenueCatIfNeeded(userId);
-    const isSubscribed = await checkSubscriptionStatus();
-    
-    console.log('🎯 Post-onboarding route decision:', { isSubscribed, userId });
-    
-    // CRITICAL: Default to paywall on any doubt
-    return isSubscribed ? '/(tabs)' : '/paywall';
+    // CRITICAL SECURITY: New users completing onboarding should ALWAYS go to paywall
+    // They need to subscribe before accessing the main app
+    console.log('🎯 Post-onboarding route decision: Routing to paywall for subscription validation');
+    return '/paywall';
   } catch (error) {
     console.error('🚨 Post-onboarding route error - defaulting to paywall:', error);
     return '/paywall';

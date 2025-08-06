@@ -16,6 +16,7 @@ import Purchases from 'react-native-purchases';
 import RevenueCatService, { RevenueCatServiceClass } from '@/services/RevenueCatService';
 import { checkSubscriptionStatus } from '@/lib/subscription';
 
+
 const { width, height } = Dimensions.get('window');
 
 export default function PaywallScreen() {

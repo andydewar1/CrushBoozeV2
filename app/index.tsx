@@ -12,6 +12,24 @@ export default function LandingScreen() {
   const { session, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useSettings();
 
+  // AUTOMATIC ROUTING: Existing users should not see landing page
+  useEffect(() => {
+    const autoRoute = async () => {
+      // Wait for auth and profile data to load
+      if (authLoading || profileLoading) {
+        return;
+      }
+
+      if (session && profile) {
+        // Existing user with completed onboarding - go directly to paywall for validation
+        console.log('🔄 Auto-routing existing user to paywall for validation');
+        router.replace('/paywall');
+      }
+      // New users or incomplete onboarding users stay on landing page
+    };
+
+    autoRoute();
+  }, [session, profile, authLoading, profileLoading, router]);
 
   // SECURITY FIX: Removed automatic background routing - all users must go through paywall validation
 
@@ -23,8 +41,7 @@ export default function LandingScreen() {
     
     if (session) {
       if (profile) {
-        // CRITICAL SECURITY: Always route to paywall first for proper validation
-        // The paywall will handle subscription checking with bulletproof validation
+        // User has completed onboarding - route to paywall for subscription validation
         console.log('🔒 Routing to paywall for security validation');
         router.replace('/paywall');
       } else {
