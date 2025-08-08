@@ -104,6 +104,18 @@ export default function HomeScreen() {
     return Math.floor(amount).toLocaleString();
   };
 
+  // Format money compactly for small stat boxes
+  const formatMoneyCompact = (amount: number): string => {
+    // For amounts >= 1000, use K format
+    if (amount >= 1000) {
+      const kValue = amount / 1000;
+      // Show 1 decimal place if it's not a whole number
+      return kValue % 1 === 0 ? `${Math.floor(kValue)}k` : `${kValue.toFixed(1)}k`;
+    }
+    // For smaller amounts, show whole number
+    return Math.floor(amount).toString();
+  };
+
   // Format money with decimals for detailed views - handle large amounts
   const formatMoneyDetailed = (amount: number): string => {
     // For very large amounts (>$100K), show in K format
@@ -172,7 +184,7 @@ export default function HomeScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>💰</Text>
-              <Text style={styles.statValue}>{displayCurrency}{formatMoney(displayTotalSaved)}</Text>
+              <Text style={styles.statValue}>{displayCurrency}{formatMoneyCompact(displayTotalSaved)}</Text>
               <Text style={styles.statLabel}>Saved</Text>
             </View>
             <View style={styles.statItem}>
