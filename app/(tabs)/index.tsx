@@ -104,8 +104,17 @@ export default function HomeScreen() {
     return Math.floor(amount).toLocaleString();
   };
 
-  // Format money with decimals for detailed views
+  // Format money with decimals for detailed views - handle large amounts
   const formatMoneyDetailed = (amount: number): string => {
+    // For very large amounts (>$100K), show in K format
+    if (amount >= 100000) {
+      return `${(amount / 1000).toFixed(1)}K`;
+    }
+    // For amounts >$10K, show without decimals to save space
+    if (amount >= 10000) {
+      return Math.floor(amount).toLocaleString();
+    }
+    // For smaller amounts, show with decimals
     return amount.toFixed(2);
   };
 
@@ -136,7 +145,13 @@ export default function HomeScreen() {
           <View style={styles.circularProgress}>
             <View style={styles.progressRing}>
               <View style={styles.progressContent}>
-                <Text style={styles.daysNumber}>{displayDays}</Text>
+                <Text style={[
+                  styles.daysNumber,
+                  // Reduce font size for very large day counts (4+ digits)
+                  displayDays >= 1000 && styles.daysNumberLarge
+                ]}>
+                  {displayDays}
+                </Text>
                 <Text style={styles.daysText}>{displayText}</Text>
                 {!timerError || timerError === 'future_quit_date' ? (
                   <Text style={styles.timeText}>{displayHours}h {displayMinutes}m</Text>
@@ -190,7 +205,13 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>Money Saved</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Total savings so far</Text>
-          <Text style={styles.moneyAmount}>{displayCurrency}{formatMoneyDetailed(displayTotalSaved)}</Text>
+          <Text style={[
+            styles.moneyAmount,
+            // Reduce font size for very large amounts
+            displayTotalSaved >= 100000 && styles.moneyAmountLarge
+          ]}>
+            {displayCurrency}{formatMoneyDetailed(displayTotalSaved)}
+          </Text>
           
           <View style={styles.ratesContainer}>
             <View style={styles.rateRow}>
@@ -586,6 +607,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  daysNumberLarge: {
+    fontSize: 36,
+  },
   daysText: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.9)',
@@ -671,6 +695,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#35998D',
     marginBottom: 20,
+  },
+  moneyAmountLarge: {
+    fontSize: 28,
   },
   ratesContainer: {
     marginBottom: 20,
