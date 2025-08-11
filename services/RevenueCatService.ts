@@ -148,6 +148,64 @@ export class RevenueCatService {
   }
 
   /**
+   * Get the current offering (paywall packages)
+   */
+  public async getCurrentOffering(): Promise<PurchasesOffering | null> {
+    if (!this.isConfigured) {
+      throw new Error('RevenueCat not configured. Call initialize() first.');
+    }
+
+    try {
+      const offerings = await Purchases.getOfferings();
+      return offerings.current || null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Purchase a package
+   */
+  public async purchasePackage(packageToPurchase: any): Promise<{ success: boolean; customerInfo?: any; error?: string }> {
+    if (!this.isConfigured) {
+      return { success: false, error: 'RevenueCat not configured. Call initialize() first.' };
+    }
+
+    try {
+      console.log('🛒 Initiating purchase for package:', packageToPurchase.identifier);
+      
+      const { customerInfo, productIdentifier } = await Purchases.purchasePackage(packageToPurchase);
+      
+      console.log('✅ Purchase successful:', {
+        productId: productIdentifier,
+        hasActiveEntitlements: Object.keys(customerInfo.entitlements.active).length > 0,
+        activeEntitlements: Object.keys(customerInfo.entitlements.active)
+      });
+
+      return { 
+        success: true, 
+        customerInfo 
+      };
+    } catch (error: any) {
+      console.error('❌ Purchase failed:', error);
+      
+      // Handle user cancellation
+      if (error.userCancelled) {
+        return { 
+          success: false, 
+          error: 'Purchase was cancelled' 
+        };
+      }
+      
+      // Handle other purchase errors
+      return { 
+        success: false, 
+        error: error.message || 'Purchase failed. Please try again.' 
+      };
+    }
+  }
+
+  /**
    * Restore purchases and validate they are currently active
    * BULLETPROOF FOR TESTFLIGHT: Only trusts expiration dates, ignores all cached data
    */
