@@ -69,34 +69,30 @@ export default function SummaryScreen() {
     console.log('💾 Starting onboarding save process for user:', user.id);
     setIsSaving(true);
     
-    try {
-      const result = await saveOnboardingData(user.id, data);
-      
-      if (result.success) {
-        console.log('✅ Onboarding data saved successfully');
-        // Force refresh the settings context so homepage gets fresh data
-        await refetchProfile();
-        toast.showSuccess('Welcome!', 'Your quit journey starts now!');
-        
-        // SIMPLE: New users completing onboarding always go to paywall
-        console.log('🧭 Onboarding complete - routing to paywall');
-        router.replace('/paywall');
-      } else {
-        console.error('❌ Failed to save onboarding data:', result.error);
-        // Still route to paywall even if save fails
-        toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
-        console.log('🧭 Onboarding complete (with save issues) - routing to paywall');
-        router.replace('/paywall');
-      }
-    } catch (error) {
-      console.error('❌ Unexpected error during onboarding save:', error);
-      // Still route to paywall to avoid user getting stuck
-      toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
-      console.log('🧭 Onboarding complete (with error) - routing to paywall');
-      router.replace('/paywall');
-    } finally {
-      setIsSaving(false);
-    }
+    // PERFORMANCE: Route to paywall immediately, save data in background
+    console.log('🧭 Onboarding complete - routing to paywall immediately');
+    router.replace('/paywall');
+    
+    // Save data in background without blocking navigation
+    saveOnboardingData(user.id, data)
+      .then(async (result) => {
+        if (result.success) {
+          console.log('✅ Onboarding data saved successfully in background');
+          // Refresh profile data in background
+          await refetchProfile();
+          toast.showSuccess('Welcome!', 'Your quit journey starts now!');
+        } else {
+          console.error('❌ Failed to save onboarding data:', result.error);
+          toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
+        }
+      })
+      .catch((error) => {
+        console.error('❌ Unexpected error during onboarding save:', error);
+        toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
+      })
+      .finally(() => {
+        setIsSaving(false);
+      });
   };
 
   return (

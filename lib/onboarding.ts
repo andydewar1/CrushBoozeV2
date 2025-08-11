@@ -42,14 +42,7 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       return sum + (type.frequency === 'week' ? cost / 7 : cost);
     }, 0);
 
-    // Check if profile already exists
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('id, created_at')
-      .eq('id', userId)
-      .maybeSingle();
-
-    // Prepare profile data
+    // PERFORMANCE: Prepare profile data without checking existing first
     const profileData = {
       id: userId,
       quit_date: data.quitDate.toISOString(),
@@ -63,13 +56,12 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       financial_goal_description: data.financialGoal.description,
       financial_goal_amount: data.financialGoal.amount,
       onboarding_completed: true,
-      created_at: existingProfile?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    console.log('💾 Profile data prepared:', { userId, hasExisting: !!existingProfile });
+    console.log('💾 Profile data prepared for upsert:', { userId });
 
-    // Use upsert to handle create or update
+    // Use upsert to handle create or update without pre-checking
     const { data: savedProfile, error } = await supabase
       .from('profiles')
       .upsert(profileData, { onConflict: 'id' })
@@ -81,40 +73,31 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       return { success: false, error: `Profile save failed: ${error.message}` };
     }
 
-    // Also create the financial goal in the financial_goals table so it shows up on the goals page
+    // PERFORMANCE: Create financial goal without pre-checking, use upsert instead
     if (data.financialGoal.description && data.financialGoal.amount > 0) {
       console.log('💰 Creating financial goal:', data.financialGoal);
       
       try {
-        // Check if this goal already exists to avoid duplicates
-        const { data: existingGoal } = await supabase
+        // Use upsert with a composite unique constraint to avoid duplicates
+        const { error: goalError } = await supabase
           .from('financial_goals')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('description', data.financialGoal.description)
-          .eq('target_amount', data.financialGoal.amount)
-          .maybeSingle();
+          .upsert({
+            user_id: userId,
+            name: data.financialGoal.description,
+            target_amount: data.financialGoal.amount,
+            description: data.financialGoal.description,
+            is_primary: true, // Mark onboarding goal as primary
+            baseline_amount: 0,
+          }, { 
+            onConflict: 'user_id,description,target_amount',
+            ignoreDuplicates: true 
+          });
 
-        if (!existingGoal) {
-          const { error: goalError } = await supabase
-            .from('financial_goals')
-            .insert({
-              user_id: userId,
-              name: data.financialGoal.description,
-              target_amount: data.financialGoal.amount,
-              description: data.financialGoal.description,
-              is_primary: true, // Mark onboarding goal as primary
-              baseline_amount: 0,
-            });
-
-          if (goalError) {
-            console.error('⚠️ Warning: Failed to create financial goal:', goalError);
-            // Don't fail the entire onboarding if goal creation fails
-          } else {
-            console.log('✅ Financial goal created successfully');
-          }
+        if (goalError) {
+          console.error('⚠️ Warning: Failed to create financial goal:', goalError);
+          // Don't fail the entire onboarding if goal creation fails
         } else {
-          console.log('ℹ️ Financial goal already exists, skipping creation');
+          console.log('✅ Financial goal created/updated successfully');
         }
       } catch (goalError) {
         console.error('⚠️ Error handling financial goal:', goalError);

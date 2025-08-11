@@ -8,7 +8,8 @@ import {
   BackHandler,
   Platform,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  Linking
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -350,6 +351,23 @@ export default function PaywallScreen() {
         >
           <Text style={styles.restoreText}>Restore purchases</Text>
         </TouchableOpacity>
+
+        {/* Legal Links */}
+        <View style={styles.legalContainer}>
+          <TouchableOpacity 
+            onPress={() => Linking.openURL('https://crushnic.com/privacy')}
+            style={styles.legalButton}
+          >
+            <Text style={styles.legalText}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalSeparator}> • </Text>
+          <TouchableOpacity 
+            onPress={() => Linking.openURL('https://crushnic.com/terms')}
+            style={styles.legalButton}
+          >
+            <Text style={styles.legalText}>Terms of Use</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -546,6 +564,28 @@ const styles = StyleSheet.create({
   restoreText: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  legalContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    paddingHorizontal: 24,
+  },
+  legalButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  legalText: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
 }); 
