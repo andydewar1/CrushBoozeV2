@@ -2,7 +2,7 @@
   "expo": {
     "name": "CrushNic",
     "slug": "crushnic",
-    "version": "1.0.59",
+    "version": "1.0.60",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "crushnic",
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crushnic.quitvaping",
-      "buildNumber": "94",
+      "buildNumber": "95",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,
@@ -31,7 +31,7 @@
         "backgroundColor": "#35998d"
       },
       "package": "com.crushnic.quitvaping",
-      "versionCode": 62,
+      "versionCode": 63,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
