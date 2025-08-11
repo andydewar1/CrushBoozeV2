@@ -106,11 +106,11 @@ export default function HomeScreen() {
 
   // Format money compactly for small stat boxes
   const formatMoneyCompact = (amount: number): string => {
-    // For amounts >= 1000, use K format
+    // For amounts >= 1000, use K format with capital K
     if (amount >= 1000) {
       const kValue = amount / 1000;
       // Show 1 decimal place if it's not a whole number
-      return kValue % 1 === 0 ? `${Math.floor(kValue)}k` : `${kValue.toFixed(1)}k`;
+      return kValue % 1 === 0 ? `${Math.floor(kValue)}K` : `${kValue.toFixed(1)}K`;
     }
     // For smaller amounts, show whole number
     return Math.floor(amount).toString();
@@ -184,7 +184,13 @@ export default function HomeScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statEmoji}>💰</Text>
-              <Text style={styles.statValue}>{displayCurrency}{formatMoneyCompact(displayTotalSaved)}</Text>
+              <Text style={[
+                styles.statValue,
+                // Make text smaller for large amounts to prevent wrapping
+                displayTotalSaved >= 10000 && styles.statValueSmall
+              ]}>
+                {displayCurrency}{formatMoneyCompact(displayTotalSaved)}
+              </Text>
               <Text style={styles.statLabel}>Saved</Text>
             </View>
             <View style={styles.statItem}>
@@ -661,6 +667,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 4,
+    textAlign: 'center',
+  },
+  statValueSmall: {
+    fontSize: 16,
   },
   statLabel: {
     fontSize: 10,

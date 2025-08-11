@@ -120,10 +120,11 @@ export function useSubscriptionGate() {
   useEffect(() => {
     const inTabsGroup = segments[0] === '(tabs)';
     const isOnPaywall = segments[0] === 'paywall';
+    const isInOnboarding = segments[0] === 'onboarding';
     
-    // CRITICAL: Don't interfere if user is already on paywall or navigating from onboarding
-    if (isOnPaywall) {
-      console.log('⚠️ User on paywall - subscription gate will not interfere');
+    // CRITICAL: Don't interfere if user is already on paywall, in onboarding, or navigating from onboarding
+    if (isOnPaywall || isInOnboarding) {
+      console.log('⚠️ User on paywall or in onboarding - subscription gate will not interfere');
       return;
     }
     

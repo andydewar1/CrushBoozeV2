@@ -69,30 +69,30 @@ export default function SummaryScreen() {
     console.log('💾 Starting onboarding save process for user:', user.id);
     setIsSaving(true);
     
-    // PERFORMANCE: Route to paywall immediately, save data in background
-    console.log('🧭 Onboarding complete - routing to paywall immediately');
-    router.replace('/paywall');
-    
-    // Save data in background without blocking navigation
-    saveOnboardingData(user.id, data)
-      .then(async (result) => {
-        if (result.success) {
-          console.log('✅ Onboarding data saved successfully in background');
-          // Refresh profile data in background
-          await refetchProfile();
-          toast.showSuccess('Welcome!', 'Your quit journey starts now!');
-        } else {
-          console.error('❌ Failed to save onboarding data:', result.error);
-          toast.showError('Warning', 'Data saved with some issues. You can update your settings later.');
-        }
-      })
-      .catch((error) => {
-        console.error('❌ Unexpected error during onboarding save:', error);
-        toast.showError('Warning', 'Something went wrong, but you can update your data in settings');
-      })
-      .finally(() => {
-        setIsSaving(false);
-      });
+    // Save data first, then show success toast, then navigate
+    try {
+      const result = await saveOnboardingData(user.id, data);
+      
+      if (result.success) {
+        console.log('✅ Onboarding data saved successfully');
+        // Refresh profile data
+        await refetchProfile();
+        
+        // Navigate immediately after save
+        console.log('🧭 Onboarding complete - routing to paywall');
+        router.replace('/paywall');
+      } else {
+        console.error('❌ Failed to save onboarding data:', result.error);
+        // Still navigate even if save had issues
+        router.replace('/paywall');
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error during onboarding save:', error);
+      // Still navigate even if save failed
+      router.replace('/paywall');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

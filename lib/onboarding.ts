@@ -78,19 +78,16 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       console.log('💰 Creating financial goal:', data.financialGoal);
       
       try {
-        // Use upsert with a composite unique constraint to avoid duplicates
+        // Insert financial goal (simple approach)
         const { error: goalError } = await supabase
           .from('financial_goals')
-          .upsert({
+          .insert({
             user_id: userId,
             name: data.financialGoal.description,
             target_amount: data.financialGoal.amount,
             description: data.financialGoal.description,
             is_primary: true, // Mark onboarding goal as primary
             baseline_amount: 0,
-          }, { 
-            onConflict: 'user_id,description,target_amount',
-            ignoreDuplicates: true 
           });
 
         if (goalError) {
