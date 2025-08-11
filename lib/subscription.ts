@@ -12,14 +12,15 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
       return false;
     }
 
-    // CRITICAL: SUPER AGGRESSIVE cache clearing for TestFlight
+    // CRITICAL: SUPER AGGRESSIVE cache clearing for TestFlight (especially for cancellations)
     console.log('🔄 AGGRESSIVELY forcing fresh subscription data...');
     await RevenueCatService.invalidateAllCaches();
     
-    // TESTFLIGHT: Multiple cache clears with delays
+    // TESTFLIGHT: Multiple cache clears with delays (extra aggressive for cancelled subscriptions)
     await new Promise(resolve => setTimeout(resolve, 300));
     await RevenueCatService.invalidateAllCaches();
     await new Promise(resolve => setTimeout(resolve, 200));
+    await RevenueCatService.invalidateAllCaches(); // Third time for cancelled subscriptions
     
     // Get customer info with timeout protection and retry logic
     let customerInfo;

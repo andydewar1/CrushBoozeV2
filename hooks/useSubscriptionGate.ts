@@ -95,12 +95,16 @@ export function useSubscriptionGate() {
         const timeSinceLastCheck = now - lastCheckTime;
         const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
         
-        // Only check on resume if user is in main app AND it's been more than 2 minutes since last check
-        if (user && inTabsGroup && hasCheckedOnEntry && timeSinceLastCheck > twoMinutes) {
-          console.log('📱 App resumed after extended absence - checking subscription');
-          checkSubscription('app resume after extended absence');
-        } else if (user && inTabsGroup && hasCheckedOnEntry) {
-          console.log('📱 App resumed recently - skipping subscription check (last check was', Math.round(timeSinceLastCheck / 1000), 'seconds ago)');
+        // TESTFLIGHT FIX: Always check on app resume to catch cancelled subscriptions immediately
+        // TestFlight sandbox has caching issues, so we need to be more aggressive
+        if (user && inTabsGroup && hasCheckedOnEntry) {
+          if (timeSinceLastCheck > twoMinutes) {
+            console.log('📱 App resumed after extended absence - checking subscription');
+            checkSubscription('app resume after extended absence');
+          } else {
+            console.log('📱 TESTFLIGHT: App resumed recently - checking subscription anyway to catch cancellations (last check was', Math.round(timeSinceLastCheck / 1000), 'seconds ago)');
+            checkSubscription('app resume - TestFlight cancellation check');
+          }
         }
       }
 

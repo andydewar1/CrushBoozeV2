@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
-import { checkSubscriptionStatus, initializeRevenueCatIfNeeded } from '@/lib/subscription';
-import { useEffect, useState } from 'react';
+
+import { useEffect } from 'react';
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -21,27 +21,10 @@ export default function LandingScreen() {
       }
 
       if (session && profile) {
-        // Existing user with completed onboarding - check subscription status first
-        console.log('🔄 Auto-routing existing user - checking subscription status...');
-        
-        try {
-          // Initialize RevenueCat if needed
-          await initializeRevenueCatIfNeeded(session.user.id);
-          
-          // Check if user has valid subscription
-          const hasValidSubscription = await checkSubscriptionStatus();
-          
-          if (hasValidSubscription) {
-            console.log('✅ Valid subscription found - routing to main app');
-            router.replace('/(tabs)');
-          } else {
-            console.log('❌ No valid subscription - routing to paywall');
-            router.replace('/paywall');
-          }
-        } catch (error) {
-          console.error('❌ Subscription check failed - routing to paywall:', error);
-          router.replace('/paywall');
-        }
+        // Existing user with completed onboarding - route to main app
+        // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
+        console.log('🔄 Auto-routing existing user to main app (subscription gate will validate)');
+        router.replace('/(tabs)');
       }
       // New users or incomplete onboarding users stay on landing page
     };
@@ -59,22 +42,10 @@ export default function LandingScreen() {
     
     if (session) {
       if (profile) {
-        // User has completed onboarding - check subscription status
-        try {
-          await initializeRevenueCatIfNeeded(session.user.id);
-          const hasValidSubscription = await checkSubscriptionStatus();
-          
-          if (hasValidSubscription) {
-            console.log('✅ Valid subscription found - routing to main app');
-            router.replace('/(tabs)');
-          } else {
-            console.log('❌ No valid subscription - routing to paywall');
-            router.replace('/paywall');
-          }
-        } catch (error) {
-          console.error('❌ Subscription check failed - routing to paywall:', error);
-          router.replace('/paywall');
-        }
+        // User has completed onboarding - route to main app
+        // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
+        console.log('🔄 Routing existing user to main app (subscription gate will validate)');
+        router.replace('/(tabs)');
       } else {
         // User is authenticated but hasn't completed onboarding
         router.push('/onboarding/quit-date');
