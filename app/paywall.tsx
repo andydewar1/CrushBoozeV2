@@ -9,7 +9,8 @@ import {
   Platform,
   ActivityIndicator,
   Dimensions,
-  Linking
+  Linking,
+  ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -275,113 +276,131 @@ export default function PaywallScreen() {
     );
   }
 
-  // Main paywall UI - Teal background, no scrolling, fits in view
+  // Main paywall UI - Optimized for iPhone 13 mini above the fold
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.contentContainer}>
-        {/* Main Title */}
-        <Text style={styles.mainTitle}>Vaping Doesn't Define You.{'\n'}Crush it For Good.</Text>
+        {/* Headline */}
+        <Text style={styles.headline}>Vaping doesn't define you. Crush it for good.</Text>
 
-        {/* Features List */}
+        {/* Features - bold with tick icons */}
         <View style={styles.featuresContainer}>
-          <FeatureItem text="Vape-Free Time Tracker" />
-          <FeatureItem text="Money Saved Tracker" />
-          <FeatureItem text="Cravings Log" />
-          <FeatureItem text="SOS Breathing Exercise" />
-          <FeatureItem text="Health Improvements Timeline" />
-          <FeatureItem text="Custom Financial Goals" />
-          <FeatureItem text="Achievement Badges" />
-          <FeatureItem text="Milestones" />
+          <View style={styles.featureRow}>
+            <Text style={styles.tickIcon}>✓</Text>
+            <Text style={styles.featureText}>Track days, cravings & money saved</Text>
+          </View>
+          <View style={styles.featureRow}>
+            <Text style={styles.tickIcon}>✓</Text>
+            <Text style={styles.featureText}>SOS breathing + relapse-proof reminders</Text>
+          </View>
+          <View style={styles.featureRow}>
+            <Text style={styles.tickIcon}>✓</Text>
+            <Text style={styles.featureText}>Health milestones, achievement badges & custom goals</Text>
+          </View>
         </View>
 
-        {/* Pricing Options */}
-        <View style={styles.pricingContainer}>
-          {/* Annual Plan */}
+        {/* Testimonial - compact */}
+        <View style={styles.testimonialContainer}>
+          <Text style={styles.testimonialText}>
+            "Whenever I wanted to cave, I opened the app and saw my savings and health progress. It kept me focused. 6 weeks quit, $250 saved."
+          </Text>
+          <Text style={styles.testimonialAuthor}>- Rafel, 20, Denver, CO</Text>
+        </View>
+
+        {/* Plan selector - compact */}
+        <View style={styles.planSelector}>
+          {/* Annual Plan - Selected by default */}
           <TouchableOpacity 
-            style={[styles.planContainer, selectedPlan === 'annual' && styles.selectedPlan]} 
+            style={[styles.planRow, selectedPlan === 'annual' && styles.selectedPlanRow]} 
             onPress={() => setSelectedPlan('annual')}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selectedPlan === 'annual' }}
+            accessibilityLabel="Annual plan, 50% off, most popular, 3-day free trial, cancel anytime"
           >
-            <View style={styles.planHeader}>
-              <View style={styles.radioContainer}>
-                <View style={[styles.radioOuter, selectedPlan === 'annual' && styles.radioSelected]}>
-                  {selectedPlan === 'annual' && <View style={styles.radioInner} />}
-                </View>
-                <Text style={styles.planTitle}>Annual</Text>
-              </View>
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>50% OFF</Text>
-              </View>
+            <View style={[styles.radioButton, selectedPlan === 'annual' && styles.radioSelected]}>
+              {selectedPlan === 'annual' && <View style={styles.radioInner} />}
             </View>
-            <Text style={styles.planPrice}>Just {pricing.annual}. 50% off monthly pricing.</Text>
+            <View style={styles.planTextContainer}>
+              <View style={styles.planTitleRow}>
+                <Text style={styles.planTitle}>Annual - </Text>
+                <View style={styles.discountBadge}>
+                  <Text style={styles.discountText}>50% OFF</Text>
+                </View>
+              </View>
+              <Text style={styles.planHelper} numberOfLines={2}>
+                <Text style={styles.planHelperBold}>{pricing.annual}</Text> · <Text style={styles.planHelperBold}>Most popular</Text>{'\n'}3-day free trial, cancel anytime
+              </Text>
+            </View>
           </TouchableOpacity>
 
           {/* Monthly Plan */}
           <TouchableOpacity 
-            style={[styles.planContainer, selectedPlan === 'monthly' && styles.selectedPlan]} 
+            style={[styles.planRow, selectedPlan === 'monthly' && styles.selectedPlanRow]} 
             onPress={() => setSelectedPlan('monthly')}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selectedPlan === 'monthly' }}
+            accessibilityLabel="Monthly plan, £4.99 per month, less than a disposable vape, 3-day free trial, cancel anytime"
           >
-            <View style={styles.planHeader}>
-              <View style={styles.radioContainer}>
-                <View style={[styles.radioOuter, selectedPlan === 'monthly' && styles.radioSelected]}>
-                  {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
-                </View>
+            <View style={[styles.radioButton, selectedPlan === 'monthly' && styles.radioSelected]}>
+              {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
+            </View>
+            <View style={styles.planTextContainer}>
+              <View style={styles.planTitleRow}>
                 <Text style={styles.planTitle}>Monthly</Text>
               </View>
+              <Text style={styles.planHelper} numberOfLines={2}>
+                <Text style={styles.planHelperBold}>{pricing.monthly}</Text> · <Text style={styles.planHelperBold}>Less than a disposable vape</Text>{'\n'}3-day free trial, cancel anytime
+              </Text>
             </View>
-            <Text style={styles.planPrice}>Just {pricing.monthly}. Less than a disposable vape!</Text>
           </TouchableOpacity>
         </View>
 
-        {/* CTA Button */}
-        <TouchableOpacity 
-          style={styles.ctaButton} 
-          onPress={handleStartTrial}
-          disabled={loading}
-        >
-          <Text style={styles.ctaButtonText}>
-            {loading ? 'Starting Trial...' : 'Start Your 3 Day Free Trial'}
-          </Text>
-        </TouchableOpacity>
+        {/* Primary CTA - big button */}
+        <View style={styles.ctaContainer}>
+          <TouchableOpacity 
+            style={styles.primaryCTA} 
+            onPress={handleStartTrial}
+            disabled={loading}
+            accessibilityLabel="Start your quit journey today, 3 days free, cancel anytime"
+          >
+            <Text style={styles.ctaPrimaryText}>
+              {loading ? 'Starting Trial...' : 'Start Your Quit Journey Today'}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.ctaSecondaryText}>3 days free · Cancel anytime</Text>
+        </View>
 
-        {/* Restore Purchases */}
+        {/* Legal links */}
+        <View style={styles.legalLinksContainer}>
+          <TouchableOpacity 
+            onPress={() => Linking.openURL('https://crushnic.com/privacy')}
+            style={styles.legalLink}
+          >
+            <Text style={styles.legalLinkText}>Privacy Policy</Text>
+          </TouchableOpacity>
+          <Text style={styles.legalSeparator}> · </Text>
+          <TouchableOpacity 
+            onPress={() => Linking.openURL('https://crushnic.com/terms')}
+            style={styles.legalLink}
+          >
+            <Text style={styles.legalLinkText}>Terms of Use</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Restore purchases */}
         <TouchableOpacity 
-          style={styles.restoreButton} 
+          style={styles.restorePurchases} 
           onPress={handleRestorePurchases}
           disabled={loading}
         >
           <Text style={styles.restoreText}>Restore purchases</Text>
         </TouchableOpacity>
-
-        {/* Legal Links */}
-        <View style={styles.legalContainer}>
-          <TouchableOpacity 
-            onPress={() => Linking.openURL('https://crushnic.com/privacy')}
-            style={styles.legalButton}
-          >
-            <Text style={styles.legalText}>Privacy Policy</Text>
-          </TouchableOpacity>
-          <Text style={styles.legalSeparator}> • </Text>
-          <TouchableOpacity 
-            onPress={() => Linking.openURL('https://crushnic.com/terms')}
-            style={styles.legalButton}
-          >
-            <Text style={styles.legalText}>Terms of Use</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
 }
 
-// Feature Item Component
-function FeatureItem({ text }: { text: string }) {
-  return (
-    <View style={styles.featureItem}>
-      <Text style={styles.checkmark}>✓</Text>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-}
+
 
 const styles = StyleSheet.create({
   container: {
@@ -439,86 +458,118 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
   },
+  // Optimized for iPhone 13 mini above the fold
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 8,
     justifyContent: 'space-between',
   },
-  mainTitle: {
-    fontSize: 36,
+  // Headline - bigger and spans 3 lines
+  headline: {
+    fontSize: 32,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'left',
-    lineHeight: 48,
-    marginBottom: 20,
+    lineHeight: 38,
+    marginBottom: 18,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
+  // Features - bigger with more line height
   featuresContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 8,
   },
-  checkmark: {
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  tickIcon: {
     fontSize: 16,
     color: '#FFFFFF',
-    fontWeight: '600',
-    marginRight: 12,
-    width: 20,
+    fontWeight: '700',
+    marginRight: 10,
+    width: 18,
+    marginTop: 1,
   },
   featureText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    lineHeight: 24,
     flex: 1,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  pricingContainer: {
-    marginBottom: 20,
+  // Testimonial - closer to features
+  testimonialContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 4,
+    marginBottom: 10,
   },
-  planContainer: {
+  testimonialText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+    lineHeight: 19,
+    marginBottom: 6,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  testimonialAuthor: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  // Plan selector - compact but strong
+  planSelector: {
+    marginBottom: 12,
+  },
+  planRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  selectedPlan: {
-    borderColor: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  planHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  radioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
     borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    minHeight: 85,
+  },
+  selectedPlanRow: {
+    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  planTextContainer: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  planTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+    flexWrap: 'wrap',
+  },
+  radioButton: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.5)',
     marginRight: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   radioSelected: {
     borderColor: '#FFFFFF',
   },
   radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#FFFFFF',
   },
   planTitle: {
@@ -527,57 +578,88 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
+  // 50% OFF badge - visually emphasized
   discountBadge: {
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+    marginLeft: 6,
   },
   discountText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#35998d',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  planPrice: {
+  planHelper: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 20,
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    textAlign: 'left',
   },
-  ctaButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 18,
-    borderRadius: 25,
+  planHelperBold: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 20,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontWeight: '700',
+  },
+  // CTA Container and Button - bigger and better layout
+  ctaContainer: {
     alignItems: 'center',
+    marginTop: 8,
     marginBottom: 16,
   },
-  ctaButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
+  primaryCTA: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 28,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 10,
+    minHeight: 56,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  ctaPrimaryText: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#35998d',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    textAlign: 'center',
   },
-  restoreButton: {
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  restoreText: {
-    fontSize: 16,
+  ctaSecondaryText: {
+    fontSize: 14,
+    fontWeight: '500',
     color: 'rgba(255, 255, 255, 0.8)',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    textAlign: 'center',
   },
-  legalContainer: {
+  // Legal links - smallest text
+  legalLinksContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
-    paddingHorizontal: 24,
+    marginBottom: 4,
   },
-  legalButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+  legalLink: {
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+    minHeight: 32,
+    minWidth: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  legalText: {
+  legalLinkText: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
@@ -586,6 +668,17 @@ const styles = StyleSheet.create({
   legalSeparator: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.6)',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  },
+  // Restore purchases - smallest text
+  restorePurchases: {
+    alignItems: 'center',
+    paddingVertical: 6,
+    minHeight: 32,
+  },
+  restoreText: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.5)',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
 }); 
