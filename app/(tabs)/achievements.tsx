@@ -33,21 +33,39 @@ export default function AchievementsScreen() {
             <Text style={styles.statNumber}>
               {loading ? '...' : error ? '0' : stats.totalEarned}
             </Text>
-            <Text style={styles.statLabel}>Earned</Text>
+            <Text 
+              style={styles.statLabel}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              Earned
+            </Text>
           </View>
           <View style={styles.statBox}>
             <Target size={24} color="#FF6B47" />
             <Text style={styles.statNumber}>
               {loading ? '...' : error ? '0' : stats.daysFree}
             </Text>
-            <Text style={styles.statLabel}>Days Free</Text>
+            <Text 
+              style={styles.statLabel}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              Days Free
+            </Text>
           </View>
           <View style={styles.statBox}>
             <TrendingUp size={24} color="#35998d" />
             <Text style={styles.statNumber}>
               {loading ? '...' : error ? '0' : stats.totalToGo}
             </Text>
-            <Text style={styles.statLabel}>To Go</Text>
+            <Text 
+              style={styles.statLabel}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              To Go
+            </Text>
           </View>
         </View>
 
@@ -88,15 +106,31 @@ export default function AchievementsScreen() {
                     <View style={styles.achievementContainer}>
                       <Text style={styles.achievementBadge}>{stats.currentAchievement.emoji}</Text>
                       <View style={styles.achievementText}>
-                        <Text style={styles.achievementName}>{stats.currentAchievement.title}</Text>
-                        <Text style={styles.achievementDescription}>{stats.currentAchievement.description}</Text>
+                        <Text 
+                          style={styles.achievementName}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {stats.currentAchievement.title}
+                        </Text>
+                        <Text 
+                          style={styles.achievementDescription}
+                          numberOfLines={3}
+                          ellipsizeMode="tail"
+                        >
+                          {stats.currentAchievement.description}
+                        </Text>
                       </View>
                     </View>
                   </View>
                   
                   <View style={styles.celebrationBanner}>
                     <Text style={styles.celebrationEmoji}>🎉</Text>
-                    <Text style={styles.celebrationText}>
+                    <Text 
+                      style={styles.celebrationText}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
                       Congratulations! You've achieved {stats.currentAchievement.title}!
                     </Text>
                   </View>
@@ -116,8 +150,20 @@ export default function AchievementsScreen() {
                       </View>
                       
                       <View style={styles.progressSection}>
-                        <Text style={styles.upcomingAchievementName}>{stats.nextAchievement.title}</Text>
-                        <Text style={styles.upcomingAchievementDescription}>{stats.nextAchievement.description}</Text>
+                        <Text 
+                          style={styles.upcomingAchievementName}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {stats.nextAchievement.title}
+                        </Text>
+                        <Text 
+                          style={styles.upcomingAchievementDescription}
+                          numberOfLines={2}
+                          ellipsizeMode="tail"
+                        >
+                          {stats.nextAchievement.description}
+                        </Text>
                         <View style={styles.progressHeader}>
                           <Text style={styles.progressLabel}>Progress</Text>
                           <Text style={styles.progressPercentage}>{stats.progressToNext}%</Text>
@@ -130,7 +176,11 @@ export default function AchievementsScreen() {
                     
                     <View style={styles.motivationBanner}>
                       <Text style={styles.motivationEmoji}>🎯</Text>
-                      <Text style={styles.motivationText}>
+                      <Text 
+                        style={styles.motivationText}
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
                         {stats.progressToNext >= 75 
                           ? `You're ${stats.progressToNext}% there! Keep going strong!`
                           : stats.progressToNext >= 50
@@ -184,16 +234,24 @@ export default function AchievementsScreen() {
                       {achievement.emoji}
                     </Text>
                   </View>
-                  <Text style={[
-                    styles.milestoneTitle, 
-                    achievement.achieved ? styles.titleUnlocked : styles.titleLocked
-                  ]}>
+                  <Text 
+                    style={[
+                      styles.milestoneTitle, 
+                      achievement.achieved ? styles.titleUnlocked : styles.titleLocked
+                    ]}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                  >
                     {achievement.title}
                   </Text>
-                  <Text style={[
-                    styles.milestoneDescription, 
-                    achievement.achieved ? styles.descriptionUnlocked : styles.descriptionLocked
-                  ]}>
+                  <Text 
+                    style={[
+                      styles.milestoneDescription, 
+                      achievement.achieved ? styles.descriptionUnlocked : styles.descriptionLocked
+                    ]}
+                    numberOfLines={3}
+                    ellipsizeMode="tail"
+                  >
                     {achievement.achieved 
                       ? achievement.description 
                       : `${achievement.daysToGo} days to go`
@@ -426,6 +484,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#35998d',
     fontWeight: '500',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   milestonesGrid: {
     flexDirection: 'row',
@@ -440,6 +500,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     position: 'relative',
+    minHeight: 140,
+    justifyContent: 'space-between',
   },
   milestoneUnlocked: {
     backgroundColor: '#FFFFFF',

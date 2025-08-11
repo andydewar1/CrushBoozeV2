@@ -14,25 +14,26 @@ export function useSubscriptionGate() {
   const appState = useRef(AppState.currentState);
   const [isChecking, setIsChecking] = useState(false);
   const [hasCheckedOnEntry, setHasCheckedOnEntry] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState<number>(0);
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // AGGRESSIVE: Check subscription every 30 seconds when in main app
+  // REASONABLE: Check subscription every 5 minutes when in main app (not every 30 seconds)
   useEffect(() => {
     const inTabsGroup = segments[0] === '(tabs)';
     
     if (user && inTabsGroup && !intervalRef.current) {
-      console.log('🔄 Starting aggressive subscription validation (every 30s)');
+      console.log('🔄 Starting periodic subscription validation (every 5 minutes)');
       intervalRef.current = setInterval(() => {
         if (!isChecking) {
           checkSubscription('periodic validation');
         }
-      }, 30000); // Check every 30 seconds
+      }, 300000); // Check every 5 minutes instead of 30 seconds
     }
     
     // Cleanup interval when leaving main app or user logs out
     if ((!user || !inTabsGroup) && intervalRef.current) {
-      console.log('🛑 Stopping aggressive subscription validation');
+      console.log('🛑 Stopping periodic subscription validation');
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
@@ -58,14 +59,15 @@ export function useSubscriptionGate() {
       return;
     }
 
-    console.log(`🔍 Starting AGGRESSIVE subscription check (${reason})...`);
+    console.log(`🔍 Starting subscription check (${reason})...`);
     setIsChecking(true);
+    setLastCheckTime(Date.now());
 
     try {
       // CRITICAL: Force fresh data every time - no caching bypass
       const isSubscribed = await checkSubscriptionStatus();
       
-      console.log(`📊 AGGRESSIVE subscription check result (${reason}):`, { isSubscribed });
+      console.log(`📊 Subscription check result (${reason}):`, { isSubscribed });
       
       if (!isSubscribed) {
         console.log('🚨 SECURITY BREACH: No subscription detected - IMMEDIATE redirect to paywall');
@@ -84,17 +86,21 @@ export function useSubscriptionGate() {
     }
   };
 
-  // Check on app resume (but not on first launch)
+  // Check on app resume (but only if user has been away for more than 2 minutes)
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         const inTabsGroup = segments[0] === '(tabs)';
+        const now = Date.now();
+        const timeSinceLastCheck = now - lastCheckTime;
+        const twoMinutes = 2 * 60 * 1000; // 2 minutes in milliseconds
         
-        // AGGRESSIVE: Check on resume if user is in main app
-        if (user && inTabsGroup && hasCheckedOnEntry) {
-          console.log('📱 App resumed - IMMEDIATE subscription check');
-          // No delay - check immediately on resume
-          checkSubscription('app resume - IMMEDIATE');
+        // Only check on resume if user is in main app AND it's been more than 2 minutes since last check
+        if (user && inTabsGroup && hasCheckedOnEntry && timeSinceLastCheck > twoMinutes) {
+          console.log('📱 App resumed after extended absence - checking subscription');
+          checkSubscription('app resume after extended absence');
+        } else if (user && inTabsGroup && hasCheckedOnEntry) {
+          console.log('📱 App resumed recently - skipping subscription check (last check was', Math.round(timeSinceLastCheck / 1000), 'seconds ago)');
         }
       }
 
@@ -108,7 +114,7 @@ export function useSubscriptionGate() {
         clearTimeout(checkTimeoutRef.current);
       }
     };
-  }, [user, segments, hasCheckedOnEntry]);
+  }, [user, segments, hasCheckedOnEntry, lastCheckTime]);
 
   // Check when entering main app (ONLY ONCE per session)
   useEffect(() => {
@@ -123,9 +129,9 @@ export function useSubscriptionGate() {
     
     if (user && inTabsGroup && !hasCheckedOnEntry && !isChecking) {
       setHasCheckedOnEntry(true);
-      // AGGRESSIVE: No delay - check immediately
-      console.log('🚨 IMMEDIATE subscription check on main app entry');
-      checkSubscription('main app entry - IMMEDIATE');
+      // Check on main app entry (this is reasonable for security)
+      console.log('🔍 Subscription check on main app entry');
+      checkSubscription('main app entry');
     }
 
     // Reset check flag when user logs out or leaves main app
