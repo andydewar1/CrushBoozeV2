@@ -57,19 +57,12 @@ export function useUserProfile(): UseUserProfileResult {
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single()
+        .maybeSingle()
 
       if (profileError) {
-        // If profile doesn't exist (PGRST116), just set null - don't error
-        if (profileError.code === 'PGRST116') {
-  
-          setProfile(null)
-          setError(null)
-        } else {
-          console.error('Profile fetch error:', profileError)
-          setError(profileError.message)
-          setProfile(null)
-        }
+        console.error('Profile fetch error:', profileError)
+        setError(profileError.message)
+        setProfile(null)
       } else {
         setProfile(data)
         setError(null)

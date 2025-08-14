@@ -204,7 +204,7 @@ export default function SettingsScreen() {
           .from('profiles')
           .select('quit_reasons, vape_types')
           .eq('id', userData.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error('Error loading onboarding data:', profileError);
@@ -758,7 +758,7 @@ export default function SettingsScreen() {
 
       // Get all user data
       const [profileResult, financialGoalsResult, goalsResult, logsResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', userData.user.id).single(),
+        supabase.from('profiles').select('*').eq('id', userData.user.id).maybeSingle(),
         supabase.from('financial_goals').select('*').eq('user_id', userData.user.id),
         supabase.from('goals').select('*').eq('user_id', userData.user.id),
         supabase.from('craving_logs').select('*').eq('user_id', userData.user.id)
