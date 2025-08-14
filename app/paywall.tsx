@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
+import RevenueCatService from "@/services/RevenueCatService";
 
 type Plan = "annual" | "monthly";
 
@@ -66,9 +67,12 @@ export default function PaywallScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-          <Text style={[styles.benefitText, { textAlign: 'center', marginBottom: 20 }]}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+          <Text style={[styles.benefitText, { textAlign: 'center', marginBottom: 20, fontSize: 16 }]}>
             {error}
+          </Text>
+          <Text style={[styles.benefitText, { textAlign: 'center', marginBottom: 20, fontSize: 12, opacity: 0.7 }]}>
+            Debug Info: RevenueCat initialized: {RevenueCatService.isInitialized() ? 'Yes' : 'No'}
           </Text>
           <Pressable
             style={styles.cta}

@@ -57,7 +57,12 @@ export function usePaywall() {
         }
       } catch (err) {
         console.error('❌ Failed to load packages:', err);
-        setError('Failed to load subscription options');
+        console.error('❌ Error details:', {
+          message: err instanceof Error ? err.message : 'Unknown error',
+          stack: err instanceof Error ? err.stack : undefined,
+          revenueCatInitialized: RevenueCatService.isInitialized()
+        });
+        setError(`Failed to load subscription options: ${err instanceof Error ? err.message : 'Unknown error'}`);
       } finally {
         setLoading(false);
       }

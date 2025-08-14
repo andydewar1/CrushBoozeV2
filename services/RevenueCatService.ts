@@ -42,22 +42,24 @@ export class RevenueCatService {
     let apiKey: string | undefined;
     
     try {
-      // HARD FAIL if .env loading is broken
-      if (!Constants.expoConfig?.extra) {
-        throw new Error('CRITICAL: Constants.expoConfig.extra is undefined - .env loading failed');
-      }
+      // Try multiple sources for runtime config:
+      // - expoConfig.extra: available in development / dev client
+      // - manifest.extra: available in production builds/OTA
+      const extra = (Constants.expoConfig?.extra as any)
+        ?? ((Constants as any).manifest?.extra as any)
+        ?? {};
 
-      // Get platform-specific API key from environment variables with fallback
-      const singleKey = Constants.expoConfig.extra.REVENUECAT_API_KEY;
-      const iosKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_IOS;
-      const androidKey = Constants.expoConfig.extra.REVENUECAT_API_KEY_ANDROID;
+      // Get platform-specific API key from config with sensible fallbacks
+      const singleKey = extra.REVENUECAT_API_KEY;
+      const iosKey = extra.REVENUECAT_API_KEY_IOS || singleKey;
+      const androidKey = extra.REVENUECAT_API_KEY_ANDROID || singleKey;
       
       // Use platform-specific key or fall back to single key
       apiKey = Platform.OS === 'ios' ? iosKey : androidKey;
 
       // HARD FAIL if API key is missing or invalid - NO SILENT RETURNS
       if (!apiKey) {
-        throw new Error(`CRITICAL: RevenueCat API key is NULL for ${Platform.OS}. Check .env file and app.config.js`);
+        throw new Error(`CRITICAL: RevenueCat API key is NULL for ${Platform.OS}. Ensure keys are set in app.config.js extra or build env (eas.json)`);
       }
       
       if (apiKey === 'your_revenuecat_public_key_here' || apiKey === 'your_ios_revenuecat_key_here' || apiKey === 'your_android_revenuecat_key_here') {
@@ -88,9 +90,12 @@ export class RevenueCatService {
       console.log('🚀 Configuring RevenueCat with options:', {
         hasApiKey: !!apiKey,
         apiKeyLength: apiKey?.length,
+        apiKeyPrefix: apiKey?.substring(0, 8) + '...',
         hasUserId: !!userId,
+        platform: Platform.OS,
         observerMode: configOptions.observerMode,
-        isDevelopment: __DEV__
+        isDevelopment: __DEV__,
+        constantsSource: Constants.expoConfig?.extra ? 'expoConfig' : 'manifest'
       });
 
       await Purchases.configure(configOptions);
@@ -137,12 +142,22 @@ export class RevenueCatService {
     try {
       const offerings = await Purchases.getOfferings();
       
+      console.log('📦 RevenueCat offerings response:', {
+        hasCurrent: !!offerings.current,
+        currentPackagesCount: offerings.current?.availablePackages?.length || 0,
+        allOfferingsCount: offerings.all ? Object.keys(offerings.all).length : 0,
+        currentIdentifier: offerings.current?.identifier,
+        availablePackageIds: offerings.current?.availablePackages?.map(p => p.identifier) || []
+      });
+      
       if (!offerings.current || !offerings.current.availablePackages.length) {
+        console.error('❌ No current offering or packages available');
         return [];
       }
       
       return offerings.all ? Object.values(offerings.all) : [];
     } catch (error) {
+      console.error('❌ getOfferings failed:', error);
       throw error;
     }
   }
@@ -157,8 +172,17 @@ export class RevenueCatService {
 
     try {
       const offerings = await Purchases.getOfferings();
+      
+      console.log('🎯 getCurrentOffering result:', {
+        hasCurrent: !!offerings.current,
+        currentId: offerings.current?.identifier,
+        packagesCount: offerings.current?.availablePackages?.length || 0,
+        packageTypes: offerings.current?.availablePackages?.map(p => p.packageType) || []
+      });
+      
       return offerings.current || null;
     } catch (error) {
+      console.error('❌ getCurrentOffering failed:', error);
       throw error;
     }
   }
