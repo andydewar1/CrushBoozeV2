@@ -4,39 +4,14 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configure notification behavior - ALWAYS show achievement notifications
+// Configure notification behavior exactly as per Expo docs
 Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    // Check if this is an achievement notification
-    const isAchievement = notification.request.content.data?.type === 'achievement';
-    
-    console.log('🔔 Notification received:', {
-      type: notification.request.content.data?.type,
-      title: notification.request.content.title,
-      isAchievement
-    });
-    
-    if (isAchievement) {
-      console.log('🎉 ACHIEVEMENT NOTIFICATION - FORCING DISPLAY');
-      // ALWAYS show achievement notifications regardless of app state
-      return {
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: true,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      };
-    }
-    
-    // Show other notifications normally
-    return {
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    };
-  },
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
 });
 
 interface NotificationSettings {
