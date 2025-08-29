@@ -9,7 +9,14 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "description": "CrushNic is a smoking cessation app designed for general fitness and wellness purposes only. Not a medical device.",
-    "keywords": ["smoking cessation", "quit smoking", "wellness", "fitness", "health tracking", "motivation"],
+    "keywords": [
+      "smoking cessation",
+      "quit smoking",
+      "wellness",
+      "fitness",
+      "health tracking",
+      "motivation"
+    ],
     "category": "health-fitness",
     "ios": {
       "supportsTablet": true,
@@ -19,7 +26,9 @@
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
-        "NSHealthUpdateUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device"
+        "NSHealthUpdateUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
+        "UIBackgroundModes": ["remote-notification"],
+        "NSUserNotificationsUsageDescription": "We need to send you notifications about your progress and achievements"
       },
       "config": {
         "googleMobileAdsAppId": ""
@@ -57,7 +66,8 @@
           "icon": "./assets/images/icon.png",
           "color": "#35998d",
           "sounds": [],
-          "mode": "production"
+          "mode": "production",
+          "enableBackgroundRemoteNotifications": true
         }
       ]
     ],

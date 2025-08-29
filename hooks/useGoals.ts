@@ -74,6 +74,7 @@ export function useGoals(): UseGoalsReturn {
       if (fetchError) {
         console.error('Error fetching goals:', fetchError);
         setError('Failed to fetch goals');
+        setLoading(false);
         return;
       }
 

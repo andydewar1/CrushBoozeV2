@@ -3,15 +3,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAchievements } from './useAchievements';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useReviewPrompt } from './useReviewPrompt';
 
 const STORAGE_KEY = 'achievement-notifications-sent';
 const SIGNUP_DATE_KEY = 'user-signup-date';
 
 export function useAchievementNotifications() {
   const { achievements, stats, loading, error } = useAchievements();
-  const { sendAchievementNotification } = useNotifications();
+  const { sendAchievementNotification, sendAchievementCheckNotification } = useNotifications();
   const { user } = useAuth();
   const previousAchievementsRef = useRef<string[]>([]);
+  
+  // Trigger review prompt check (based on signup date, not achievements)
+  useReviewPrompt();
 
   // Store signup date when user first signs up
   useEffect(() => {
@@ -100,6 +104,13 @@ export function useAchievementNotifications() {
           // For users who signed up more than 24 hours ago, just update the storage without notifications
           await AsyncStorage.setItem(`${STORAGE_KEY}-${user.id}`, JSON.stringify(currentlyAchieved));
           console.log('🔕 User signed up >24h ago, updating storage without notifications');
+        }
+
+        // Always trigger background achievement check for any user (regardless of signup time)
+        // This ensures background processing works for all users
+        if (newAchievements.length > 0) {
+          console.log('🔕 Triggering background achievement check for new achievements');
+          await sendAchievementCheckNotification();
         }
 
       } catch (error) {

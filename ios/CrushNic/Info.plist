@@ -31,9 +31,15 @@
           <string>com.crushnic.quitvaping</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>exp+crushnic</string>
+        </array>
+      </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>61</string>
+    <string>95</string>
     <key>GADApplicationIdentifier</key>
     <string/>
     <key>ITSAppUsesNonExemptEncryption</key>
@@ -60,6 +66,13 @@
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
+    </array>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>We need to send you notifications about your progress and achievements</string>
+    <key>UIBackgroundModes</key>
+    <array>
+      <string>remote-notification</string>
+      <string>fetch</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

@@ -33,6 +33,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="crushnic"/>
+        <data android:scheme="exp+crushnic"/>
       </intent-filter>
     </activity>
   </application>

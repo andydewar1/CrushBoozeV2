@@ -29,6 +29,7 @@ interface NotificationContextType {
   sendAchievementNotification: (title: string, description: string, emoji: string) => Promise<void>;
   sendMoneySavedNotification: (amount: number, currency: string) => Promise<void>;
   sendDailyReminderNotification: () => Promise<void>;
+  sendAchievementCheckNotification: () => Promise<void>;
   hasPermissions: boolean;
 }
 
@@ -53,6 +54,7 @@ export function useNotifications(): NotificationContextType {
       sendAchievementNotification: async () => {},
       sendMoneySavedNotification: async () => {},
       sendDailyReminderNotification: async () => {},
+      sendAchievementCheckNotification: async () => {},
       hasPermissions: false,
     };
   }
@@ -73,15 +75,9 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 
   if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
     
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    
-    if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
+      console.log('Permissions not granted, cannot get push token');
       return null;
     }
     
@@ -120,7 +116,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     loadSettings();
   }, []);
 
-  // Check existing permissions on mount
+  // Check existing permissions on mount (but don't request them)
   useEffect(() => {
     const checkExistingPermissions = async () => {
       try {
@@ -169,19 +165,58 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     if (!hasPermissions || !notificationSettings.achievementNotifications) return;
 
     try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `${emoji} Achievement Unlocked!`,
-          body: `You've earned a new badge: ${title}. Congratulations!`,
-          data: { 
-            type: 'achievement',
-            achievementTitle: title,
-            achievementDescription: description,
-            emoji
-          },
-        },
-        trigger: null, // Show immediately
+      // Always get a fresh push token for achievement notifications
+      console.log('🔄 Getting fresh push token for achievement notification...');
+      
+      // Check permissions first
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('❌ Permissions not granted for achievement notification');
+        return;
+      }
+
+      // Get fresh token
+      const tokenResult = await Notifications.getExpoPushTokenAsync({
+        projectId: process.env.EAS_PROJECT_ID
       });
+      
+      if (!tokenResult?.data) {
+        console.log('❌ Failed to get fresh push token for achievement notification');
+        return;
+      }
+
+      console.log('🔑 Fresh token obtained for achievement notification:', tokenResult.data);
+
+      // Send push notification via Expo's push service
+      const message = {
+        to: tokenResult.data,
+        title: `${emoji} New Achievement Unlocked!`,
+        body: `Congratulations! You've just unlocked "${title}". Tap here to see your progress!`,
+        data: { 
+          type: 'achievement',
+          achievementTitle: title,
+          achievementDescription: description,
+          emoji,
+          action: 'view_achievements'
+        },
+        priority: 'high' as const,
+        sound: 'default' as const,
+      };
+
+      console.log('🚀 Sending achievement push notification:', { title, emoji });
+      
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+
+      const result = await response.json();
+      console.log('✅ Achievement push notification sent successfully:', result);
+      
+      return result;
     } catch (error) {
       console.log('Error sending achievement notification:', error);
     }
@@ -228,6 +263,65 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   };
 
+  const sendAchievementCheckNotification = async () => {
+    try {
+      // Always get a fresh push token for achievement checks
+      console.log('🔄 Getting fresh push token for achievement check...');
+      
+      // Check permissions first
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('❌ Permissions not granted for achievement check');
+        return;
+      }
+
+      // Get fresh token
+      const tokenResult = await Notifications.getExpoPushTokenAsync({
+        projectId: process.env.EAS_PROJECT_ID
+      });
+      
+      if (!tokenResult?.data) {
+        console.log('❌ Failed to get fresh push token for achievement check');
+        return;
+      }
+
+      console.log('🔑 Fresh token obtained for achievement check:', tokenResult.data);
+
+      // Send silent push notification to trigger background achievement check
+      const message = {
+        to: tokenResult.data,
+        contentAvailable: true,
+        data: { 
+          type: 'ACHIEVEMENT_CHECK',
+          timestamp: Date.now(),
+          debug: 'background-achievement-check'
+        }
+        // NO priority for iOS - this was causing issues
+      };
+
+      console.log('🔕 SENDING SILENT ACHIEVEMENT CHECK:', JSON.stringify(message, null, 2));
+      
+      const response = await fetch('https://exp.host/--/api/v2/push/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(message),
+      });
+
+      const result = await response.json();
+      console.log('✅ SILENT NOTIFICATION RESPONSE:', JSON.stringify(result, null, 2));
+      
+      if (result?.data?.status === 'ok') {
+        console.log('🎉 Achievement check notification sent successfully! ID:', result.data.id);
+      } else if (result?.data?.status === 'error') {
+        console.error('❌ PUSH NOTIFICATION ERROR:', result.data);
+      }
+    } catch (error: any) {
+      console.error('❌ FAILED TO SEND ACHIEVEMENT CHECK:', error?.message || String(error));
+    }
+  };
+
   const value: NotificationContextType = {
     expoPushToken,
     notificationSettings,
@@ -236,6 +330,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     sendAchievementNotification,
     sendMoneySavedNotification,
     sendDailyReminderNotification,
+    sendAchievementCheckNotification,
     hasPermissions,
   };
 

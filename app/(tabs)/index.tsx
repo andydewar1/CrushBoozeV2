@@ -16,9 +16,12 @@ import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
 import { useMoneySavedNotifications } from '@/hooks/useMoneySavedNotifications';
-import NotificationPermissionRequest from '@/components/NotificationPermissionRequest';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import RevenueCatService from '@/services/RevenueCatService';
 import { format } from 'date-fns';
+
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -31,18 +34,27 @@ export default function HomeScreen() {
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
-  // Initialize RevenueCat when user reaches main app (after onboarding)
+  // Only request permission on Home (after login)
   useEffect(() => {
-    const initRevenueCat = async () => {
+    (async () => {
       try {
-        // RevenueCat is initialized in app/_layout.tsx - no duplicate init needed
-      } catch (error) {
-        // Silently fail - don't break the app if RevenueCat fails
-        console.error('RevenueCat init failed:', error);
-      }
-    };
+        const key = 'notifications_prompted_v1';
+        const already = await AsyncStorage.getItem(key);
+        if (already) return;
 
-    initRevenueCat();
+        const { status } = await Notifications.requestPermissionsAsync();
+        await AsyncStorage.setItem(key, '1');
+
+        if (status === 'granted') {
+          const { ensurePushToken } = await import('@/lib/notifications/token');
+          await ensurePushToken();
+        } else {
+          console.log('[Home] 🔕 User declined notifications');
+        }
+      } catch (e) {
+        console.log('[Home] ⚠️ Permission flow error', e);
+      }
+    })();
   }, []);
 
   // Initialize notification hooks (these will monitor for new achievements and milestones)
@@ -143,7 +155,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <NotificationPermissionRequest />
+
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Header 
           title="Home" 

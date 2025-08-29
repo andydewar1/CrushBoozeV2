@@ -1,3 +1,7 @@
+// Make sure this import is at the very top, outside any functions.
+// This guarantees the task is defined whenever the JS runtime boots (FG or headless BG).
+import "@/lib/notifications/background";
+
 import { Stack } from 'expo-router';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -6,8 +10,9 @@ import { SettingsProvider } from '@/contexts/SettingsContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { useSubscriptionGate } from '@/hooks/useSubscriptionGate';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, AppState } from 'react-native';
 import { useEffect } from 'react';
+import { ensureBackgroundTaskRegistered } from '@/lib/notifications/background';
 
 function AppContent() {
   // Initialize subscription gating throughout the app
@@ -27,19 +32,40 @@ function AppContent() {
 export default function RootLayout() {
   // Initialize RevenueCat ONCE on app launch using the service
   useEffect(() => {
-    const initializeRevenueCat = async () => {
+    const initializeServices = async () => {
       try {
+        // Initialize RevenueCat
         console.log('🚀 [SINGLE] RevenueCat initialization on app launch...');
         const { RevenueCatService } = await import('@/services/RevenueCatService');
         const service = RevenueCatService.getInstance();
         await service.initialize();
         console.log('✅ [SINGLE] RevenueCat configured successfully via service');
+
+        // Initialize background notifications
+        await ensureBackgroundTaskRegistered();
+
+        // Dev-only: list registered tasks and get push token
+        if (__DEV__) {
+          const TM = await import('expo-task-manager');
+          const tasks = await TM.getRegisteredTasksAsync();
+          console.log('Registered tasks:', tasks);
+
+          const { ensurePushToken } = await import('@/lib/notifications/token');
+          const token = await ensurePushToken();
+          console.log('Push token for testing:', token);
+        }
       } catch (error) {
-        console.error('❌ [SINGLE] RevenueCat service initialization failed:', error);
+        console.error('❌ Service initialization failed:', error);
       }
     };
     
-    initializeRevenueCat();
+    initializeServices();
+  }, []);
+
+  // Add AppState listener to verify backgrounding
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", s => console.log("[AppState]", s));
+    return () => sub.remove();
   }, []);
 
   return (
