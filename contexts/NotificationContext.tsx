@@ -4,15 +4,39 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Configure notification behavior
+// Configure notification behavior - ALWAYS show achievement notifications
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    // Check if this is an achievement notification
+    const isAchievement = notification.request.content.data?.type === 'achievement';
+    
+    console.log('🔔 Notification received:', {
+      type: notification.request.content.data?.type,
+      title: notification.request.content.title,
+      isAchievement
+    });
+    
+    if (isAchievement) {
+      console.log('🎉 ACHIEVEMENT NOTIFICATION - FORCING DISPLAY');
+      // ALWAYS show achievement notifications regardless of app state
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      };
+    }
+    
+    // Show other notifications normally
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
 
 interface NotificationSettings {
@@ -177,7 +201,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       // Get fresh token
       const tokenResult = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EAS_PROJECT_ID
+        projectId: '4fb906e8-fea5-4082-8a0e-445722ad3558'
       });
       
       if (!tokenResult?.data) {
@@ -187,11 +211,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       console.log('🔑 Fresh token obtained for achievement notification:', tokenResult.data);
 
-      // Send push notification via Expo's push service
+      // Send VISIBLE push notification that shows even when app is closed/phone locked
       const message = {
         to: tokenResult.data,
-        title: `${emoji} New Achievement Unlocked!`,
-        body: `Congratulations! You've just unlocked "${title}". Tap here to see your progress!`,
+        title: `🎉 Achievement Unlocked!`,
+        body: `Congratulations! You've unlocked a new achievement. Tap to see your progress!`,
         data: { 
           type: 'achievement',
           achievementTitle: title,
@@ -201,9 +225,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         },
         priority: 'high' as const,
         sound: 'default' as const,
+        // These ensure the notification shows on lock screen and notification center
+        badge: 1,
+        channelId: 'default', // Android
       };
 
-      console.log('🚀 Sending achievement push notification:', { title, emoji });
+      console.log('🚀 SENDING VISIBLE ACHIEVEMENT PUSH NOTIFICATION:', { 
+        title, 
+        emoji,
+        to: tokenResult.data.substring(0, 20) + '...',
+        messageBody: message.body
+      });
       
       const response = await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
@@ -214,7 +246,15 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       });
 
       const result = await response.json();
-      console.log('✅ Achievement push notification sent successfully:', result);
+      
+      if (result?.data?.status === 'ok') {
+        console.log('✅ VISIBLE ACHIEVEMENT NOTIFICATION SENT SUCCESSFULLY! ID:', result.data.id);
+        console.log('📱 This notification WILL appear on lock screen and notification center');
+      } else {
+        console.error('❌ ACHIEVEMENT NOTIFICATION FAILED:', result);
+      }
+      
+      console.log('📊 Full response:', result);
       
       return result;
     } catch (error) {
@@ -277,7 +317,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       // Get fresh token
       const tokenResult = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EAS_PROJECT_ID
+        projectId: '4fb906e8-fea5-4082-8a0e-445722ad3558'
       });
       
       if (!tokenResult?.data) {

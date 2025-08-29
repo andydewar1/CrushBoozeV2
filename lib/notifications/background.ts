@@ -5,7 +5,7 @@ import * as Notifications from "expo-notifications";
 export const BACKGROUND_NOTIFICATION_TASK = "BACKGROUND_NOTIFICATION_TASK";
 
 // 🚨 Define at module top-level (no function wrapper)  
-TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
+TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error, executionInfo }) => {
   const startTime = Date.now();
   try {
     console.log("[BG] 🎯🎯🎯 BACKGROUND TASK TRIGGERED 🎯🎯🎯");
@@ -38,11 +38,16 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionIn
       console.log(`[BG] ✅ BACKGROUND TASK COMPLETED SUCCESSFULLY in ${duration}ms`);
     } else if (payload?.type === 'ACHIEVEMENT_CHECK') {
       console.log('[BG] 🏆 ACHIEVEMENT CHECK PAYLOAD DETECTED - Processing achievements!');
-      // TODO: call your achievement check here
-      // await checkAchievementsSilently(payload);
       
-      // For now, just log that we received it
-      console.log('[BG] 🎯 Achievement check triggered successfully in background!');
+      // Import and call the achievement check function
+      try {
+        const { runAchievementCheckFromPush } = await import('./achievements.bridge');
+        await runAchievementCheckFromPush(payload);
+        console.log('[BG] 🎯 Achievement check completed successfully in background!');
+      } catch (error) {
+        console.log('[BG] ❌ Achievement check failed:', error);
+      }
+      
       const duration = Date.now() - startTime;
       console.log(`[BG] ✅ ACHIEVEMENT CHECK COMPLETED in ${duration}ms`);
     } else {
@@ -89,14 +94,4 @@ export async function ensureBackgroundTaskRegistered() {
   }
 }
 
-// Foreground handler (keeps banners off even if a non-silent arrives)
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: false,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    // iOS 15+
-    shouldShowBanner: false,
-    shouldShowList: false,
-  }),
-});
+// Notification handler is configured in NotificationContext.tsx

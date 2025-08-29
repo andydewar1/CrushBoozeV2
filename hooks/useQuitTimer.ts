@@ -76,6 +76,8 @@ export function useQuitTimer(): QuitTimer {
         }
       }
 
+
+
       setTimer(prev => ({
         ...prev,
         days,

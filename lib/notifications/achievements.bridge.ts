@@ -124,8 +124,8 @@ async function checkAndUnlockAchievements(userId: string) {
         bgLog(`📱 Processing notification for: ${achievementData.title}`);
         
         const notificationContent = {
-          title: `${achievementData.emoji || '🎉'} Achievement Unlocked!`,
-          body: `You've earned a new badge: ${achievementData.title}. Congratulations!`,
+          title: `🎉 Achievement Unlocked!`,
+          body: `Congratulations! You've unlocked a new achievement. Tap to see your progress!`,
           data: { 
             type: 'achievement',
             achievementId: achievement.id,
