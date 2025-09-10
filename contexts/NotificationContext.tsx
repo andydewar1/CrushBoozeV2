@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// Remove direct import to avoid circular dependencies - we'll import dynamically
 
 // Configure notification behavior exactly as per Expo docs
 Notifications.setNotificationHandler({
@@ -181,6 +182,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         if (hasPerms) {
           console.log('🔔 Auto-scheduling progress notifications on app launch...');
           await scheduleProgressNotifications();
+        }
+
+        // ============================================================================
+        // REVIEW PROMPT SYSTEM - Record first open and maybe request review
+        // ============================================================================
+        try {
+          const { recordFirstOpenIfMissing, maybeRequestReviewIfEligible } = await import('@/lib/reviews');
+          await recordFirstOpenIfMissing();
+          await maybeRequestReviewIfEligible();
+        } catch (error) {
+          console.log('Review system not available yet:', error);
         }
       } catch (error) {
         console.log('Error checking existing permissions:', error);

@@ -62,9 +62,21 @@ export default function RootLayout() {
     initializeServices();
   }, []);
 
-  // Add AppState listener to verify backgrounding
+  // Add AppState listener to verify backgrounding and handle review prompts
   useEffect(() => {
-    const sub = AppState.addEventListener("change", s => console.log("[AppState]", s));
+    const handleAppStateChange = async (nextAppState: string) => {
+      console.log("[AppState]", nextAppState);
+      
+      // When app becomes active (from background or launch), check for review eligibility
+      if (nextAppState === 'active') {
+        // Import here to avoid circular dependencies
+        const { recordFirstOpenIfMissing, maybeRequestReviewIfEligible } = await import('@/lib/reviews');
+        await recordFirstOpenIfMissing();
+        await maybeRequestReviewIfEligible();
+      }
+    };
+
+    const sub = AppState.addEventListener("change", handleAppStateChange);
     return () => sub.remove();
   }, []);
 

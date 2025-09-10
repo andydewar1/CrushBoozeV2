@@ -1096,6 +1096,48 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* DEV ONLY - Review Testing */}
+        {__DEV__ && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <SettingsIcon size={20} color="#35998d" />
+              <Text style={styles.sectionTitle}>Development Tools</Text>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.settingItem, { backgroundColor: 'rgba(53, 153, 141, 0.1)' }]}
+              onPress={async () => {
+                try {
+                  const { testReviewPrompt } = await import('@/lib/reviews');
+                  await testReviewPrompt();
+                  showSuccess('Test Review', 'Review prompt triggered (if available)');
+                } catch (error) {
+                  showError('Test Failed', 'Failed to trigger review prompt');
+                }
+              }}
+            >
+              <Text style={[styles.settingLabel, { color: '#35998d' }]}>⭐ Test Review Prompt</Text>
+              <ChevronRight size={16} color="#35998d" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.settingItem}
+              onPress={async () => {
+                try {
+                  const { getReviewState } = await import('@/lib/reviews');
+                  const state = await getReviewState();
+                  console.log('Review State:', state);
+                  showInfo('Review State', `Check console for details. Days since first open: ${state.daysSinceFirstOpen || 'N/A'}`);
+                } catch (error) {
+                  showError('Debug Failed', 'Failed to get review state');
+                }
+              }}
+            >
+              <Text style={styles.settingLabel}>🔍 Debug Review State</Text>
+              <ChevronRight size={16} color="#C7C7CC" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Support */}
         <View style={styles.section}>
