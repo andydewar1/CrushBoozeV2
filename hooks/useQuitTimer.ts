@@ -56,6 +56,15 @@ export function useQuitTimer(): QuitTimer {
         hours = totalHours % 24;
         const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
         minutes = totalMinutes % 60;
+        
+        console.log('🕐 QUIT TIMER DEBUG:', {
+          quitDate: quitDate.toISOString(),
+          now: now.toISOString(),
+          days,
+          hours,
+          minutes,
+          has_quit: settings.has_quit
+        });
       } else {
         // Check if quit date is in the future
         if (quitDate > now) {

@@ -190,12 +190,33 @@ export function useAchievements() {
 
     const daysFree = days;
 
+    console.log('🏆 ACHIEVEMENTS DEBUG:', {
+      daysFree,
+      timerLoading,
+      timerError,
+      firstAchievement: ACHIEVEMENTS[0]
+    });
+
     // Calculate achievements with their status
     const processedAchievements = ACHIEVEMENTS.map(achievement => ({
       ...achievement,
       achieved: daysFree >= achievement.daysRequired,
       daysToGo: Math.max(0, achievement.daysRequired - daysFree),
     }));
+
+    const achievedCount = processedAchievements.filter(a => a.achieved).length;
+    console.log('🏆 PROCESSED ACHIEVEMENTS:', {
+      daysFree,
+      totalAchievements: processedAchievements.length,
+      achievedCount,
+      firstFewAchievements: processedAchievements.slice(0, 3).map(a => ({
+        id: a.id,
+        title: a.title,
+        daysRequired: a.daysRequired,
+        achieved: a.achieved,
+        daysToGo: a.daysToGo
+      }))
+    });
 
     setAchievements(processedAchievements);
 

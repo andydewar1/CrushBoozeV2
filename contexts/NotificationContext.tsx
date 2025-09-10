@@ -14,29 +14,10 @@ Notifications.setNotificationHandler({
   }),
 });
 
-interface NotificationSettings {
-  achievementNotifications: boolean;
-  moneySavedNotifications: boolean;
-  dailyReminders: boolean;
-}
-
 interface NotificationContextType {
   expoPushToken: string | null;
-  notificationSettings: NotificationSettings;
-  updateNotificationSettings: (settings: Partial<NotificationSettings>) => Promise<void>;
-  requestPermissions: () => Promise<boolean>;
-  sendAchievementNotification: (title: string, description: string, emoji: string) => Promise<void>;
-  sendMoneySavedNotification: (amount: number, currency: string) => Promise<void>;
-  sendDailyReminderNotification: () => Promise<void>;
-  sendAchievementCheckNotification: () => Promise<void>;
   hasPermissions: boolean;
 }
-
-const defaultSettings: NotificationSettings = {
-  achievementNotifications: true,
-  moneySavedNotifications: true,
-  dailyReminders: false,
-};
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
 
@@ -47,13 +28,6 @@ export function useNotifications(): NotificationContextType {
     // Return a safe default instead of throwing
     return {
       expoPushToken: null,
-      notificationSettings: defaultSettings,
-      updateNotificationSettings: async () => {},
-      requestPermissions: async () => false,
-      sendAchievementNotification: async () => {},
-      sendMoneySavedNotification: async () => {},
-      sendDailyReminderNotification: async () => {},
-      sendAchievementCheckNotification: async () => {},
       hasPermissions: false,
     };
   }
@@ -74,11 +48,21 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 
   if (Device.isDevice) {
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
     
+    // If permission is not granted, request it
     if (existingStatus !== 'granted') {
-      console.log('Permissions not granted, cannot get push token');
+      console.log('🔔 Requesting notification permissions...');
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    if (finalStatus !== 'granted') {
+      console.log('❌ Notification permissions not granted');
       return null;
     }
+    
+    console.log('✅ Notification permissions granted');
     
     try {
       const projectId = '4fb906e8-fea5-4082-8a0e-445722ad3558'; // From your app.json
@@ -97,25 +81,82 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [hasPermissions, setHasPermissions] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(defaultSettings);
 
-  useEffect(() => {
-    // Load saved notification settings
-    const loadSettings = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('notification-settings');
-        if (saved) {
-          setNotificationSettings({ ...defaultSettings, ...JSON.parse(saved) });
-        }
-      } catch (error) {
-        console.log('Error loading notification settings:', error);
+  // ============================================================================
+  // SIMPLE PROGRESS NOTIFICATIONS - Scheduled locally at 12pm daily/weekly
+  // ============================================================================
+  
+  const scheduleProgressNotifications = async () => {
+    // Check permissions directly instead of relying on state
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('❌ No notification permissions - cannot schedule progress notifications');
+      return;
+    }
+
+    try {
+      // Cancel any existing scheduled notifications to avoid duplicates
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log('🧹 Cleared existing scheduled notifications');
+
+      // Check if we've already scheduled notifications (to avoid re-scheduling on every app launch)
+      const hasScheduled = await AsyncStorage.getItem('progress-notifications-scheduled');
+      if (hasScheduled) {
+        console.log('✅ Progress notifications already scheduled');
+        return;
       }
-    };
 
-    loadSettings();
-  }, []);
+      const now = new Date();
+      
+      // Schedule 7 daily notifications at 12pm (first week)
+      for (let day = 1; day <= 7; day++) {
+        const scheduledDate = new Date(now);
+        scheduledDate.setDate(now.getDate() + day);
+        scheduledDate.setHours(12, 0, 0, 0); // 12pm local time
+        
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Today's progress is in – open to see your wins 📊",
+            body: "Tap to check your vape-free journey and savings",
+            data: { type: 'daily_progress', day },
+            sound: true,
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledDate },
+        });
+        
+        console.log(`📅 Scheduled daily notification ${day} for ${scheduledDate.toISOString()}`);
+      }
 
-  // Check existing permissions on mount (but don't request them)
+      // Schedule weekly notifications starting from day 8
+      for (let week = 1; week <= 52; week++) { // Schedule for a full year
+        const scheduledDate = new Date(now);
+        scheduledDate.setDate(now.getDate() + 7 + (week * 7)); // Start from day 8, then every 7 days
+        scheduledDate.setHours(12, 0, 0, 0); // 12pm local time
+        
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Today's progress is in – open to see your wins 📊",
+            body: "Weekly check-in: See how far you've come!",
+            data: { type: 'weekly_progress', week },
+            sound: true,
+          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledDate },
+        });
+        
+        console.log(`📅 Scheduled weekly notification ${week} for ${scheduledDate.toISOString()}`);
+      }
+
+      // Mark as scheduled to prevent re-scheduling
+      await AsyncStorage.setItem('progress-notifications-scheduled', 'true');
+      console.log('✅ All progress notifications scheduled successfully');
+      
+    } catch (error) {
+      console.error('❌ Error scheduling progress notifications:', error);
+    }
+  };
+
+
+  // Check existing permissions on mount and schedule notifications if we have them
   useEffect(() => {
     const checkExistingPermissions = async () => {
       try {
@@ -133,6 +174,14 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             console.log('Error getting existing push token:', error);
           }
         }
+
+        // ============================================================================
+        // AUTO-SCHEDULE PROGRESS NOTIFICATIONS if we have permissions
+        // ============================================================================
+        if (hasPerms) {
+          console.log('🔔 Auto-scheduling progress notifications on app launch...');
+          await scheduleProgressNotifications();
+        }
       } catch (error) {
         console.log('Error checking existing permissions:', error);
       }
@@ -141,211 +190,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     checkExistingPermissions();
   }, []);
 
-  const requestPermissions = async (): Promise<boolean> => {
-    const token = await registerForPushNotificationsAsync();
-    setExpoPushToken(token);
-    const hasPerms = token !== null;
-    setHasPermissions(hasPerms);
-    return hasPerms;
-  };
-
-  const updateNotificationSettings = async (settings: Partial<NotificationSettings>) => {
-    const newSettings = { ...notificationSettings, ...settings };
-    setNotificationSettings(newSettings);
-    
-    try {
-      await AsyncStorage.setItem('notification-settings', JSON.stringify(newSettings));
-    } catch (error) {
-      console.log('Error saving notification settings:', error);
-    }
-  };
-
-  const sendAchievementNotification = async (title: string, description: string, emoji: string) => {
-    if (!hasPermissions || !notificationSettings.achievementNotifications) return;
-
-    try {
-      // Always get a fresh push token for achievement notifications
-      console.log('🔄 Getting fresh push token for achievement notification...');
-      
-      // Check permissions first
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('❌ Permissions not granted for achievement notification');
-        return;
-      }
-
-      // Get fresh token
-      const tokenResult = await Notifications.getExpoPushTokenAsync({
-        projectId: '4fb906e8-fea5-4082-8a0e-445722ad3558'
-      });
-      
-      if (!tokenResult?.data) {
-        console.log('❌ Failed to get fresh push token for achievement notification');
-        return;
-      }
-
-      console.log('🔑 Fresh token obtained for achievement notification:', tokenResult.data);
-
-      // Send VISIBLE push notification that shows even when app is closed/phone locked
-      const message = {
-        to: tokenResult.data,
-        title: `🎉 Achievement Unlocked!`,
-        body: `Congratulations! You've unlocked a new achievement. Tap to see your progress!`,
-        data: { 
-          type: 'achievement',
-          achievementTitle: title,
-          achievementDescription: description,
-          emoji,
-          action: 'view_achievements'
-        },
-        priority: 'high' as const,
-        sound: 'default' as const,
-        // These ensure the notification shows on lock screen and notification center
-        badge: 1,
-        channelId: 'default', // Android
-      };
-
-      console.log('🚀 SENDING VISIBLE ACHIEVEMENT PUSH NOTIFICATION:', { 
-        title, 
-        emoji,
-        to: tokenResult.data.substring(0, 20) + '...',
-        messageBody: message.body
-      });
-      
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
-
-      const result = await response.json();
-      
-      if (result?.data?.status === 'ok') {
-        console.log('✅ VISIBLE ACHIEVEMENT NOTIFICATION SENT SUCCESSFULLY! ID:', result.data.id);
-        console.log('📱 This notification WILL appear on lock screen and notification center');
-      } else {
-        console.error('❌ ACHIEVEMENT NOTIFICATION FAILED:', result);
-      }
-      
-      console.log('📊 Full response:', result);
-      
-      return result;
-    } catch (error) {
-      console.log('Error sending achievement notification:', error);
-    }
-  };
-
-  const sendMoneySavedNotification = async (amount: number, currency: string) => {
-    if (!hasPermissions || !notificationSettings.moneySavedNotifications) return;
-
-    const formattedAmount = Math.floor(amount).toLocaleString();
-    
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '💰 Money Saved Milestone!',
-          body: `Congratulations! You've saved ${currency}${formattedAmount} by quitting vaping!`,
-          data: { 
-            type: 'money_saved',
-            amount,
-            currency,
-            milestone: amount
-          },
-        },
-        trigger: null, // Show immediately
-      });
-    } catch (error) {
-      console.log('Error sending money saved notification:', error);
-    }
-  };
-
-  const sendDailyReminderNotification = async () => {
-    if (!hasPermissions || !notificationSettings.dailyReminders) return;
-
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🌟 Stay Strong!',
-          body: "Remember why you started. Check your progress in CrushNic!",
-          data: { type: 'daily_reminder' },
-        },
-        trigger: null, // Show immediately for now - TODO: implement proper scheduling
-      });
-    } catch (error) {
-      console.log('Error scheduling daily reminder:', error);
-    }
-  };
-
-  const sendAchievementCheckNotification = async () => {
-    try {
-      // Always get a fresh push token for achievement checks
-      console.log('🔄 Getting fresh push token for achievement check...');
-      
-      // Check permissions first
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('❌ Permissions not granted for achievement check');
-        return;
-      }
-
-      // Get fresh token
-      const tokenResult = await Notifications.getExpoPushTokenAsync({
-        projectId: '4fb906e8-fea5-4082-8a0e-445722ad3558'
-      });
-      
-      if (!tokenResult?.data) {
-        console.log('❌ Failed to get fresh push token for achievement check');
-        return;
-      }
-
-      console.log('🔑 Fresh token obtained for achievement check:', tokenResult.data);
-
-      // Send silent push notification to trigger background achievement check
-      const message = {
-        to: tokenResult.data,
-        contentAvailable: true,
-        data: { 
-          type: 'ACHIEVEMENT_CHECK',
-          timestamp: Date.now(),
-          debug: 'background-achievement-check'
-        }
-        // NO priority for iOS - this was causing issues
-      };
-
-      console.log('🔕 SENDING SILENT ACHIEVEMENT CHECK:', JSON.stringify(message, null, 2));
-      
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
-
-      const result = await response.json();
-      console.log('✅ SILENT NOTIFICATION RESPONSE:', JSON.stringify(result, null, 2));
-      
-      if (result?.data?.status === 'ok') {
-        console.log('🎉 Achievement check notification sent successfully! ID:', result.data.id);
-      } else if (result?.data?.status === 'error') {
-        console.error('❌ PUSH NOTIFICATION ERROR:', result.data);
-      }
-    } catch (error: any) {
-      console.error('❌ FAILED TO SEND ACHIEVEMENT CHECK:', error?.message || String(error));
-    }
-  };
 
   const value: NotificationContextType = {
     expoPushToken,
-    notificationSettings,
-    updateNotificationSettings,
-    requestPermissions,
-    sendAchievementNotification,
-    sendMoneySavedNotification,
-    sendDailyReminderNotification,
-    sendAchievementCheckNotification,
     hasPermissions,
   };
 

@@ -17,6 +17,20 @@ export function useAchievementNotifications() {
   useReviewPrompt();
 
   useEffect(() => {
+    console.log('🔔 ACHIEVEMENT NOTIFICATIONS HOOK:', {
+      loading,
+      error: error,
+      hasUser: !!user,
+      userId: user?.id,
+      achievementsLength: achievements.length,
+      achievements: achievements.slice(0, 3).map(a => ({
+        id: a.id,
+        title: a.title,
+        achieved: a.achieved,
+        daysRequired: a.daysRequired
+      }))
+    });
+
     if (loading || error || !user || !achievements.length) return;
 
     const checkForNewAchievements = async () => {

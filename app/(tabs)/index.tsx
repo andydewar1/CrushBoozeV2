@@ -14,8 +14,6 @@ import { useGoals } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
-import { useAchievementNotifications } from '@/hooks/useAchievementNotifications';
-import { useMoneySavedNotifications } from '@/hooks/useMoneySavedNotifications';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -57,9 +55,6 @@ export default function HomeScreen() {
     })();
   }, []);
 
-  // Initialize notification hooks (these will monitor for new achievements and milestones)
-  useAchievementNotifications();
-  useMoneySavedNotifications();
 
   // Refresh goals when the screen comes into focus
   useFocusEffect(

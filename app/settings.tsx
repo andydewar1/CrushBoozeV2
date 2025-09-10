@@ -115,13 +115,6 @@ export default function SettingsScreen() {
     error: null as string | null
   });
 
-  // Notification settings
-  const { 
-    notificationSettings, 
-    updateNotificationSettings, 
-    hasPermissions, 
-    requestPermissions 
-  } = useNotifications();
 
   // Temp data states
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
@@ -1103,54 +1096,6 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Notifications */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Bell size={20} color="#35998d" />
-            <Text style={styles.sectionTitle}>Notifications</Text>
-          </View>
-
-          {!hasPermissions && (
-            <TouchableOpacity 
-              style={[styles.settingItem, styles.warningItem]} 
-              onPress={requestPermissions}
-            >
-              <View style={styles.settingItemContent}>
-                <Text style={[styles.settingLabel, styles.warningText]}>Enable Notifications</Text>
-                <Text style={styles.settingSubtitle}>Get notified about achievements and milestones</Text>
-              </View>
-              <ChevronRight size={16} color="#FF6B47" />
-            </TouchableOpacity>
-          )}
-
-          {hasPermissions && (
-            <View style={styles.toggleSettingItem}>
-              <View style={styles.settingItemContent}>
-                <Text style={styles.settingLabel}>Notifications</Text>
-                <Text style={styles.settingSubtitle}>Get notified about achievements and milestones</Text>
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.toggle,
-                  (notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications) && styles.toggleActive
-                ]}
-                onPress={() => {
-                  const newValue = !(notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications);
-                  updateNotificationSettings({ 
-                    achievementNotifications: newValue,
-                    moneySavedNotifications: newValue,
-                    dailyReminders: false // Keep daily reminders off for simplicity
-                  });
-                }}
-              >
-                <View style={[
-                  styles.toggleSlider,
-                  (notificationSettings.achievementNotifications || notificationSettings.moneySavedNotifications) && styles.toggleSliderActive
-                ]} />
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
 
         {/* Support */}
         <View style={styles.section}>
