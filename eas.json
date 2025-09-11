@@ -4,6 +4,18 @@
       "developmentClient": true,
       "distribution": "internal",
       "ios": { "resourceClass": "m-medium" }
+    },
+    "production": {
+      "distribution": "store",
+      "ios": { "resourceClass": "m-medium" }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "crushnichq@gmail.com",
+        "ascAppId": "6748355575"
+      }
     }
   }
 }

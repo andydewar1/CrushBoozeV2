@@ -10,9 +10,7 @@ async function getStoreReview() {
     try {
       StoreReview = await import('expo-store-review');
     } catch (error) {
-      if (__DEV__) {
-        console.log('Review: expo-store-review not available yet (native module not built)');
-      }
+    // Silently fail if module not available
       return null;
     }
   }
@@ -177,74 +175,3 @@ export async function maybeRequestReviewIfEligible(): Promise<void> {
   }
 }
 
-/**
- * DEV ONLY: Force a review prompt for testing (bypasses timing logic)
- * Does NOT set cooldown timestamps in dev mode
- */
-export async function testReviewPrompt(): Promise<void> {
-  if (!__DEV__) {
-    console.warn('testReviewPrompt() should only be called in development');
-    return;
-  }
-
-  // iOS only - gracefully no-op on Android
-  if (Platform.OS !== 'ios') {
-    console.log('Review: Test prompt skipped (Android)');
-    return;
-  }
-
-  try {
-    // Get StoreReview module safely
-    const SR = await getStoreReview();
-    if (!SR) {
-      console.log('Review: Test prompt - expo-store-review not available');
-      return;
-    }
-
-    // Check if iOS will actually show the review prompt
-    const hasAction = await SR.hasAction();
-    if (!hasAction) {
-      console.log('Review: Test prompt - iOS hasAction=false, cannot show review');
-      return;
-    }
-
-    console.log('Review: Test prompt - requesting review...');
-    await SR.requestReview();
-    console.log('Review: Test prompt - requestReview() called (no cooldown set in dev mode)');
-  } catch (error) {
-    console.log('Review: Test prompt error:', error);
-  }
-}
-
-/**
- * DEV ONLY: Get current review state for debugging
- */
-export async function getReviewState(): Promise<{
-  firstOpenAt: string | null;
-  lastReviewRequestAt: string | null;
-  hasAskedForReview: boolean;
-  daysSinceFirstOpen: number | null;
-  daysSinceLastPrompt: number | null;
-  isEligible: boolean;
-}> {
-  if (!__DEV__) {
-    throw new Error('getReviewState() should only be called in development');
-  }
-
-  const firstOpenAt = await AsyncStorage.getItem(FIRST_OPEN_AT_KEY);
-  const lastReviewRequestAt = await AsyncStorage.getItem(LAST_REVIEW_REQUEST_AT_KEY);
-  const hasAskedForReview = (await AsyncStorage.getItem(HAS_ASKED_FOR_REVIEW_KEY)) === 'true';
-  
-  const daysSinceFirstOpen = firstOpenAt ? daysSince(firstOpenAt) : null;
-  const daysSinceLastPrompt = lastReviewRequestAt ? daysSince(lastReviewRequestAt) : null;
-  const isEligible = await isEligibleForReview();
-
-  return {
-    firstOpenAt,
-    lastReviewRequestAt,
-    hasAskedForReview,
-    daysSinceFirstOpen,
-    daysSinceLastPrompt,
-    isEligible,
-  };
-}

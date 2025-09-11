@@ -150,6 +150,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       // Mark as scheduled to prevent re-scheduling
       await AsyncStorage.setItem('progress-notifications-scheduled', 'true');
       console.log('✅ All progress notifications scheduled successfully');
+
       
     } catch (error) {
       console.error('❌ Error scheduling progress notifications:', error);
