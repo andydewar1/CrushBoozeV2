@@ -117,8 +117,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: "Today's progress is in – open to see your wins 📊",
-            body: "Tap to check your vape-free journey and savings",
+            title: "Today's progress is in 🎉",
+            body: "Tap here to see your wins 👀",
             data: { type: 'daily_progress', day },
             sound: true,
           },
@@ -136,8 +136,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: "Today's progress is in – open to see your wins 📊",
-            body: "Weekly check-in: See how far you've come!",
+            title: "Today's progress is in 🎉",
+            body: "Tap here to see your wins 👀",
             data: { type: 'weekly_progress', week },
             sound: true,
           },
