@@ -766,7 +766,7 @@ export default function SettingsScreen() {
         goals: goalsResult.data || [],
         craving_logs: logsResult.data || [],
         exported_at: new Date().toISOString(),
-        app_version: '1.0.78',
+        app_version: '1.0.80',
         export_format: 'CrushNic_Data_Export_v1'
       };
 
@@ -1130,7 +1130,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.settingValue}>1.0.78</Text>
+            <Text style={styles.settingValue}>1.0.80</Text>
           </View>
 
         </View>
