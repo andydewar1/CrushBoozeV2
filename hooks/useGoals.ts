@@ -65,11 +65,26 @@ export function useGoals(): UseGoalsReturn {
       setLoading(true);
       setError(null);
 
-      const { data, error: fetchError } = await supabase
+      let { data, error: fetchError } = await supabase
         .from('financial_goals')
         .select('*')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
+
+      // Retry once on 401 (token expired during refresh)
+      if (fetchError && fetchError.code === 'PGRST301') {
+        console.log('⚠️ Got 401 error, waiting for token refresh and retrying...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const result = await supabase
+          .from('financial_goals')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+        
+        data = result.data;
+        fetchError = result.error;
+      }
 
       if (fetchError) {
         console.error('Error fetching goals:', fetchError);
