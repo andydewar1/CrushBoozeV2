@@ -259,7 +259,7 @@ export default function HomeScreen() {
                     : 'Savings will start when you quit!'
                   : 'Add your quit and habit data in settings to see your results' 
                 : displayTotalSaved > 0 
-                  ? 'Every minute counts! Keep it up!' 
+                  ? 'Every minute counts!' 
                   : 'Your savings will start growing once you quit!'
               }
             </Text>
