@@ -157,8 +157,6 @@ export default function HomeScreen() {
           subtitle="Your future self is proud of you."
         />
 
-
-
         {/* Main Progress Card */}
         <View style={styles.progressCard}>
           <View style={styles.circularProgress}>
@@ -576,6 +574,7 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -1160,6 +1159,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#35998d',
+  },
+
+  // Test button styles
+  testButton: {
+    backgroundColor: '#35998d',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    shadowColor: '#35998d',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  testButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  testButtonHelper: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginTop: 12,
+    lineHeight: 20,
   },
 
 });

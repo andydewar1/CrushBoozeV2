@@ -84,7 +84,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [hasPermissions, setHasPermissions] = useState(false);
 
   // ============================================================================
-  // SIMPLE PROGRESS NOTIFICATIONS - Scheduled locally at 12pm daily/weekly
+  // SIMPLE PROGRESS NOTIFICATIONS - One repeating notification at 12pm daily
   // ============================================================================
   
   const scheduleProgressNotifications = async () => {
@@ -100,57 +100,25 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       await Notifications.cancelAllScheduledNotificationsAsync();
       console.log('🧹 Cleared existing scheduled notifications');
 
-      // Check if we've already scheduled notifications (to avoid re-scheduling on every app launch)
-      const hasScheduled = await AsyncStorage.getItem('progress-notifications-scheduled');
-      if (hasScheduled) {
-        console.log('✅ Progress notifications already scheduled');
-        return;
-      }
+      // Schedule daily notification at 12:00 PM
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Today's progress is in 🎉",
+          body: "Tap here to see your wins 👀",
+          data: { type: 'daily_progress' },
+          sound: true,
+        },
+        trigger: {
+          hour: 12,
+          minute: 0,
+          repeats: true,
+        },
+      });
 
-      const now = new Date();
+      console.log('✅ Daily 12pm notification scheduled successfully');
       
-      // Schedule 7 daily notifications at 12pm (first week)
-      for (let day = 1; day <= 7; day++) {
-        const scheduledDate = new Date(now);
-        scheduledDate.setDate(now.getDate() + day);
-        scheduledDate.setHours(12, 0, 0, 0); // 12pm local time
-        
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Today's progress is in 🎉",
-            body: "Tap here to see your wins 👀",
-            data: { type: 'daily_progress', day },
-            sound: true,
-          },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledDate },
-        });
-        
-        console.log(`📅 Scheduled daily notification ${day} for ${scheduledDate.toISOString()}`);
-      }
-
-      // Schedule weekly notifications starting from day 8
-      for (let week = 1; week <= 52; week++) { // Schedule for a full year
-        const scheduledDate = new Date(now);
-        scheduledDate.setDate(now.getDate() + 7 + (week * 7)); // Start from day 8, then every 7 days
-        scheduledDate.setHours(12, 0, 0, 0); // 12pm local time
-        
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Today's progress is in 🎉",
-            body: "Tap here to see your wins 👀",
-            data: { type: 'weekly_progress', week },
-            sound: true,
-          },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: scheduledDate },
-        });
-        
-        console.log(`📅 Scheduled weekly notification ${week} for ${scheduledDate.toISOString()}`);
-      }
-
-      // Mark as scheduled to prevent re-scheduling
-      await AsyncStorage.setItem('progress-notifications-scheduled', 'true');
-      console.log('✅ All progress notifications scheduled successfully');
-
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+      console.log('📋 Scheduled notifications:', scheduled.length, 'notification(s)');
       
     } catch (error) {
       console.error('❌ Error scheduling progress notifications:', error);

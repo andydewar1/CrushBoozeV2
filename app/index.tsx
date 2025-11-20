@@ -15,8 +15,17 @@ export default function LandingScreen() {
   // AUTOMATIC ROUTING: Existing users should not see landing page
   useEffect(() => {
     const autoRoute = async () => {
+      console.log('🔍 [LANDING] Auto-route check:', {
+        authLoading,
+        profileLoading,
+        hasSession: !!session,
+        hasProfile: !!profile,
+        sessionId: session?.user?.id,
+      });
+
       // Wait for auth and profile data to load
       if (authLoading || profileLoading) {
+        console.log('⏳ [LANDING] Still loading, waiting...');
         return;
       }
 
@@ -25,6 +34,10 @@ export default function LandingScreen() {
         // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
         console.log('🔄 Auto-routing existing user to main app (subscription gate will validate)');
         router.replace('/(tabs)');
+      } else if (session && !profile) {
+        console.log('⚠️ [LANDING] User is authenticated but has no profile (onboarding incomplete)');
+      } else {
+        console.log('ℹ️ [LANDING] No session - staying on landing page');
       }
       // New users or incomplete onboarding users stay on landing page
     };
@@ -37,8 +50,14 @@ export default function LandingScreen() {
   const handleGetStarted = async () => {
     // Don't redirect if still loading auth or profile data
     if (authLoading || profileLoading) {
+      console.log('⏳ [GET STARTED] Still loading, ignoring button press');
       return;
     }
+    
+    console.log('👆 [GET STARTED] Button pressed:', {
+      hasSession: !!session,
+      hasProfile: !!profile,
+    });
     
     if (session) {
       if (profile) {
@@ -48,9 +67,11 @@ export default function LandingScreen() {
         router.replace('/(tabs)');
       } else {
         // User is authenticated but hasn't completed onboarding
+        console.log('🎯 Routing to onboarding (no profile found)');
         router.push('/onboarding/quit-date');
       }
     } else {
+      console.log('🆕 No session - routing to signup');
       router.push('/auth/signup');
     }
   };
