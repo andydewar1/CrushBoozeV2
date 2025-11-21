@@ -32,28 +32,8 @@ export default function HomeScreen() {
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
-  // Only request permission on Home (after login)
-  useEffect(() => {
-    (async () => {
-      try {
-        const key = 'notifications_prompted_v1';
-        const already = await AsyncStorage.getItem(key);
-        if (already) return;
-
-        const { status } = await Notifications.requestPermissionsAsync();
-        await AsyncStorage.setItem(key, '1');
-
-        if (status === 'granted') {
-          const { ensurePushToken } = await import('@/lib/notifications/token');
-          await ensurePushToken();
-        } else {
-          console.log('[Home] 🔕 User declined notifications');
-        }
-      } catch (e) {
-        console.log('[Home] ⚠️ Permission flow error', e);
-      }
-    })();
-  }, []);
+  // Notification permissions are now handled in NotificationContext
+  // This prevents duplicate permission requests and race conditions
 
   // Request ATT permission after user has seen the app (better UX)
   useEffect(() => {

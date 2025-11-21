@@ -96,12 +96,22 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
 
     try {
-      // Cancel any existing scheduled notifications to avoid duplicates
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      console.log('🧹 Cleared existing scheduled notifications');
+      // Check if notifications are already scheduled - don't reschedule on every app launch
+      const existingScheduled = await Notifications.getAllScheduledNotificationsAsync();
+      console.log('🔍 Checking existing scheduled notifications:', existingScheduled.length);
+      
+      if (existingScheduled.length > 0) {
+        console.log('✅ Notifications already scheduled - skipping reschedule');
+        existingScheduled.forEach((notif, idx) => {
+          console.log(`  📋 [${idx}] ID: ${notif.identifier}, Trigger:`, notif.trigger);
+        });
+        return;
+      }
 
-      // Schedule daily notification at 12:00 PM
-      await Notifications.scheduleNotificationAsync({
+      console.log('📅 No notifications scheduled - creating new daily 12pm notification');
+
+      // Schedule daily notification at 12:00 PM with proper DAILY trigger
+      const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: "Today's progress is in 🎉",
           body: "Tap here to see your wins 👀",
@@ -109,16 +119,25 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           sound: true,
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour: 12,
           minute: 0,
-          repeats: true,
         },
       });
 
       console.log('✅ Daily 12pm notification scheduled successfully');
+      console.log('🆔 Notification ID:', notificationId);
       
-      const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-      console.log('📋 Scheduled notifications:', scheduled.length, 'notification(s)');
+      // Verify the notification was scheduled correctly
+      const verifyScheduled = await Notifications.getAllScheduledNotificationsAsync();
+      console.log('✅ Verification: Scheduled notifications count:', verifyScheduled.length);
+      verifyScheduled.forEach((notif) => {
+        console.log('  📋 Scheduled notification:', {
+          id: notif.identifier,
+          trigger: notif.trigger,
+          content: notif.content
+        });
+      });
       
     } catch (error) {
       console.error('❌ Error scheduling progress notifications:', error);
