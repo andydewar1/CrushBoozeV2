@@ -2,7 +2,7 @@
   "expo": {
     "name": "CrushNic",
     "slug": "crushnic",
-    "version": "1.0.80",
+    "version": "1.0.81",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "crushnic",
@@ -21,14 +21,15 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crushnic.quitvaping",
-      "buildNumber": "159",
+      "buildNumber": "163",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
         "NSHealthUpdateUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
         "UIBackgroundModes": ["remote-notification"],
-        "NSUserNotificationsUsageDescription": "We need to send you notifications about your progress and achievements"
+        "NSUserNotificationsUsageDescription": "We need to send you notifications about your progress and achievements",
+        "NSUserTrackingUsageDescription": "This allows us to measure ad performance and show you more relevant ads"
       },
       "config": {
         "googleMobileAdsAppId": ""
@@ -40,7 +41,7 @@
         "backgroundColor": "#35998d"
       },
       "package": "com.crushnic.quitvaping",
-      "versionCode": 159,
+      "versionCode": 163,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -79,6 +80,7 @@
       "eas": {
         "projectId": "4fb906e8-fea5-4082-8a0e-445722ad3558"
       },
+      "facebookAppId": "1485743649198635",
       "healthDisclaimer": {
         "isHealthApp": true,
         "medicalDevice": false,

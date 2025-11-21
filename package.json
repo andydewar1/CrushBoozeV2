@@ -1,7 +1,7 @@
 {
   "name": "bolt-expo-starter",
   "main": "expo-router/entry",
-  "version": "1.0.80",
+  "version": "1.0.81",
   "private": true,
   "scripts": {
     "dev": "EXPO_NO_TELEMETRY=1 expo start",
@@ -37,15 +37,18 @@
     "expo-sharing": "~13.1.5",
     "expo-splash-screen": "~0.30.6",
     "expo-status-bar": "~2.2.2",
+    "expo-store-review": "~8.1.5",
     "expo-symbols": "~0.4.3",
     "expo-system-ui": "~5.0.11",
     "expo-task-manager": "^13.1.6",
+    "expo-tracking-transparency": "^6.0.7",
     "expo-web-browser": "~14.2.0",
     "lucide-react-native": "^0.475.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-calendars": "^1.1313.0",
+    "react-native-fbsdk-next": "^13.4.1",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-purchases": "^9.1.0",
     "react-native-purchases-ui": "^9.1.0",
@@ -54,8 +57,7 @@
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-url-polyfill": "^2.0.0",
-    "react-native-web": "^0.20.0",
-    "expo-store-review": "~8.1.5"
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

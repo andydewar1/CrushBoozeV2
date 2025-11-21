@@ -272,6 +272,10 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - ExpoAdapterFBSDKNext (13.4.1):
+    - ExpoModulesCore
+    - FBSDKCoreKit
+    - React-Core
   - ExpoAsset (11.1.7):
     - ExpoModulesCore
   - ExpoBlur (14.1.5):
@@ -331,6 +335,8 @@ PODS:
     - ExpoModulesCore
   - ExpoSystemUI (5.0.11):
     - ExpoModulesCore
+  - ExpoTrackingTransparency (6.0.7):
+    - ExpoModulesCore
   - ExpoWebBrowser (14.2.0):
     - ExpoModulesCore
   - EXTaskManager (13.1.6):
@@ -339,7 +345,21 @@ PODS:
   - EXUpdatesInterface (1.1.0):
     - ExpoModulesCore
   - fast_float (6.1.4)
+  - FBAEMKit (18.0.2):
+    - FBSDKCoreKit_Basics (= 18.0.2)
   - FBLazyVector (0.79.5)
+  - FBSDKCoreKit (18.0.2):
+    - FBAEMKit (= 18.0.2)
+    - FBSDKCoreKit_Basics (= 18.0.2)
+  - FBSDKCoreKit_Basics (18.0.2)
+  - FBSDKGamingServicesKit (18.0.2):
+    - FBSDKCoreKit (= 18.0.2)
+    - FBSDKCoreKit_Basics (= 18.0.2)
+    - FBSDKShareKit (= 18.0.2)
+  - FBSDKLoginKit (18.0.2):
+    - FBSDKCoreKit (= 18.0.2)
+  - FBSDKShareKit (18.0.2):
+    - FBSDKCoreKit (= 18.0.2)
   - fmt (11.0.2)
   - glog (0.3.5)
   - hermes-engine (0.79.5):
@@ -1674,6 +1694,21 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
+  - react-native-fbsdk-next (13.4.1):
+    - React-Core
+    - react-native-fbsdk-next/Core (= 13.4.1)
+    - react-native-fbsdk-next/Login (= 13.4.1)
+    - react-native-fbsdk-next/Share (= 13.4.1)
+  - react-native-fbsdk-next/Core (13.4.1):
+    - FBSDKCoreKit (~> 18.0)
+    - React-Core
+  - react-native-fbsdk-next/Login (13.4.1):
+    - FBSDKLoginKit (~> 18.0)
+    - React-Core
+  - react-native-fbsdk-next/Share (13.4.1):
+    - FBSDKGamingServicesKit (~> 18.0)
+    - FBSDKShareKit (~> 18.0)
+    - React-Core
   - react-native-safe-area-context (5.4.0):
     - DoubleConversion
     - glog
@@ -2398,6 +2433,7 @@ DEPENDENCIES:
   - expo-dev-launcher (from `../node_modules/expo-dev-launcher`)
   - expo-dev-menu (from `../node_modules/expo-dev-menu`)
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
+  - ExpoAdapterFBSDKNext (from `../node_modules/react-native-fbsdk-next/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
   - ExpoCamera (from `../node_modules/expo-camera/ios`)
@@ -2415,6 +2451,7 @@ DEPENDENCIES:
   - ExpoStoreReview (from `../node_modules/expo-store-review/ios`)
   - ExpoSymbols (from `../node_modules/expo-symbols/ios`)
   - ExpoSystemUI (from `../node_modules/expo-system-ui/ios`)
+  - ExpoTrackingTransparency (from `../node_modules/expo-tracking-transparency/ios`)
   - ExpoWebBrowser (from `../node_modules/expo-web-browser/ios`)
   - EXTaskManager (from `../node_modules/expo-task-manager/ios`)
   - EXUpdatesInterface (from `../node_modules/expo-updates-interface/ios`)
@@ -2456,6 +2493,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-fbsdk-next (from `../node_modules/react-native-fbsdk-next`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -2501,6 +2539,12 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - FBAEMKit
+    - FBSDKCoreKit
+    - FBSDKCoreKit_Basics
+    - FBSDKGamingServicesKit
+    - FBSDKLoginKit
+    - FBSDKShareKit
     - PurchasesHybridCommon
     - PurchasesHybridCommonUI
     - RevenueCat
@@ -2533,6 +2577,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-dev-menu"
   expo-dev-menu-interface:
     :path: "../node_modules/expo-dev-menu-interface/ios"
+  ExpoAdapterFBSDKNext:
+    :path: "../node_modules/react-native-fbsdk-next/ios"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
   ExpoBlur:
@@ -2567,6 +2613,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-symbols/ios"
   ExpoSystemUI:
     :path: "../node_modules/expo-system-ui/ios"
+  ExpoTrackingTransparency:
+    :path: "../node_modules/expo-tracking-transparency/ios"
   ExpoWebBrowser:
     :path: "../node_modules/expo-web-browser/ios"
   EXTaskManager:
@@ -2646,6 +2694,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-fbsdk-next:
+    :path: "../node_modules/react-native-fbsdk-next"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   React-NativeModulesApple:
@@ -2744,6 +2794,7 @@ SPEC CHECKSUMS:
   expo-dev-launcher: 35dc0269b5fc1f628abc00e08e5a969e7809eff4
   expo-dev-menu: 0771fa9c5c405e07aa15e55a699b8a4a984ea77a
   expo-dev-menu-interface: 609c35ae8b97479cdd4c9e23c8cf6adc44beea0e
+  ExpoAdapterFBSDKNext: 16c905ebd6449c37bd5dfbb2784a678ce084b26e
   ExpoAsset: ef06e880126c375f580d4923fdd1cdf4ee6ee7d6
   ExpoBlur: 3c8885b9bf9eef4309041ec87adec48b5f1986a9
   ExpoCamera: e1879906d41184e84b57d7643119f8509414e318
@@ -2761,11 +2812,18 @@ SPEC CHECKSUMS:
   ExpoStoreReview: f70e5929ba4a594078dd3285d5151427167f48fa
   ExpoSymbols: c5612a90fb9179cdaebcd19bea9d8c69e5d3b859
   ExpoSystemUI: 433a971503b99020318518ed30a58204288bab2d
+  ExpoTrackingTransparency: f9ad2b1955c71085aa9208ed180721301614bac9
   ExpoWebBrowser: dc39a88485f007e61a3dff05d6a75f22ab4a2e92
   EXTaskManager: 280143f6d8e596f28739d74bf34910300dcbd4ea
   EXUpdatesInterface: 7ff005b7af94ee63fa452ea7bb95d7a8ff40277a
   fast_float: 06eeec4fe712a76acc9376682e4808b05ce978b6
+  FBAEMKit: 56a4f5a9607957b547b6458b17a98c5bb2736367
   FBLazyVector: d2a9cd223302b6c9aa4aa34c1a775e9db609eb52
+  FBSDKCoreKit: 54f1240567e16862ab71c53c33dc347db5c524c5
+  FBSDKCoreKit_Basics: eb530cd6a79030dbb11df460aafb2767bcad9028
+  FBSDKGamingServicesKit: a967e47b5cbf759fb3e42a87f11a999aa7c36b24
+  FBSDKLoginKit: 6a70798793e499335a98fab1a758d7da34af196e
+  FBSDKShareKit: e52c6b1584c77c708bcb4001c9a48223c115cbd9
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: f03b0e06d3882d71e67e45b073bb827da1a21aae
@@ -2802,6 +2860,7 @@ SPEC CHECKSUMS:
   React-logger: 85fa3509931497c72ccd2547fcc91e7299d8591e
   React-Mapbuffer: 96a2f2a176268581733be182fa6eebab1c0193be
   React-microtasksnativemodule: bda561d2648e1e52bd9e5a87f8889836bdbde2e2
+  react-native-fbsdk-next: 52f81e60eb3e8e0e06cf9728b4572d3509ca9d01
   react-native-safe-area-context: 562163222d999b79a51577eda2ea8ad2c32b4d06
   React-NativeModulesApple: 1ecb83880dd11baf2228f8dd89d8419c387e03ad
   React-oscompat: 0592889a9fcf0eacb205532028e4a364e22907dd

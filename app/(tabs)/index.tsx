@@ -55,6 +55,26 @@ export default function HomeScreen() {
     })();
   }, []);
 
+  // Request ATT permission after user has seen the app (better UX)
+  useEffect(() => {
+    (async () => {
+      try {
+        const key = 'att_prompted_v1';
+        const already = await AsyncStorage.getItem(key);
+        if (already) return;
+
+        // Wait 2 seconds so user sees the app first
+        setTimeout(async () => {
+          const { requestTrackingPermission } = await import('@/lib/facebook');
+          await requestTrackingPermission();
+          await AsyncStorage.setItem(key, '1');
+        }, 2000);
+      } catch (e) {
+        console.log('[Home] ⚠️ ATT permission error', e);
+      }
+    })();
+  }, []);
+
 
   // Refresh goals when the screen comes into focus
   useFocusEffect(
