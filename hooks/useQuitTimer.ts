@@ -51,11 +51,11 @@ export function useQuitTimer(): QuitTimer {
 
       if (settings.has_quit) {
         // User has already quit, calculate time since quit date
-        days = Math.max(0, differenceInDays(now, quitDate));
-        const totalHours = Math.max(0, differenceInHours(now, quitDate));
-        hours = totalHours % 24;
-        const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
-        minutes = totalMinutes % 60;
+        const totalMinutesSinceQuit = Math.max(0, differenceInMinutes(now, quitDate));
+        
+        days = Math.floor(totalMinutesSinceQuit / (24 * 60));
+        hours = Math.floor((totalMinutesSinceQuit % (24 * 60)) / 60);
+        minutes = totalMinutesSinceQuit % 60;
         
         console.log('🕐 QUIT TIMER DEBUG:', {
           quitDate: quitDate.toISOString(),
@@ -69,19 +69,19 @@ export function useQuitTimer(): QuitTimer {
         // Check if quit date is in the future
         if (quitDate > now) {
           // Future quit date - show countdown to quit date
-          days = Math.max(0, differenceInDays(quitDate, now));
-          const totalHours = Math.max(0, differenceInHours(quitDate, now));
-          hours = totalHours % 24;
-          const totalMinutes = Math.max(0, differenceInMinutes(quitDate, now));
-          minutes = totalMinutes % 60;
+          const totalMinutesSinceQuit = Math.max(0, differenceInMinutes(quitDate, now));
+          
+          days = Math.floor(totalMinutesSinceQuit / (24 * 60));
+          hours = Math.floor((totalMinutesSinceQuit % (24 * 60)) / 60);
+          minutes = totalMinutesSinceQuit % 60;
           error = 'future_quit_date';
         } else {
           // Past quit date but has_quit is false - should probably be corrected
-          days = Math.max(0, differenceInDays(now, quitDate));
-          const totalHours = Math.max(0, differenceInHours(now, quitDate));
-          hours = totalHours % 24;
-          const totalMinutes = Math.max(0, differenceInMinutes(now, quitDate));
-          minutes = totalMinutes % 60;
+          const totalMinutesSinceQuit = Math.max(0, differenceInMinutes(now, quitDate));
+          
+          days = Math.floor(totalMinutesSinceQuit / (24 * 60));
+          hours = Math.floor((totalMinutesSinceQuit % (24 * 60)) / 60);
+          minutes = totalMinutesSinceQuit % 60;
         }
       }
 
