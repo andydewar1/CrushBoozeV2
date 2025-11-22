@@ -59,42 +59,28 @@ export async function requestTrackingPermission() {
 }
 
 /**
- * Log app install event to Facebook
- * Only logs once per install (tracked via AsyncStorage)
+ * Log app install event (call ONCE after SDK initialization)
+ * Uses AsyncStorage to ensure it only fires on first app launch
  */
 export async function logAppInstall() {
-  console.log('📝 [Facebook] Checking if install event should be logged...');
-  
   try {
-    // Check if we've already logged this install
     const hasLogged = await AsyncStorage.getItem(FB_APP_INSTALL_KEY);
-    console.log('📦 [Facebook] Has logged before?', hasLogged);
     
     if (hasLogged === 'true') {
-      console.log('ℹ️ [Facebook] App install already logged - skipping');
+      console.log('⏭️ [Facebook] App install already logged, skipping');
       return;
     }
-
-    console.log('🎯 [Facebook] Logging fb_mobile_activate_app event...');
-    // Log the app install/activate event
+    
+    console.log('📲 [Facebook] Logging app install event...');
     AppEventsLogger.logEvent('fb_mobile_activate_app');
-    
-    console.log('💾 [Facebook] Marking install as logged in AsyncStorage...');
-    // Mark as logged
     await AsyncStorage.setItem(FB_APP_INSTALL_KEY, 'true');
-    
     console.log('✅✅✅ [Facebook] App install event logged successfully!');
     
     if (__DEV__) {
-      Alert.alert('Facebook Event', 'Install event logged!');
+      Alert.alert('Facebook SDK', 'App install event logged!');
     }
   } catch (error) {
-    console.error('❌❌❌ [Facebook] Failed to log app install:', error);
-    console.error('Error details:', JSON.stringify(error, null, 2));
-    
-    if (__DEV__) {
-      Alert.alert('Facebook Event Error', `Failed: ${error}`);
-    }
+    console.error('❌ [Facebook] Failed to log app install:', error);
   }
 }
 

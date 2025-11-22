@@ -38,7 +38,7 @@ export default function RootLayout() {
         console.log('🚀 [Facebook] Initializing SDK...');
         const { initializeFacebookSDK, logAppInstall } = await import('@/lib/facebook');
         await initializeFacebookSDK();
-        await logAppInstall();
+        await logAppInstall(); // Log install event (only fires once)
         console.log('✅ [Facebook] SDK initialized and install logged');
 
         // Initialize RevenueCat
