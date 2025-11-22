@@ -19,7 +19,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.83</string>
+    <string>1.0.84</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -45,7 +45,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>165</string>
+    <string>166</string>
     <key>GADApplicationIdentifier</key>
     <string/>
     <key>ITSAppUsesNonExemptEncryption</key>
@@ -79,6 +79,8 @@
     <string>This allows us to measure ad performance and show you more relevant ads</string>
     <key>FacebookAppID</key>
     <string>1485743649198635</string>
+    <key>FacebookClientToken</key>
+    <string>5ace0579424d63dd847190a5ec712100</string>
     <key>FacebookDisplayName</key>
     <string>CrushNic</string>
     <key>FacebookAutoLogAppEventsEnabled</key>
