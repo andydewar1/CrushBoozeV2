@@ -79,111 +79,104 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
   return token;
 }
 
-export function NotificationProvider({ children }: { children: React.ReactNode }) {
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [hasPermissions, setHasPermissions] = useState(false);
-
-  // ============================================================================
-  // SIMPLE PROGRESS NOTIFICATIONS - One repeating notification at 12pm daily
-  // ============================================================================
+// ============================================================================
+// SINGLE SOURCE OF TRUTH: Schedule daily 12pm local notification
+// ============================================================================
+export async function scheduleProgressNotifications() {
+  console.log('[NotificationContext] 🔔 scheduleProgressNotifications called');
   
-  const scheduleProgressNotifications = async () => {
-    // Check permissions directly instead of relying on state
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') {
-      console.log('❌ No notification permissions - cannot schedule progress notifications');
+  // Check permissions directly instead of relying on state
+  const { status } = await Notifications.getPermissionsAsync();
+  console.log('[NotificationContext] 📋 Current permission status:', status);
+  
+  if (status !== 'granted') {
+    console.log('[NotificationContext] ❌ No notification permissions - cannot schedule');
+    return;
+  }
+
+  try {
+    // Check if notifications are already scheduled
+    const existingScheduled = await Notifications.getAllScheduledNotificationsAsync();
+    console.log('[NotificationContext] 🔍 Existing scheduled notifications:', existingScheduled.length);
+    
+    if (existingScheduled.length > 0) {
+      console.log('[NotificationContext] ✅ Notification already scheduled - skipping reschedule');
+      existingScheduled.forEach((notif, idx) => {
+        console.log(`[NotificationContext]   📋 [${idx}] ID: ${notif.identifier}`);
+        console.log(`[NotificationContext]   ⏰ Trigger:`, JSON.stringify(notif.trigger));
+      });
       return;
     }
 
-    try {
-      // Check if notifications are already scheduled - don't reschedule on every app launch
-      const existingScheduled = await Notifications.getAllScheduledNotificationsAsync();
-      console.log('🔍 Checking existing scheduled notifications:', existingScheduled.length);
-      
-      if (existingScheduled.length > 0) {
-        console.log('✅ Notifications already scheduled - skipping reschedule');
-        existingScheduled.forEach((notif, idx) => {
-          console.log(`  📋 [${idx}] ID: ${notif.identifier}, Trigger:`, notif.trigger);
-        });
-        return;
-      }
+    console.log('[NotificationContext] 📅 No notifications scheduled - creating new daily 12pm notification');
 
-      console.log('📅 No notifications scheduled - creating new daily 12pm notification');
+    // Schedule daily notification at 12:00 PM local time
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Today's progress is in 🎉",
+        body: "Tap here to see your wins 👀",
+        data: { type: 'daily_progress' },
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: 12,
+        minute: 0,
+      },
+    });
 
-      // Schedule daily notification at 12:00 PM with proper DAILY trigger
-      const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Today's progress is in 🎉",
-          body: "Tap here to see your wins 👀",
-          data: { type: 'daily_progress' },
-          sound: true,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: 12,
-          minute: 0,
-        },
+    console.log('[NotificationContext] ✅ Daily 12pm notification scheduled successfully!');
+    console.log('[NotificationContext] 🆔 Notification ID:', notificationId);
+    console.log('[NotificationContext] ⏰ Trigger: DAILY at 12:00 local time');
+    
+    // Verify the notification was scheduled correctly
+    const verifyScheduled = await Notifications.getAllScheduledNotificationsAsync();
+    console.log('[NotificationContext] ✅ Verification: Total scheduled notifications:', verifyScheduled.length);
+    verifyScheduled.forEach((notif) => {
+      console.log('[NotificationContext]   📋 Verified notification:', {
+        id: notif.identifier,
+        trigger: notif.trigger,
       });
+    });
+    
+  } catch (error) {
+    console.error('[NotificationContext] ❌ Error scheduling notification:', error);
+  }
+}
 
-      console.log('✅ Daily 12pm notification scheduled successfully');
-      console.log('🆔 Notification ID:', notificationId);
-      
-      // Verify the notification was scheduled correctly
-      const verifyScheduled = await Notifications.getAllScheduledNotificationsAsync();
-      console.log('✅ Verification: Scheduled notifications count:', verifyScheduled.length);
-      verifyScheduled.forEach((notif) => {
-        console.log('  📋 Scheduled notification:', {
-          id: notif.identifier,
-          trigger: notif.trigger,
-          content: notif.content
-        });
-      });
-      
-    } catch (error) {
-      console.error('❌ Error scheduling progress notifications:', error);
-    }
-  };
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const [hasPermissions, setHasPermissions] = useState(false);
 
 
   // Check existing permissions on mount and schedule notifications if we have them
   useEffect(() => {
     const checkExistingPermissions = async () => {
       try {
+        console.log('[NotificationContext] 🚀 Checking permissions on app launch...');
         const { status } = await Notifications.getPermissionsAsync();
         const hasPerms = status === 'granted';
+        console.log('[NotificationContext] 📋 Permission status on launch:', status);
         setHasPermissions(hasPerms);
         
-        // If we have permissions, try to get the push token
-        if (hasPerms && Device.isDevice) {
-          try {
-            const projectId = '4fb906e8-fea5-4082-8a0e-445722ad3558';
-            const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-            setExpoPushToken(token);
-          } catch (error) {
-            console.log('Error getting existing push token:', error);
-          }
-        }
-
-        // ============================================================================
-        // AUTO-SCHEDULE PROGRESS NOTIFICATIONS if we have permissions
-        // ============================================================================
+        // If we have permissions, auto-schedule notifications (subsequent launches)
         if (hasPerms) {
-          console.log('🔔 Auto-scheduling progress notifications on app launch...');
+          console.log('[NotificationContext] ✅ Permissions granted - scheduling notifications...');
           await scheduleProgressNotifications();
+        } else {
+          console.log('[NotificationContext] ⚠️ No permissions yet - waiting for user to grant on Home screen');
         }
 
-        // ============================================================================
-        // REVIEW PROMPT SYSTEM - Record first open and maybe request review
-        // ============================================================================
+        // Review prompt system
         try {
           const { recordFirstOpenIfMissing, maybeRequestReviewIfEligible } = await import('@/lib/reviews');
           await recordFirstOpenIfMissing();
           await maybeRequestReviewIfEligible();
         } catch (error) {
-          console.log('Review system not available yet:', error);
+          console.log('[NotificationContext] Review system not available:', error);
         }
       } catch (error) {
-        console.log('Error checking existing permissions:', error);
+        console.log('[NotificationContext] ❌ Error checking permissions:', error);
       }
     };
 

@@ -32,8 +32,36 @@ export default function HomeScreen() {
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
-  // Notification permissions are now handled in NotificationContext
-  // This prevents duplicate permission requests and race conditions
+  // Request permission on Home screen (first time only)
+  useEffect(() => {
+    (async () => {
+      try {
+        const key = 'notifications_prompted_v1';
+        const already = await AsyncStorage.getItem(key);
+        
+        if (already) {
+          console.log('[Home] ℹ️ Notification permission already prompted');
+          return;
+        }
+
+        console.log('[Home] 🔔 Requesting notification permission for the first time...');
+        const { status } = await Notifications.requestPermissionsAsync();
+        await AsyncStorage.setItem(key, '1');
+        console.log('[Home] 📋 Permission result:', status);
+
+        if (status === 'granted') {
+          console.log('[Home] ✅ Permission granted! Scheduling daily 12pm notification...');
+          // THIS IS THE CRITICAL FIX: Schedule notification after permission is granted
+          const { scheduleProgressNotifications } = await import('@/contexts/NotificationContext');
+          await scheduleProgressNotifications();
+        } else {
+          console.log('[Home] 🔕 User declined notifications');
+        }
+      } catch (e) {
+        console.log('[Home] ❌ Permission flow error:', e);
+      }
+    })();
+  }, []);
 
   // Request ATT permission after user has seen the app (better UX)
   useEffect(() => {
