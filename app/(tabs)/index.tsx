@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
-import { useGoals } from '@/hooks/useGoals';
+import { useGoals, type Goal } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
@@ -27,10 +27,31 @@ export default function HomeScreen() {
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
-  const { activeGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
+  const { activeGoals, achievedGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+
+  // Calculate total committed to achieved goals and available savings
+  const totalCommitted = achievedGoals.reduce(
+    (sum, g) => sum + g.target_amount,
+    0
+  );
+  const availableSavings = Math.max(totalSaved - totalCommitted, 0);
+
+  const getGoalProgress = (goal: Goal) => {
+    if (goal.achieved_at) return 100;
+
+    const progressAmount = Math.min(availableSavings, goal.target_amount);
+    return Math.round((progressAmount / goal.target_amount) * 100);
+  };
+
+  const getRemainingForGoal = (goal: Goal) => {
+    if (goal.achieved_at) return 0;
+
+    const progressAmount = Math.min(availableSavings, goal.target_amount);
+    return Math.max(goal.target_amount - progressAmount, 0);
+  };
 
   // Request permission on Home screen (first time only)
   useEffect(() => {
@@ -426,8 +447,8 @@ export default function HomeScreen() {
             </View>
           ) : (
             activeGoals.slice(0, 2).map((goal) => {
-              const progress = calculateGoalProgress(goal, totalSaved);
-              const remaining = Math.max(0, goal.target_amount - totalSaved);
+              const progress = getGoalProgress(goal);
+              const remaining = getRemainingForGoal(goal);
               
               return (
                 <View key={goal.id} style={styles.goalCard}>

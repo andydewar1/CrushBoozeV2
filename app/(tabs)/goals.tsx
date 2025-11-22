@@ -33,6 +33,27 @@ export default function GoalsScreen() {
 
   // Remove automatic goal creation - let users create goals manually
 
+  // Calculate total committed to achieved goals and available savings
+  const totalCommitted = achievedGoals.reduce(
+    (sum, g) => sum + g.target_amount,
+    0
+  );
+  const availableSavings = Math.max(totalSaved - totalCommitted, 0);
+
+  const getGoalProgress = (goal: Goal) => {
+    if (goal.achieved_at) return 100;
+
+    const progressAmount = Math.min(availableSavings, goal.target_amount);
+    return Math.round((progressAmount / goal.target_amount) * 100);
+  };
+
+  const getRemainingForGoal = (goal: Goal) => {
+    if (goal.achieved_at) return 0;
+
+    const progressAmount = Math.min(availableSavings, goal.target_amount);
+    return Math.max(goal.target_amount - progressAmount, 0);
+  };
+
   const formatCurrency = (amount: number) => {
     return `${currency}${amount.toLocaleString()}`;
   };
@@ -49,7 +70,7 @@ export default function GoalsScreen() {
     
     // Calculate average progress across all goals
     const totalProgress = goals.reduce((sum, goal) => {
-      const progress = calculateGoalProgress(goal, totalSaved);
+      const progress = getGoalProgress(goal);
       return sum + progress;
     }, 0);
     
@@ -110,6 +131,28 @@ export default function GoalsScreen() {
   };
 
   const handleMarkComplete = async (goal: Goal) => {
+    // Calculate total already committed to achieved goals
+    const totalCommitted = achievedGoals.reduce(
+      (sum, g) => sum + g.target_amount,
+      0
+    );
+    const requiredTotal = totalCommitted + goal.target_amount;
+    const remainingNeeded = Math.max(0, requiredTotal - totalSaved);
+
+    // Check if user has enough saved to cover all achieved goals + this one
+    if (totalSaved < requiredTotal) {
+      Alert.alert(
+        'Not enough saved yet',
+        `You already have ${currency}${totalCommitted.toFixed(
+          2
+        )} allocated to other achieved goals. You need ${currency}${remainingNeeded.toFixed(
+          2
+        )} more saved to complete this goal.`
+      );
+      return;
+    }
+
+    // User has enough saved, show confirmation
     Alert.alert(
       'Mark Goal Complete',
       `Congratulations! Are you ready to mark "${goal.name}" as achieved?`,
@@ -195,8 +238,8 @@ export default function GoalsScreen() {
             <Text style={styles.sectionSubtitle}>Goals you're currently working towards.</Text>
             
             {activeGoals.map((goal) => {
-              const progress = calculateGoalProgress(goal, totalSaved);
-              const remaining = Math.max(0, goal.target_amount - totalSaved);
+              const progress = getGoalProgress(goal);
+              const remaining = getRemainingForGoal(goal);
               
               return (
                 <View key={goal.id} style={styles.goalCard}>

@@ -254,12 +254,23 @@ export function useGoals(): UseGoalsReturn {
     if (!session?.user?.id || goals.length === 0) return;
 
     try {
-      // Check achievements based on goal type
+      // Calculate total already committed to achieved goals
+      const achievedGoalsList = goals.filter(goal => goal.achieved_at);
+      const totalCommitted = achievedGoalsList.reduce(
+        (sum, g) => sum + g.target_amount,
+        0
+      );
+
+      // Check achievements based on goal type AND available savings
       const goalsToAchieve = goals.filter(goal => {
         if (goal.achieved_at) return false; // Already achieved
         
         const progress = calculateGoalProgress(goal, totalSaved);
-        return progress >= 100;
+        if (progress < 100) return false; // Not at 100% yet
+        
+        // Check if user has enough saved to cover all achieved goals + this one
+        const requiredTotal = totalCommitted + goal.target_amount;
+        return totalSaved >= requiredTotal;
       });
 
       // Find goals that are marked as achieved but shouldn't be
@@ -272,13 +283,11 @@ export function useGoals(): UseGoalsReturn {
 
       // Batch update achieved goals
       for (const goal of goalsToAchieve) {
-
         await markGoalAchieved(goal.id);
       }
 
       // Batch update unachieved goals (if needed)
       for (const goal of goalsToUnachieve) {
-
         await markGoalUnachieved(goal.id);
       }
 

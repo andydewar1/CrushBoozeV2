@@ -16,17 +16,9 @@ export async function initializeFacebookSDK() {
     console.log('🔧 [Facebook] Calling Settings.initializeSDK()...');
     Settings.initializeSDK();
     console.log('✅✅✅ [Facebook] SDK initialized successfully!');
-    
-    if (__DEV__) {
-      Alert.alert('Facebook SDK', 'Initialized successfully!');
-    }
   } catch (error) {
     console.error('❌❌❌ [Facebook] SDK initialization failed:', error);
     console.error('Error details:', JSON.stringify(error, null, 2));
-    
-    if (__DEV__) {
-      Alert.alert('Facebook SDK Error', `Failed: ${error}`);
-    }
   }
 }
 
@@ -75,10 +67,6 @@ export async function logAppInstall() {
     AppEventsLogger.logEvent('fb_mobile_activate_app');
     await AsyncStorage.setItem(FB_APP_INSTALL_KEY, 'true');
     console.log('✅✅✅ [Facebook] App install event logged successfully!');
-    
-    if (__DEV__) {
-      Alert.alert('Facebook SDK', 'App install event logged!');
-    }
   } catch (error) {
     console.error('❌ [Facebook] Failed to log app install:', error);
   }
