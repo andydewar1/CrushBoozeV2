@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import RevenueCatService from '@/services/RevenueCatService';
 import { format } from 'date-fns';
+import { initializeFacebookSDK, logAppInstall } from '@/lib/facebook';
 
 
 export default function HomeScreen() {
@@ -52,6 +53,15 @@ export default function HomeScreen() {
     const progressAmount = Math.min(availableSavings, goal.target_amount);
     return Math.max(goal.target_amount - progressAmount, 0);
   };
+
+  // Initialize Facebook SDK once on mount
+  useEffect(() => {
+    const initFacebook = async () => {
+      await initializeFacebookSDK();
+      logAppInstall();
+    };
+    initFacebook();
+  }, []);
 
   // Request permission on Home screen (first time only)
   useEffect(() => {

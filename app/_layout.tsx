@@ -34,13 +34,6 @@ export default function RootLayout() {
   useEffect(() => {
     const initializeServices = async () => {
       try {
-        // Initialize Facebook SDK for Meta App Install tracking
-        console.log('🚀 [Facebook] Initializing SDK...');
-        const { initializeFacebookSDK, logAppInstall } = await import('@/lib/facebook');
-        await initializeFacebookSDK();
-        await logAppInstall(); // Log install event (only fires once)
-        console.log('✅ [Facebook] SDK initialized and install logged');
-
         // Initialize RevenueCat
         console.log('🚀 [SINGLE] RevenueCat initialization on app launch...');
         const { RevenueCatService } = await import('@/services/RevenueCatService');
