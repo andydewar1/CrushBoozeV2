@@ -126,11 +126,7 @@ export default function AchievementsScreen() {
                   
                   <View style={styles.celebrationBanner}>
                     <Text style={styles.celebrationEmoji}>🎉</Text>
-                    <Text 
-                      style={styles.celebrationText}
-                      numberOfLines={2}
-                      ellipsizeMode="tail"
-                    >
+                    <Text style={styles.celebrationText}>
                       Congratulations! You've achieved {stats.currentAchievement.title}!
                     </Text>
                   </View>
@@ -613,7 +609,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   celebrationEmoji: {
     fontSize: 20,
@@ -624,6 +620,7 @@ const styles = StyleSheet.create({
     color: '#35998d',
     fontWeight: '600',
     flex: 1,
+    flexShrink: 1,
   },
   upcomingSection: {
     marginTop: 16,
