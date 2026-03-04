@@ -141,7 +141,7 @@ export default function PaywallScreen() {
               <Radio selected={plan === "annual"} />
               <Text style={[styles.planTitle, { fontSize: compact ? 18 : 20 }]}>Annual -</Text>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>50% OFF</Text>
+                <Text style={styles.badgeText}>75% OFF</Text>
               </View>
             </View>
             <View style={styles.planCopy}>
@@ -165,7 +165,7 @@ export default function PaywallScreen() {
             </View>
             <View style={styles.planCopy}>
               <Text style={[styles.planTopLine, { fontSize: compact ? 15 : 16 }]}>
-                {monthlyPackage?.product.priceString || '£4.99'}/mo · Less than a vape!
+                {monthlyPackage?.product.priceString || '£9.99'}/mo · Less than a vape!
               </Text>
               <Text style={[styles.planBottomLine, { fontSize: compact ? 14 : 15 }]}>
                 3-day free trial, cancel anytime.
