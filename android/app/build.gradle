@@ -92,8 +92,8 @@ android {
         applicationId 'com.crushnic.quitvaping'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 175
-        versionName "1.0.92"
+        versionCode 176
+        versionName "1.0.93"
     }
     signingConfigs {
         debug {
