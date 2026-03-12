@@ -1,6 +1,6 @@
 export default ({ config }) => {
-  const iosKey = "appl_acqtvMQYwixBkxfQviZTLqKKJKc";
-  const androidKey = "goog_CgXPzjcynVrqUtQBoQAwKhqpOcF";
+  const iosKey = "appl_IZlbmfEexoAYKdqRkGjCBrZrOSe";
+  const androidKey = "goog_CgXPzjcynVrqUtQBoQAwKhqpOcF"; // TODO: Update for CrushBooze Android
 
   return {
     ...config,
@@ -25,7 +25,7 @@ export default ({ config }) => {
       // Supabase configuration from environment variables
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
-      eas: { projectId: "4fb906e8-fea5-4082-8a0e-445722ad3558" }
+      eas: { projectId: "308794b0-e823-46fa-9697-3905d814e2b2" }
     },
   };
 };

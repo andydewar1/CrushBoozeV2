@@ -4,8 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
 // Supabase configuration from environment variables with fallbacks
-const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL || process.env.SUPABASE_URL || 'hpyufwwaqgrpwgeojhmu.supabase.co';
-const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhweXVmd3dhcWdycHdnZW9qaG11Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0ODA4NDEsImV4cCI6MjA2OTA1Njg0MX0.wJdbABtWMKdVkYm3N01loGpP6o-qYCUqkIxb405w7hg';
+const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL || process.env.SUPABASE_URL || 'lkfimuzzujgwcfcxbuhl.supabase.co';
+const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrZmltdXp6dWpnd2NmY3hidWhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMzI0NjIsImV4cCI6MjA4ODkwODQ2Mn0.mjdvpoCkkU_joSWWLTb3tDz_ULRDFgQsJ6Eni9JoJaY';
 
 export const supabase = createClient(`https://${supabaseUrl}`, supabaseAnonKey, {
   auth: {
@@ -13,7 +13,7 @@ export const supabase = createClient(`https://${supabaseUrl}`, supabaseAnonKey, 
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    storageKey: 'crushnic-auth-token',
+    storageKey: 'crushbooze-auth-token',
   },
   db: {
     schema: 'public'

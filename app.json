@@ -1,27 +1,27 @@
 {
   "expo": {
-    "name": "CrushNic",
-    "slug": "crushnic",
-    "version": "1.0.93",
+    "name": "CrushBooze",
+    "slug": "crushbooze",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "crushnic",
+    "scheme": "crushbooze",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "description": "CrushNic is a smoking cessation app designed for general fitness and wellness purposes only. Not a medical device.",
+    "description": "CrushBooze is an alcohol cessation app designed for general fitness and wellness purposes only. Not a medical device.",
     "keywords": [
-      "smoking cessation",
-      "quit smoking",
+      "quit drinking",
+      "alcohol cessation",
+      "sobriety",
       "wellness",
-      "fitness",
       "health tracking",
       "motivation"
     ],
     "category": "health-fitness",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.crushnic.quitvaping",
-      "buildNumber": "176",
+      "bundleIdentifier": "com.quitdrinking.crushbooze",
+      "buildNumber": "1",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,
@@ -40,8 +40,8 @@
         "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#35998d"
       },
-      "package": "com.crushnic.quitvaping",
-      "versionCode": 176,
+      "package": "com.quitdrinking.crushbooze",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -78,7 +78,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4fb906e8-fea5-4082-8a0e-445722ad3558"
+        "projectId": "308794b0-e823-46fa-9697-3905d814e2b2"
       },
       "facebookAppId": "1485743649198635",
       "healthDisclaimer": {
