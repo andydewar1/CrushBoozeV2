@@ -15,6 +15,7 @@ interface OnboardingData {
   
   // Goals & Motivation
   quitReasons: string[];
+  personalWhy: string;
   financialGoal: {
     description: string;
     amount: number;
@@ -50,6 +51,7 @@ const defaultData: OnboardingData = {
   weeklySpend: 0,
   currency: 'GBP',
   quitReasons: [],
+  personalWhy: '',
   financialGoal: {
     description: '',
     amount: 0,
@@ -117,6 +119,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       // Handle quitReasons array
       if (Array.isArray(newData.quitReasons)) {
         updatedData.quitReasons = [...newData.quitReasons];
+      }
+
+      // Handle personalWhy
+      if (typeof newData.personalWhy === 'string') {
+        updatedData.personalWhy = newData.personalWhy;
       }
 
       // Handle financial goal

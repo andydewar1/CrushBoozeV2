@@ -4,18 +4,18 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 export default function NotAloneScreen() {
   const { data } = useOnboarding();
 
   const handleContinue = () => {
-    router.push('/onboarding/reasons');
+    router.push('/onboarding/weekly-spend');
   };
 
   return (
     <OnboardingScreen
-      currentStep={12}
+      currentStep={10}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"
@@ -28,10 +28,10 @@ export default function NotAloneScreen() {
         </Text>
         <Text style={styles.text}>
           <Text style={styles.highlight}>{data.notAlonePercentage}%</Text>
-          {' '}of our users felt exactly the same way before they quit.
+          {' '}of our users felt exactly the same way before they decided to make a change.
         </Text>
         <Text style={styles.subtext}>
-          And now they've taken back control of their lives.
+          And now they've taken back control.
         </Text>
       </View>
     </OnboardingScreen>

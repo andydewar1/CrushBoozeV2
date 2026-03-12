@@ -81,16 +81,8 @@ export default function OnboardingScreen({
   
   const handleSelect = (value: string) => {
     if (!onSelect) return;
-    
-    if (multiSelect && Array.isArray(selectedValue)) {
-      if (selectedValue.includes(value)) {
-        onSelect(selectedValue.filter(v => v !== value).join(','));
-      } else {
-        onSelect([...selectedValue, value].join(','));
-      }
-    } else {
-      onSelect(value);
-    }
+    // Just pass the value - let parent handle array logic for multi-select
+    onSelect(value);
   };
   
   const isSelected = (value: string) => {
@@ -296,9 +288,10 @@ const styles = StyleSheet.create({
     lineHeight: 36,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 20,
     marginTop: 12,
-    lineHeight: 24,
+    lineHeight: 30,
+    fontWeight: '500',
   },
   contentContainer: {
     flex: 1,

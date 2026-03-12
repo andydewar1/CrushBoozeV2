@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 export default function CommitmentScreen() {
   const { data } = useOnboarding();
@@ -16,7 +16,7 @@ export default function CommitmentScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={23}
+      currentStep={25}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

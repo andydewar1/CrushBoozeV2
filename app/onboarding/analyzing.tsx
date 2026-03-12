@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 const STEPS = [
   'Analysing your drinking pattern...',
@@ -50,7 +50,7 @@ export default function AnalyzingScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={20}
+      currentStep={22}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

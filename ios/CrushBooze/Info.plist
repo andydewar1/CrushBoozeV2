@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>CrushNic</string>
+    <string>CrushBooze</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -19,7 +19,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.93</string>
+    <string>1.0.0</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -27,25 +27,19 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>crushnic</string>
-          <string>com.crushnic.quitvaping</string>
+          <string>crushbooze</string>
+          <string>com.quitdrinking.crushbooze</string>
         </array>
       </dict>
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+crushnic</string>
-        </array>
-      </dict>
-      <dict>
-        <key>CFBundleURLSchemes</key>
-        <array>
-          <string>fb1485743649198635</string>
+          <string>exp+crushbooze</string>
         </array>
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>176</string>
+    <string>1</string>
     <key>GADApplicationIdentifier</key>
     <string/>
     <key>ITSAppUsesNonExemptEncryption</key>
@@ -67,8 +61,6 @@
     <string>This app is for general fitness and wellness purposes only and is not a medical device</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>This app is for general fitness and wellness purposes only and is not a medical device</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
@@ -77,38 +69,9 @@
     <string>We need to send you notifications about your progress and achievements</string>
     <key>NSUserTrackingUsageDescription</key>
     <string>This allows us to measure ad performance and show you more relevant ads</string>
-    <key>FacebookAppID</key>
-    <string>1485743649198635</string>
-    <key>FacebookClientToken</key>
-    <string>5ace0579424d63dd847190a5ec712100</string>
-    <key>FacebookDisplayName</key>
-    <string>CrushNic</string>
-    <key>FacebookAutoLogAppEventsEnabled</key>
-    <true/>
-    <key>FacebookAdvertiserIDCollectionEnabled</key>
-    <true/>
-    <key>LSApplicationQueriesSchemes</key>
-    <array>
-      <string>fbapi</string>
-      <string>fb-messenger-share-api</string>
-      <string>fbauth2</string>
-      <string>fbshareextension</string>
-    </array>
-    <key>SKAdNetworkItems</key>
-    <array>
-      <dict>
-        <key>SKAdNetworkIdentifier</key>
-        <string>v9wttpbfk9.skadnetwork</string>
-      </dict>
-      <dict>
-        <key>SKAdNetworkIdentifier</key>
-        <string>n38lu8286q.skadnetwork</string>
-      </dict>
-    </array>
     <key>UIBackgroundModes</key>
     <array>
       <string>remote-notification</string>
-      <string>fetch</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

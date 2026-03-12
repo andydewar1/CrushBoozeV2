@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 export default function ReasonsValidationScreen() {
   const { data } = useOnboarding();
@@ -15,7 +15,7 @@ export default function ReasonsValidationScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={14}
+      currentStep={15}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

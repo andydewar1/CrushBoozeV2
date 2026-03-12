@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { router } from 'expo-router';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 const OPTIONS = [
   { emoji: '🔄', text: 'Yes, it\'s become a bit of a habit', value: 'habit' },
@@ -15,7 +15,7 @@ export default function HabitScreen() {
 
   const handleContinue = () => {
     // Not storing this - just for flow
-    router.push('/onboarding/weekly-spend');
+    router.push('/onboarding/not-alone');
   };
 
   return (

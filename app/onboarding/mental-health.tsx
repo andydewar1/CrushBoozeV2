@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 const OPTIONS = [
   { emoji: '😰', text: 'Pretty anxious or low', value: 'anxious' },

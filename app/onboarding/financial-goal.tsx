@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 export default function FinancialGoalScreen() {
   const { data, updateData } = useOnboarding();
@@ -20,7 +20,7 @@ export default function FinancialGoalScreen() {
         amount: parseFloat(goalAmount) || 0,
       },
     });
-    router.push('/onboarding/quit-date');
+    router.push('/onboarding/goal-timeline');
   };
 
   const getCurrencySymbol = () => {
@@ -33,7 +33,7 @@ export default function FinancialGoalScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={15}
+      currentStep={16}
       totalSteps={TOTAL_STEPS}
       title="If you weren't spending money on alcohol, what would you actually do with it?"
       subtitle="Let's create a goal that we can help you achieve."

@@ -4,16 +4,15 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 const REASON_LABELS: Record<string, string> = {
   money: 'Save money',
-  health: 'Better health',
-  weight: 'Lose weight',
+  health: 'Feel healthier',
+  sleep: 'Sleep better',
+  clarity: 'Think clearer',
   relationships: 'Better relationships',
-  control: 'More control',
-  challenge: 'Personal challenge',
-  sobriety: 'Try sobriety',
+  weight: 'Lose weight',
 };
 
 export default function SummaryScreen() {
@@ -41,7 +40,7 @@ export default function SummaryScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={21}
+      currentStep={23}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"
@@ -77,6 +76,13 @@ export default function SummaryScreen() {
             ))}
           </View>
         </View>
+
+        {data.personalWhy && (
+          <View style={styles.whyCard}>
+            <Text style={styles.cardLabel}>Your personal why</Text>
+            <Text style={styles.whyText}>"{data.personalWhy}"</Text>
+          </View>
+        )}
       </View>
     </OnboardingScreen>
   );
@@ -133,5 +139,19 @@ const styles = StyleSheet.create({
     color: '#caf0f8',
     fontSize: 14,
     fontWeight: '500',
+  },
+  whyCard: {
+    backgroundColor: 'rgba(202, 240, 248, 0.15)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(202, 240, 248, 0.3)',
+  },
+  whyText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontStyle: 'italic',
+    lineHeight: 26,
   },
 });

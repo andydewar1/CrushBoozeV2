@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 export default function WelcomeScreen() {
   const { data } = useOnboarding();
@@ -17,11 +17,15 @@ export default function WelcomeScreen() {
     <OnboardingScreen
       currentStep={2}
       totalSteps={TOTAL_STEPS}
-      title={`Hey there, ${data.name} 👋`}
+      title=""
       onContinue={handleContinue}
       continueText="Continue"
+      showBackButton={true}
     >
       <View style={styles.content}>
+        <Text style={styles.greeting}>
+          Hey there, {data.name} 👋
+        </Text>
         <Text style={styles.text}>
           We're really glad you're here.
         </Text>
@@ -40,18 +44,25 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: 4,
     paddingBottom: 40,
   },
-  text: {
-    fontSize: 20,
+  greeting: {
+    fontSize: 28,
+    fontWeight: '700',
     color: '#1A1A2E',
-    lineHeight: 30,
+    marginBottom: 24,
+  },
+  text: {
+    fontSize: 22,
+    color: '#1A1A2E',
+    lineHeight: 32,
     marginBottom: 20,
   },
   textMuted: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#6B7280',
-    lineHeight: 24,
+    lineHeight: 28,
     marginTop: 20,
   },
 });

@@ -27,7 +27,9 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
         "NSHealthUpdateUsageDescription": "This app is for general fitness and wellness purposes only and is not a medical device",
-        "UIBackgroundModes": ["remote-notification"],
+        "UIBackgroundModes": [
+          "remote-notification"
+        ],
         "NSUserNotificationsUsageDescription": "We need to send you notifications about your progress and achievements",
         "NSUserTrackingUsageDescription": "This allows us to measure ad performance and show you more relevant ads"
       },
@@ -89,6 +91,7 @@
         "requiresDisclaimer": true,
         "consultHealthcareProvider": true
       }
-    }
+    },
+    "owner": "adewar"
   }
 }

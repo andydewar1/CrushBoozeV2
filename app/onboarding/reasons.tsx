@@ -3,16 +3,15 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 23;
+const TOTAL_STEPS = 25;
 
 const OPTIONS = [
-  { emoji: '💰', text: 'I want to save real money', value: 'money' },
-  { emoji: '❤️', text: 'I want to improve my health', value: 'health' },
-  { emoji: '⚖️', text: 'I want to lose weight', value: 'weight' },
-  { emoji: '👨‍👩‍👧‍👦', text: 'I want to improve my relationships', value: 'relationships' },
-  { emoji: '💪', text: 'I want to be more in control', value: 'control' },
-  { emoji: '🏆', text: 'I want a challenge', value: 'challenge' },
-  { emoji: '✨', text: 'I want to try sobriety', value: 'sobriety' },
+  { emoji: '💰', text: 'Save money', value: 'money' },
+  { emoji: '💪', text: 'Feel healthier', value: 'health' },
+  { emoji: '😴', text: 'Sleep better', value: 'sleep' },
+  { emoji: '🧠', text: 'Think clearer', value: 'clarity' },
+  { emoji: '👨‍👩‍👧‍👦', text: 'Better relationships', value: 'relationships' },
+  { emoji: '⚖️', text: 'Lose weight', value: 'weight' },
 ];
 
 export default function ReasonsScreen() {
@@ -29,7 +28,7 @@ export default function ReasonsScreen() {
 
   const handleContinue = () => {
     updateData({ quitReasons: selected });
-    router.push('/onboarding/reasons-validation');
+    router.push('/onboarding/personal-why');
   };
 
   return (
