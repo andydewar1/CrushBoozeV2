@@ -68,7 +68,7 @@ export default function LandingScreen() {
       } else {
         // User is authenticated but hasn't completed onboarding
         console.log('🎯 Routing to onboarding (no profile found)');
-        router.push('/onboarding/quit-date');
+        router.push('/onboarding/name');
       }
     } else {
       console.log('🆕 No session - routing to signup');

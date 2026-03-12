@@ -29,7 +29,7 @@ export default function SignUpScreen() {
         return;
       }
       
-      router.replace('/onboarding/quit-date');
+      router.replace('/onboarding/name');
     } catch (error: any) {
       Alert.alert('Sign Up Failed', error.message || 'Please try again');
     } finally {

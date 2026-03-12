@@ -15,7 +15,7 @@ export default function GetStartedScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Let's Begin Your{'\n'}Journey</Text>
           <Text style={styles.subtitle}>
-            We'll help you quit vaping with a personalized plan based on your usage and goals.
+            We'll help you quit drinking with a personalized plan based on your habits and goals.
           </Text>
         </View>
 
@@ -35,8 +35,8 @@ export default function GetStartedScreen() {
               <Text style={styles.stepNumberText}>2</Text>
             </View>
             <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Tell Us About Your Usage</Text>
-              <Text style={styles.stepDescription}>Share your vaping habits and costs</Text>
+              <Text style={styles.stepTitle}>Tell Us About Your Drinking</Text>
+              <Text style={styles.stepDescription}>Share your drinking habits and spending</Text>
             </View>
           </View>
 
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#35998D',
+    backgroundColor: '#03045e',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   button: {
-    backgroundColor: '#35998D',
+    backgroundColor: '#03045e',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 100,

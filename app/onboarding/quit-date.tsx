@@ -1,150 +1,98 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import { format } from 'date-fns';
-import OnboardingScreen from '@/components/OnboardingScreen';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { useSettings } from '@/contexts/SettingsContext';
+import OnboardingScreen from '@/components/OnboardingScreenNew';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+const TOTAL_STEPS = 23;
 
 export default function QuitDateScreen() {
   const { data, updateData } = useOnboarding();
-  const { profile } = useSettings();
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(data.quitDate || new Date());
+  const [date, setDate] = useState(data.quitDate || new Date());
+  const [showPicker, setShowPicker] = useState(Platform.OS === 'ios');
 
-  // ALWAYS sync onboarding context with latest saved profile data
-  useEffect(() => {
-    if (profile?.quit_date) {
-      const savedDate = new Date(profile.quit_date);
-      // Only update if the saved date is different from current context data
-      const currentContextTime = data.quitDate?.getTime();
-      const savedTime = savedDate.getTime();
-      
-      if (currentContextTime !== savedTime) {
-        console.log('Syncing onboarding context with saved profile data:', savedDate);
-        setSelectedDate(savedDate);
-        updateData({ 
-          quitDate: savedDate
-        });
-      }
-    }
-  }, [profile?.quit_date, updateData]);
-
-  // Sync local selectedDate state with context data
-  useEffect(() => {
-    if (data.quitDate && data.quitDate.getTime() !== selectedDate.getTime()) {
-      console.log('Syncing local state with context data:', data.quitDate);
-      setSelectedDate(new Date(data.quitDate));
-    }
-  }, [data.quitDate?.getTime()]);
-
-  const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
-    if (date) {
-      const newDate = new Date(date);
-      // Keep the time from the existing selectedDate
-      newDate.setHours(selectedDate.getHours());
-      newDate.setMinutes(selectedDate.getMinutes());
-      setSelectedDate(newDate);
-      updateData({ quitDate: newDate });
-    }
+  const handleContinue = () => {
+    updateData({ quitDate: date });
+    router.push('/onboarding/preview-1');
   };
 
-  const handleTimeChange = (event: DateTimePickerEvent, date?: Date) => {
-    if (date) {
-      const newDate = new Date(selectedDate);
-      newDate.setHours(date.getHours());
-      newDate.setMinutes(date.getMinutes());
-      setSelectedDate(newDate);
-      updateData({ quitDate: newDate });
-    }
+  const onChange = (event: any, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
-      setShowTimePicker(false);
+      setShowPicker(false);
+    }
+    if (selectedDate) {
+      setDate(selectedDate);
     }
   };
 
-
-
-  const formatDateTime = (date: Date) => {
-    const formattedDate = format(date, 'MMMM d, yyyy');
-    const formattedTime = format(date, 'h:mm a').replace(' ', ''); // Remove space before AM/PM
-    return { formattedDate, formattedTime };
+  const formatDate = (d: Date) => {
+    return d.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   };
 
-
+  const isToday = (d: Date) => {
+    const today = new Date();
+    return d.toDateString() === today.toDateString();
+  };
 
   return (
     <OnboardingScreen
-      title="Set your quit date"
-      subtitle="When would you like to start your journey?"
-      currentStep={1}
-      totalSteps={7}
-      nextScreen="/onboarding/goals"
-      canProgress={selectedDate !== null}
+      currentStep={16}
+      totalSteps={TOTAL_STEPS}
+      title={`This is the moment it gets real, ${data.name}.`}
+      subtitle="When do you want to start your alcohol-free journey?"
+      onContinue={handleContinue}
+      canContinue={true}
     >
       <View style={styles.container}>
+        {Platform.OS === 'android' && (
+          <TouchableOpacity 
+            style={styles.dateButton}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={styles.dateText}>{formatDate(date)}</Text>
+            {isToday(date) && <Text style={styles.todayBadge}>Today</Text>}
+          </TouchableOpacity>
+        )}
 
-        <View style={styles.dateContainer}>
-          <DateTimePicker
-            value={selectedDate}
-            mode="date"
-            display="inline"
-            onChange={handleDateChange}
-            textColor="#FFFFFF"
-            accentColor="#FFFFFF"
-            themeVariant="dark"
-          />
-        </View>
-
-        <View style={styles.timeSection}>
-          <Text style={styles.label}>What time?</Text>
-          {Platform.OS === 'ios' ? (
-            <View style={styles.timePickerContainer}>
-              <DateTimePicker
-                value={selectedDate}
-                mode="time"
-                display="spinner"
-                onChange={handleTimeChange}
-                textColor="#FFFFFF"
-                accentColor="#FFFFFF"
-                themeVariant="dark"
-              />
-            </View>
-          ) : (
-            <>
-              <Text 
-                style={styles.timeButton}
-                onPress={() => setShowTimePicker(true)}
-              >
-                {format(selectedDate, 'h:mm a')}
-              </Text>
-              {showTimePicker && (
-                <DateTimePicker
-
-                  value={selectedDate}
-                  mode="time"
-                  is24Hour={false}
-                  onChange={handleTimeChange}
-                />
-              )}
-            </>
-          )}
-        </View>
-
-        <View style={styles.summaryContainer}>
-          <Text style={styles.summaryLabel}>
-            Your journey begins
-          </Text>
-          <View style={styles.dateTimeContainer}>
-            <Text style={styles.dateText}>
-              {formatDateTime(selectedDate).formattedDate}
-            </Text>
-            <Text style={styles.timeText}>
-              {formatDateTime(selectedDate).formattedTime}
-            </Text>
+        {showPicker && (
+          <View style={styles.pickerContainer}>
+            <DateTimePicker
+              value={date}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onChange}
+              minimumDate={new Date()}
+              style={styles.picker}
+            />
           </View>
-          <Text style={styles.motivationalText}>
-            This date marks the beginning of your journey to freedom
-          </Text>
+        )}
+
+        <View style={styles.quickOptions}>
+          <TouchableOpacity 
+            style={[styles.quickOption, isToday(date) && styles.quickOptionActive]}
+            onPress={() => setDate(new Date())}
+          >
+            <Text style={[styles.quickOptionText, isToday(date) && styles.quickOptionTextActive]}>
+              🚀 Start Today
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.quickOption}
+            onPress={() => {
+              const tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              setDate(tomorrow);
+            }}
+          >
+            <Text style={styles.quickOptionText}>📅 Tomorrow</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </OnboardingScreen>
@@ -153,85 +101,66 @@ export default function QuitDateScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    marginTop: 20,
   },
-
-  dateContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  dateButton: {
+    backgroundColor: '#F5F5F5',
     borderRadius: 16,
-    width: '100%',
-    marginBottom: 24,
-  },
-  timeSection: {
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    marginBottom: 12,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  timePickerContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    width: '100%',
-    marginBottom: 12,
-  },
-  timeButton: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    textAlign: 'center',
-    overflow: 'hidden',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  summaryContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 20,
-    padding: 24,
-    marginTop: 'auto',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  summaryLabel: {
-    fontSize: 18,
-    color: '#FFFFFF',
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 12,
-    opacity: 0.9,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  dateTimeContainer: {
-    alignItems: 'center',
-    marginVertical: 8,
   },
   dateText: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontSize: 18,
+    color: '#1A1A2E',
+    fontWeight: '500',
   },
-  timeText: {
-    fontSize: 32,
+  todayBadge: {
+    backgroundColor: '#03045e',
     color: '#FFFFFF',
-    fontWeight: '700',
-    marginTop: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: '600',
+    overflow: 'hidden',
   },
-  motivationalText: {
+  pickerContainer: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 200,
+  },
+  quickOptions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  quickOption: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  quickOptionActive: {
+    borderColor: '#03045e',
+    backgroundColor: '#FFFFFF',
+  },
+  quickOptionText: {
     fontSize: 15,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginTop: 12,
-    opacity: 0.8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    fontStyle: 'italic',
+    color: '#1A1A2E',
+    fontWeight: '500',
   },
-}); 
+  quickOptionTextActive: {
+    fontWeight: '600',
+    color: '#03045e',
+  },
+});

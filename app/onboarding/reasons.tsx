@@ -1,86 +1,49 @@
-import { useState } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import OnboardingScreen from '@/components/OnboardingScreen';
-import SelectionButton from '@/components/SelectionButton';
+import React, { useState } from 'react';
+import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const REASONS = [
-  {
-    id: 'health',
-    title: 'Improve my health',
-  },
-  {
-    id: 'money',
-    title: 'Save money',
-  },
-  {
-    id: 'freedom',
-    title: 'Break free from addiction',
-  },
-  {
-    id: 'family',
-    title: 'For my family',
-  },
-  {
-    id: 'fitness',
-    title: 'Better fitness and sports',
-  },
-  {
-    id: 'future',
-    title: 'Invest in my future',
-  },
+const TOTAL_STEPS = 23;
+
+const OPTIONS = [
+  { emoji: '💰', text: 'I want to save real money', value: 'money' },
+  { emoji: '❤️', text: 'I want to improve my health', value: 'health' },
+  { emoji: '⚖️', text: 'I want to lose weight', value: 'weight' },
+  { emoji: '👨‍👩‍👧‍👦', text: 'I want to improve my relationships', value: 'relationships' },
+  { emoji: '💪', text: 'I want to be more in control', value: 'control' },
+  { emoji: '🏆', text: 'I want a challenge', value: 'challenge' },
+  { emoji: '✨', text: 'I want to try sobriety', value: 'sobriety' },
 ];
 
 export default function ReasonsScreen() {
   const { data, updateData } = useOnboarding();
-  const [selectedReasons, setSelectedReasons] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string[]>(data.quitReasons);
 
-  const toggleReason = (reasonId: string) => {
-    const newSelected = new Set(selectedReasons);
-    if (newSelected.has(reasonId)) {
-      newSelected.delete(reasonId);
+  const handleSelect = (value: string) => {
+    if (selected.includes(value)) {
+      setSelected(selected.filter(v => v !== value));
     } else {
-      newSelected.add(reasonId);
+      setSelected([...selected, value]);
     }
-    setSelectedReasons(newSelected);
+  };
 
-    // Update onboarding context
-    updateData({
-      quitReasons: Array.from(newSelected),
-    });
+  const handleContinue = () => {
+    updateData({ quitReasons: selected });
+    router.push('/onboarding/reasons-validation');
   };
 
   return (
     <OnboardingScreen
-      title="What's on your mind?"
-      subtitle="I want to quit vaping because..."
-      currentStep={3}
-      totalSteps={7}
-      nextScreen="/onboarding/vape-types"
-      previousScreen="/onboarding/goals"
-      canProgress={selectedReasons.size > 0}
-    >
-      <View style={styles.container}>
-        <View style={styles.reasonsContainer}>
-          {REASONS.map((reason) => (
-            <SelectionButton
-              key={reason.id}
-              title={reason.title}
-              selected={selectedReasons.has(reason.id)}
-              onPress={() => toggleReason(reason.id)}
-            />
-          ))}
-        </View>
-      </View>
-    </OnboardingScreen>
+      currentStep={13}
+      totalSteps={TOTAL_STEPS}
+      title="So, why do you want to stop drinking?"
+      subtitle="Pick everything that's true for you."
+      options={OPTIONS}
+      selectedValue={selected}
+      onSelect={handleSelect}
+      multiSelect={true}
+      onContinue={handleContinue}
+      canContinue={selected.length > 0}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  reasonsContainer: {
-    paddingTop: 8,
-  },
-}); 

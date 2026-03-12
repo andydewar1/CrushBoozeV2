@@ -1,359 +1,137 @@
-import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
-import { Calendar, Target, Heart } from 'lucide-react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { saveOnboardingData } from '@/lib/onboarding';
-import { useToast } from '@/contexts/ToastContext';
-import { useSettings } from '@/contexts/SettingsContext';
-import { supabase } from '@/lib/supabase';
+import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-import { format } from 'date-fns';
-import { useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MedicalDisclaimer from '@/components/MedicalDisclaimer';
+const TOTAL_STEPS = 23;
+
+const REASON_LABELS: Record<string, string> = {
+  money: 'Save money',
+  health: 'Better health',
+  weight: 'Lose weight',
+  relationships: 'Better relationships',
+  control: 'More control',
+  challenge: 'Personal challenge',
+  sobriety: 'Try sobriety',
+};
 
 export default function SummaryScreen() {
-  const { data } = useOnboarding();
-  const { user } = useAuth();
-  const router = useRouter();
-  const toast = useToast();
-  const { refetchProfile } = useSettings();
-  const [isSaving, setIsSaving] = useState(false);
+  const { data, ninetyDaySavings } = useOnboarding();
 
-  // Safety check for incomplete onboarding data
-  if (!data || !data.quitDate) {
-    console.warn('⚠️ Incomplete onboarding data, redirecting to start');
-    try {
-      router.replace('/onboarding/quit-date');
-    } catch (navError) {
-      console.error('❌ Navigation error:', navError);
-    }
-    return null;
-  }
+  const handleContinue = () => {
+    router.push('/onboarding/future-vision');
+  };
 
   const getCurrencySymbol = () => {
     switch (data.currency) {
+      case 'USD': return '$';
       case 'EUR': return '€';
-      case 'GBP': return '£';
-      case 'AUD': return 'A$';
-      case 'CAD': return 'C$';
-      default: return '$';
+      default: return '£';
     }
   };
 
-  const calculateDailyCost = (type: typeof data.vapeTypes[0]) => {
-    if (!type) return 0;
-    const quantity = type.quantity || 0;
-    const unitCost = type.unitCost || 0;
-    const cost = quantity * unitCost;
-    return type.frequency === 'week' ? cost / 7 : cost;
-  };
-
-  const calculateTotalDailyCost = () => {
-    return data.vapeTypes.reduce((total, type) => total + calculateDailyCost(type), 0);
-  };
-
-  const calculateMonthlySavings = () => {
-    const dailyCost = calculateTotalDailyCost();
-    return dailyCost * 30;
-  };
-
-  const handleGetStarted = async () => {
-    if (!user) {
-      console.error('❌ No user found when trying to save onboarding data');
-      toast.showError('Error', 'Please log in again');
-      return;
-    }
-    
-    console.log('💾 Starting onboarding save process for user:', user.id);
-    setIsSaving(true);
-    
-    // Save data first, then show success toast, then navigate
-    try {
-      const result = await saveOnboardingData(user.id, data);
-      
-      if (result.success) {
-        console.log('✅ Onboarding data saved successfully');
-        // Refresh profile data
-        await refetchProfile();
-        
-        // Navigate immediately after save
-        console.log('🧭 Onboarding complete - routing to paywall');
-        router.replace('/paywall');
-      } else {
-        console.error('❌ Failed to save onboarding data:', result.error);
-        // Still navigate even if save had issues
-        router.replace('/paywall');
-      }
-    } catch (error) {
-      console.error('❌ Unexpected error during onboarding save:', error);
-      // Still navigate even if save failed
-      router.replace('/paywall');
-    } finally {
-      setIsSaving(false);
-    }
+  const formatDate = (d: Date) => {
+    return d.toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '100%' }]} />
-        </View>
-      </View>
+    <OnboardingScreen
+      currentStep={21}
+      totalSteps={TOTAL_STEPS}
+      title=""
+      variant="dark"
+      onContinue={handleContinue}
+      continueText="Continue"
+    >
+      <View style={styles.container}>
+        <Text style={styles.intro}>
+          {data.name}, let's look at what you've told us.
+        </Text>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Your Quit Plan</Text>
-          <Text style={styles.subtitle}>Here's a summary of your journey ahead</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Your quit date</Text>
+          <Text style={styles.cardValue}>{formatDate(data.quitDate)}</Text>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Calendar size={24} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Quit Date</Text>
-          </View>
-          <Text style={styles.sectionContent}>
-            {data.hasQuit ? 'Already quit on ' : 'Planning to quit on '}
-            {format(data.quitDate || new Date(), 'MMMM d, yyyy')}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Money you'll save in just 90 days</Text>
+          <Text style={styles.cardValueLarge}>
+            {getCurrencySymbol()}{ninetyDaySavings.toLocaleString()}
           </Text>
         </View>
 
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Target size={24} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Your Goals</Text>
-          </View>
-          <View style={styles.goalsList}>
-            {data.personalGoals.map((goal, index) => (
-              <View key={goal} style={styles.goalItem}>
-                <Text style={styles.goalText}>{goal}</Text>
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>The things that matter most to you</Text>
+          <View style={styles.reasonsContainer}>
+            {data.quitReasons.map((reason, index) => (
+              <View key={reason} style={styles.reasonTag}>
+                <Text style={styles.reasonText}>
+                  {REASON_LABELS[reason] || reason}
+                </Text>
               </View>
             ))}
           </View>
         </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Heart size={24} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Your Motivation</Text>
-          </View>
-          <Text style={styles.sectionContent}>
-            {data.quitReason}
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Target size={24} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Monthly Spending</Text>
-          </View>
-          <Text style={styles.spendingAmount}>
-            {getCurrencySymbol()}{calculateMonthlySavings().toFixed(2)}
-          </Text>
-          <Text style={styles.spendingText}>
-            This is how much you could save each month
-          </Text>
-        </View>
-
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Target size={24} color="#FFFFFF" strokeWidth={2} />
-            <Text style={styles.sectionTitle}>Financial Goal</Text>
-          </View>
-          <Text style={styles.goalDescription}>
-            {data.financialGoal.description}
-          </Text>
-          <Text style={styles.goalAmount}>
-            Target: {getCurrencySymbol()}{data.financialGoal.amount.toFixed(2)}
-          </Text>
-        </View>
-
-        <View style={styles.messageCard}>
-          <Text style={styles.messageEmoji}>🌟</Text>
-          <Text style={styles.messageTitle}>You're Ready to Begin!</Text>
-          <Text style={styles.messageText}>
-            Remember, every journey begins with a single step. We're here to support you every step of the way.
-          </Text>
-        </View>
-
-        {/* Medical Disclaimer - Required for App Store Approval */}
-        <MedicalDisclaimer style={styles.disclaimer} />
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity 
-          style={[styles.button, isSaving && styles.buttonDisabled]}
-          onPress={handleGetStarted}
-          disabled={isSaving}
-        >
-          <Text style={styles.buttonText}>
-            {isSaving ? 'Setting Up Your Journey...' : 'Get Started'}
-          </Text>
-        </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </OnboardingScreen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#35998d',
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 24,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 2,
-  },
-  scrollView: {
-    flex: 1,
-    padding: 20,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 40,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    letterSpacing: -1,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  section: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  sectionContent: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  goalsList: {
-    gap: 8,
-  },
-  goalItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-  },
-  goalText: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    fontWeight: '500',
-    textTransform: 'capitalize',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  spendingAmount: {
-    fontSize: 34,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  spendingText: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  goalDescription: {
-    fontSize: 17,
-    color: '#FFFFFF',
-    marginBottom: 8,
-    lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  goalAmount: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  messageCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  disclaimer: {
-    margin: 20,
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  messageEmoji: {
-    fontSize: 40,
-    marginBottom: 16,
-  },
-  messageTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
-    textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  messageText: {
-    fontSize: 17,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-  },
-  footer: {
-    padding: 20,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    backgroundColor: '#35998d',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  button: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 100,
-    height: 56,
-    alignItems: 'center',
     justifyContent: 'center',
+    paddingBottom: 20,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  intro: {
+    fontSize: 22,
+    color: '#FFFFFF',
+    marginBottom: 32,
+    lineHeight: 30,
   },
-  buttonText: {
-    fontSize: 17,
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+  },
+  cardLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cardValue: {
+    fontSize: 20,
+    color: '#FFFFFF',
     fontWeight: '600',
-    color: '#35998d',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-}); 
+  cardValueLarge: {
+    fontSize: 32,
+    color: '#caf0f8',
+    fontWeight: '700',
+  },
+  reasonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+  },
+  reasonTag: {
+    backgroundColor: 'rgba(202, 240, 248, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  reasonText: {
+    color: '#caf0f8',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+});
