@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -8,6 +8,24 @@ const TOTAL_STEPS = 25;
 
 export default function FutureVisionScreen() {
   const { data, ninetyDaySavings } = useOnboarding();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleContinue = () => {
     router.push('/onboarding/commitment');
@@ -32,6 +50,15 @@ export default function FutureVisionScreen() {
       continueText="Continue"
     >
       <View style={styles.container}>
+        <Animated.Text 
+          style={[
+            styles.emoji, 
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          🌅
+        </Animated.Text>
+
         <Text style={styles.title}>
           Now imagine this moment 90 days from today.
         </Text>
@@ -68,6 +95,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingBottom: 40,
+  },
+  emoji: {
+    fontSize: 64,
+    marginBottom: 24,
   },
   title: {
     fontSize: 26,

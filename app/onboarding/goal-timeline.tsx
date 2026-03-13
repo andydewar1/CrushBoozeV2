@@ -1,13 +1,31 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25; // Added one more screen
+const TOTAL_STEPS = 25;
 
 export default function GoalTimelineScreen() {
   const { data } = useOnboarding();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleContinue = () => {
     router.push('/onboarding/quit-date');
@@ -52,6 +70,15 @@ export default function GoalTimelineScreen() {
       continueText="Let's do it"
     >
       <View style={styles.content}>
+        <Animated.Text 
+          style={[
+            styles.emoji, 
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          ⏱️
+        </Animated.Text>
+
         <Text style={styles.intro}>
           {data.name}, here's something exciting.
         </Text>
@@ -82,6 +109,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingBottom: 40,
+  },
+  emoji: {
+    fontSize: 64,
+    marginBottom: 24,
   },
   intro: {
     fontSize: 22,

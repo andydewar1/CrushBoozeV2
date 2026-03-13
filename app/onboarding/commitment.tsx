@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -8,6 +8,24 @@ const TOTAL_STEPS = 25;
 
 export default function CommitmentScreen() {
   const { data } = useOnboarding();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleContinue = () => {
     // Navigate to paywall
@@ -25,6 +43,15 @@ export default function CommitmentScreen() {
       showBackButton={true}
     >
       <View style={styles.container}>
+        <Animated.Text 
+          style={[
+            styles.emoji, 
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          💪
+        </Animated.Text>
+
         <Text style={styles.name}>So {data.name}...</Text>
         <Text style={styles.question}>
           Are you ready to commit to your alcohol-free journey?
@@ -39,6 +66,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingBottom: 60,
+  },
+  emoji: {
+    fontSize: 64,
+    marginBottom: 24,
   },
   name: {
     fontSize: 24,

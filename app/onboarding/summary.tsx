@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -17,6 +17,24 @@ const REASON_LABELS: Record<string, string> = {
 
 export default function SummaryScreen() {
   const { data, ninetyDaySavings } = useOnboarding();
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
   const handleContinue = () => {
     router.push('/onboarding/future-vision');
@@ -49,6 +67,15 @@ export default function SummaryScreen() {
       continueText="Continue"
     >
       <View style={styles.container}>
+        <Animated.Text 
+          style={[
+            styles.emoji, 
+            { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          ✨
+        </Animated.Text>
+
         <Text style={styles.intro}>
           {data.name}, let's look at what you've told us.
         </Text>
@@ -95,32 +122,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingBottom: 20,
   },
+  emoji: {
+    fontSize: 56,
+    marginBottom: 20,
+  },
   intro: {
     fontSize: 22,
     color: '#FFFFFF',
-    marginBottom: 32,
+    marginBottom: 24,
     lineHeight: 30,
   },
   card: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
   },
   cardLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
-    marginBottom: 8,
+    marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   cardValue: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#FFFFFF',
     fontWeight: '600',
   },
   cardValueLarge: {
-    fontSize: 32,
+    fontSize: 28,
     color: '#caf0f8',
     fontWeight: '700',
   },
@@ -132,27 +163,27 @@ const styles = StyleSheet.create({
   },
   reasonTag: {
     backgroundColor: 'rgba(202, 240, 248, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
   },
   reasonText: {
     color: '#caf0f8',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   whyCard: {
     backgroundColor: 'rgba(202, 240, 248, 0.15)',
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(202, 240, 248, 0.3)',
   },
   whyText: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#FFFFFF',
     fontStyle: 'italic',
-    lineHeight: 26,
+    lineHeight: 24,
   },
 });
