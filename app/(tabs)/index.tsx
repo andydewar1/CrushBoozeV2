@@ -14,6 +14,7 @@ import { useGoals, type Goal } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useSettings } from '@/contexts/SettingsContext';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -25,6 +26,7 @@ import { initializeFacebookSDK, logAppInstall } from '@/lib/facebook';
 export default function HomeScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
+  const { settings } = useSettings();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, weeklyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
@@ -213,8 +215,8 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <Header 
-          title="Home" 
-          subtitle="Your future self is proud of you."
+          title={`Hey, ${settings?.name || 'there'}.`}
+          subtitle="Keep up the good work!"
         />
 
         {/* Main Progress Card */}
