@@ -1930,7 +1930,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2135,7 +2135,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   selectedCurrencyOption: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.3)',
   },
@@ -2155,7 +2155,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   selectedGoalOption: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.3)',
   },

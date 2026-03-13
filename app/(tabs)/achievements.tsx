@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   motivationBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   celebrationBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',

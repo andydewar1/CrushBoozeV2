@@ -811,7 +811,7 @@ const styles = StyleSheet.create({
     color: '#03045e',
   },
   motivationBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   celebrationBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -1203,7 +1203,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   achievedBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',

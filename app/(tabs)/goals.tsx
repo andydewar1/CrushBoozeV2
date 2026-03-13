@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   achievedBanner: {
-    backgroundColor: '#caf0f8',
+    backgroundColor: '#F5F8FA',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
