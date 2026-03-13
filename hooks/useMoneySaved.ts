@@ -6,21 +6,19 @@ interface MoneySaved {
   totalSaved: number;
   dailyRate: number;
   hourlyRate: number;
+  weeklyRate: number;
   currency: string;
   loading: boolean;
   error: string | null;
 }
 
 const getCurrencySymbol = (currency: string): string => {
-  switch (currency) {
-    case 'EUR': return '€';
-    case 'GBP': return '£';  
-    case 'AUD': return 'A$';
-    case 'CAD': return 'C$';
-    case 'USD':
-    default: 
-      return '$';
-  }
+  const symbols: Record<string, string> = {
+    'GBP': '£', 'USD': '$', 'EUR': '€', 'CAD': 'C$', 'AUD': 'A$',
+    'NZD': 'NZ$', 'CHF': 'CHF', 'SEK': 'kr', 'NOK': 'kr', 'DKK': 'kr',
+    'PLN': 'zł', 'INR': '₹', 'JPY': '¥', 'CNY': '¥', 'BRL': 'R$', 'MXN': 'MX$',
+  };
+  return symbols[currency] || '$';
 };
 
 export function useMoneySaved(): MoneySaved {
@@ -29,6 +27,7 @@ export function useMoneySaved(): MoneySaved {
     totalSaved: 0,
     dailyRate: 0,
     hourlyRate: 0,
+    weeklyRate: 0,
     currency: '$',
     loading: true,
     error: null
@@ -39,12 +38,12 @@ export function useMoneySaved(): MoneySaved {
 
     const updateSavings = () => {
       if (!settings?.quit_date) {
-
         setMoneySaved(prev => ({
           ...prev,
           totalSaved: 0,
           dailyRate: 0,
           hourlyRate: 0,
+          weeklyRate: 0,
           loading: settingsLoading,
           currency: getCurrencySymbol(settings?.currency || 'USD'),
           error: settingsLoading ? null : 'No quit data available'
@@ -54,7 +53,9 @@ export function useMoneySaved(): MoneySaved {
 
       const quitDate = new Date(settings.quit_date);
       const now = new Date();
-      const dailyCost = settings.daily_cost || 0;
+      // daily_cost column now stores WEEKLY spend for CrushBooze
+      const weeklySpend = settings.daily_cost || 0;
+      const dailyCost = weeklySpend / 7;
       const currencySymbol = getCurrencySymbol(settings.currency || 'USD');
       let totalSaved = 0;
 
@@ -65,6 +66,7 @@ export function useMoneySaved(): MoneySaved {
           totalSaved: 0,
           dailyRate: dailyCost,
           hourlyRate: dailyCost / 24,
+          weeklyRate: weeklySpend,
           currency: currencySymbol,
           loading: false,
           error: 'future_quit_date'
@@ -85,6 +87,7 @@ export function useMoneySaved(): MoneySaved {
         totalSaved: Math.max(0, totalSaved),
         dailyRate: dailyCost,
         hourlyRate,
+        weeklyRate: weeklySpend,
         currency: currencySymbol,
         loading: false,
         error: null
@@ -105,4 +108,4 @@ export function useMoneySaved(): MoneySaved {
   }, [settings, settingsLoading]);
 
   return moneySaved;
-} 
+}

@@ -108,11 +108,9 @@ export default function QuitDateScreen() {
                   <DateTimePicker
                     value={date}
                     mode={pickerMode}
-                    display={pickerMode === 'date' ? 'inline' : 'spinner'}
+                    display="spinner"
                     onChange={onPickerChange}
-                    minimumDate={pickerMode === 'date' ? new Date() : undefined}
-                    style={pickerMode === 'date' ? styles.calendarPicker : styles.picker}
-                    accentColor="#03045e"
+                    style={styles.picker}
                   />
                 </View>
               </View>
@@ -127,7 +125,6 @@ export default function QuitDateScreen() {
             mode={pickerMode}
             display="default"
             onChange={onPickerChange}
-            minimumDate={pickerMode === 'date' ? new Date() : undefined}
           />
         )}
       </View>
@@ -206,10 +203,6 @@ const styles = StyleSheet.create({
   },
   picker: {
     height: 220,
-    width: '100%',
-  },
-  calendarPicker: {
-    height: 340,
     width: '100%',
   },
 });

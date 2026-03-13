@@ -26,7 +26,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
-  const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
+  const { totalSaved, dailyRate, hourlyRate, weeklyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
   const { activeGoals, achievedGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
@@ -161,6 +161,7 @@ export default function HomeScreen() {
 
   // Show loading or error state for savings
   const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
+  const displayWeeklyRate = (savingsLoading || savingsError) ? 0 : weeklyRate;
   const displayDailyRate = (savingsLoading || savingsError) ? 0 : dailyRate;
   const displayHourlyRate = (savingsLoading || savingsError) ? 0 : hourlyRate;
   const displayCurrency = currency || '$';
@@ -296,6 +297,10 @@ export default function HomeScreen() {
           </Text>
           
           <View style={styles.ratesContainer}>
+            <View style={styles.rateRow}>
+              <Text style={styles.rateLabel}>Weekly rate:</Text>
+              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayWeeklyRate)}</Text>
+            </View>
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Daily rate:</Text>
               <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayDailyRate)}</Text>

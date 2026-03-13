@@ -5,12 +5,12 @@ import { useToast } from './ToastContext';
 
 interface UserProfile {
   id: string;
+  name: string;
   quit_date: string;
   has_quit: boolean;
   personal_goals: string[];
   quit_reason: string;
   quit_reasons: string[];
-  vape_types: any[];
   currency: string;
   daily_cost: number;
   financial_goal_description: string;
@@ -96,26 +96,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const calculateDailyCost = (vapeTypes: UserProfile['vape_types']) => {
-    return vapeTypes.reduce((total, type) => {
-      const quantity = type.quantity || 0;
-      const unitCost = type.unitCost || 0;
-      const cost = quantity * unitCost;
-      return total + (type.frequency === 'week' ? cost / 7 : cost);
-    }, 0);
-  };
-
   const updateProfile = useCallback(async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
     if (!session?.user?.id) {
       return { success: false, error: 'Not authenticated' };
     }
 
     try {
-      // If updating vape types, recalculate daily cost
-      if (updates.vape_types) {
-        updates.daily_cost = calculateDailyCost(updates.vape_types);
-      }
-
       const { error: updateError } = await supabase
         .from('profiles')
         .update(updates)

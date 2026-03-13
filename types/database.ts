@@ -17,6 +17,7 @@ export interface DatabaseSchema {
   profiles: {
     Row: {
       id: string
+      name: string
       quit_date: string // ISO timestamp
       has_quit: boolean
       personal_goals: string[]

@@ -2,25 +2,16 @@ import { supabase } from './supabase';
 import { UserProfile } from './auth';
 
 export interface OnboardingData {
+  name: string;
   quitDate: Date;
-  hasQuit: boolean;
-  personalGoals: string[];
-  quitReasons: string[];
-  quitReason: string;
-  vapeTypes: VapeType[];
+  weeklySpend: number;
   currency: string;
+  quitReasons: string[];
+  personalWhy: string;
   financialGoal: {
     description: string;
     amount: number;
   };
-}
-
-export interface VapeType {
-  type: 'disposable' | 'pod' | 'liquid' | 'other';
-  otherText?: string;
-  quantity: number;
-  frequency: 'day' | 'week';
-  unitCost: number;
 }
 
 export interface OnboardingResult {
@@ -34,47 +25,47 @@ export interface OnboardingResult {
  */
 export async function saveOnboardingData(userId: string, data: OnboardingData): Promise<OnboardingResult> {
   try {
-    console.log('💾 CRITICAL: Saving onboarding data for user:', userId);
+    console.log('💾 Saving onboarding data for user:', userId);
     console.log('💾 Onboarding data:', {
+      name: data.name,
       quitDate: data.quitDate,
-      hasQuit: data.hasQuit,
-      personalGoalsCount: data.personalGoals.length,
-      vapeTypesCount: data.vapeTypes.length,
+      weeklySpend: data.weeklySpend,
       currency: data.currency,
+      quitReasonsCount: data.quitReasons.length,
       financialGoal: data.financialGoal
     });
 
-    // Calculate daily cost
-    const dailyCost = data.vapeTypes.reduce((sum, type) => {
-      const cost = (type.quantity || 0) * (type.unitCost || 0);
-      return sum + (type.frequency === 'week' ? cost / 7 : cost);
-    }, 0);
+    // Determine if user has quit (quit date is today or in the past)
+    const now = new Date();
+    const quitDate = new Date(data.quitDate);
+    const hasQuit = quitDate <= now;
 
-    // PERFORMANCE: Prepare profile data without checking existing first
+    // Prepare profile data - store weekly spend directly (daily_cost column stores weekly for CrushBooze)
     const profileData = {
       id: userId,
+      name: data.name,
       quit_date: data.quitDate.toISOString(),
-      has_quit: data.hasQuit,
-      personal_goals: data.personalGoals,
-      quit_reasons: data.quitReasons,
-      quit_reason: data.quitReason,
-      vape_types: data.vapeTypes,
+      has_quit: hasQuit,
+      personal_goals: data.quitReasons, // Display as goal tags on home
+      quit_reasons: data.quitReasons,   // Backup of selected reasons
+      quit_reason: data.personalWhy,    // Their typed personal why
+      daily_cost: data.weeklySpend,     // Stores WEEKLY spend (we calculate daily from this)
       currency: data.currency,
-      daily_cost: dailyCost,
       financial_goal_description: data.financialGoal.description,
       financial_goal_amount: data.financialGoal.amount,
       onboarding_completed: true,
       updated_at: new Date().toISOString()
     };
 
-    console.log('💾 CRITICAL: Profile data prepared for upsert:', { 
+    console.log('💾 Profile data prepared for upsert:', { 
       userId, 
-      onboarding_completed: true,
-      dailyCost,
+      name: profileData.name,
+      dailyCost: profileData.daily_cost,
+      hasQuit: profileData.has_quit,
       personalGoalsCount: profileData.personal_goals.length 
     });
 
-    // Use upsert to handle create or update without pre-checking
+    // Use upsert to handle create or update
     const { data: savedProfile, error } = await supabase
       .from('profiles')
       .upsert(profileData, { onConflict: 'id' })
@@ -82,17 +73,15 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       .single();
 
     if (error) {
-      console.error('❌ CRITICAL: Profile save failed:', error);
-      console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details });
+      console.error('❌ Profile save failed:', error);
       return { success: false, error: `Profile save failed: ${error.message}` };
     }
 
-    // PERFORMANCE: Create financial goal without pre-checking, use upsert instead
+    // Create financial goal if provided
     if (data.financialGoal.description && data.financialGoal.amount > 0) {
       console.log('💰 Creating financial goal:', data.financialGoal);
       
       try {
-        // Insert financial goal (simple approach)
         const { error: goalError } = await supabase
           .from('financial_goals')
           .insert({
@@ -100,19 +89,15 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
             name: data.financialGoal.description,
             target_amount: data.financialGoal.amount,
             description: data.financialGoal.description,
-            is_primary: true, // Mark onboarding goal as primary
-            baseline_amount: 0,
           });
 
         if (goalError) {
           console.error('⚠️ Warning: Failed to create financial goal:', goalError);
-          // Don't fail the entire onboarding if goal creation fails
         } else {
-          console.log('✅ Financial goal created/updated successfully');
+          console.log('✅ Financial goal created successfully');
         }
       } catch (goalError) {
         console.error('⚠️ Error handling financial goal:', goalError);
-        // Don't fail the entire onboarding if goal creation fails
       }
     }
 

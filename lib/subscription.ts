@@ -1,10 +1,20 @@
 import RevenueCatService from '@/services/RevenueCatService';
 
+// 🚨 DEV MODE: Set to true to bypass RevenueCat during development
+// ⚠️ IMPORTANT: Set back to false before submitting to App Store!
+const DEV_BYPASS_SUBSCRIPTION = true;
+
 /**
  * BULLETPROOF subscription check - ZERO bypass possibilities
  * TESTFLIGHT OPTIMIZED: Handles sandbox subscription edge cases
  */
 export async function checkSubscriptionStatus(): Promise<boolean> {
+  // DEV MODE: Skip all subscription checks
+  if (DEV_BYPASS_SUBSCRIPTION) {
+    console.log('🔧 DEV MODE: Bypassing subscription check');
+    return true;
+  }
+
   try {
     // CRITICAL: Fail fast if service not initialized
     if (!RevenueCatService.isInitialized()) {

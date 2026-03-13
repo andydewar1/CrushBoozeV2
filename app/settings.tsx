@@ -58,18 +58,6 @@ const PERSONAL_GOALS = [
   { id: 'stress', title: 'Reduce Stress' },
 ];
 
-type VapeTypeId = 'disposable' | 'pod' | 'liquid' | 'other';
-
-const VAPE_TYPES: Array<{
-  id: VapeTypeId;
-  title: string;
-  emoji: string;
-}> = [
-  { id: 'disposable', title: 'Disposable', emoji: '🔋' },
-  { id: 'pod', title: 'Pod System', emoji: '💨' },
-  { id: 'liquid', title: 'E-Liquid', emoji: '💧' },
-  { id: 'other', title: 'Other', emoji: '➕' },
-];
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -94,7 +82,6 @@ export default function SettingsScreen() {
   const [editingQuitDate, setEditingQuitDate] = useState(false);
   const [editingPersonalWhy, setEditingPersonalWhy] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(false);
-  const [editingVapeTypes, setEditingVapeTypes] = useState(false);
   const [editingUsagePatterns, setEditingUsagePatterns] = useState(false);
 
   const [editingPersonalGoals, setEditingPersonalGoals] = useState(false);
@@ -119,11 +106,11 @@ export default function SettingsScreen() {
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
   const [tempPersonalWhy, setTempPersonalWhy] = useState(motivation?.quitReason || '');
   const [tempCurrency, setTempCurrency] = useState(currency || '$');
-  const [tempVapeTypes, setTempVapeTypes] = useState<any[]>([]);
   const [tempUsagePatterns, setTempUsagePatterns] = useState<any[]>([]);
 
   const [tempPersonalGoals, setTempPersonalGoals] = useState<string[]>(motivation?.personalGoals || []);
-  const [tempDailyCost, setTempDailyCost] = useState(profile?.daily_cost?.toString() || '0');
+  // daily_cost column now stores WEEKLY spend for CrushBooze
+  const [tempWeeklySpend, setTempWeeklySpend] = useState((profile?.daily_cost || 0).toString());
   const [tempCurrentPassword, setTempCurrentPassword] = useState('');
   const [tempNewPassword, setTempNewPassword] = useState('');
   const [tempConfirmPassword, setTempConfirmPassword] = useState('');
@@ -135,7 +122,6 @@ export default function SettingsScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   
   // Current onboarding data
-  const [currentVapeTypes, setCurrentVapeTypes] = useState<any[]>([]);
 
   // Legacy refresh function - no longer needed with optimistic updates
   const refreshData = useCallback(async () => {
@@ -157,8 +143,9 @@ export default function SettingsScreen() {
     if (currency) {
       setTempCurrency(currency);
     }
-    if (profile?.daily_cost) {
-      setTempDailyCost(profile.daily_cost.toString());
+    if (profile?.daily_cost !== undefined) {
+      // daily_cost column stores WEEKLY spend for CrushBooze
+      setTempWeeklySpend(profile.daily_cost.toString());
     }
   }, [motivation, quitDate, currency, profile]);
 
@@ -194,7 +181,7 @@ export default function SettingsScreen() {
 
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('quit_reasons, vape_types')
+          .select('quit_reasons')
           .eq('id', userData.user.id)
           .maybeSingle();
 
@@ -202,9 +189,6 @@ export default function SettingsScreen() {
           console.error('Error loading onboarding data:', profileError);
           return;
         }
-
-        setCurrentVapeTypes(profileData?.vape_types || []);
-        setTempVapeTypes(profileData?.vape_types || []);
       } catch (error) {
         console.error('Error loading onboarding data:', error);
       }
@@ -384,31 +368,32 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSaveDailyCosts = async () => {
+  const handleSaveWeeklySpend = async () => {
     if (!session?.user?.id) return;
     
-    const cost = parseFloat(tempDailyCost) || 0;
+    // Store weekly spend directly (daily_cost column stores weekly for CrushBooze)
+    const weeklyAmount = parseFloat(tempWeeklySpend) || 0;
     
     setSaving(true);
     try {
       const { success, error } = await updateProfile({
-        daily_cost: cost
+        daily_cost: weeklyAmount
       });
       
       if (success) {
         setEditingDailyCosts(false);
-        showSuccess('Daily Costs Updated', 'Your daily costs have been updated successfully');
+        showSuccess('Weekly Spending Updated', 'Your weekly spending has been updated successfully');
       } else {
-        throw new Error(error || 'Failed to update daily costs');
+        throw new Error(error || 'Failed to update weekly spending');
       }
     } catch (error) {
-      console.error('Error updating daily costs:', error);
+      console.error('Error updating weekly spending:', error);
       showError(
         'Update Failed', 
-        'Failed to update daily costs. Please try again.',
+        'Failed to update weekly spending. Please try again.',
         {
           label: 'Retry',
-          onPress: () => handleSaveDailyCosts()
+          onPress: () => handleSaveWeeklySpend()
         }
       );
     } finally {
@@ -526,56 +511,9 @@ export default function SettingsScreen() {
 
 
 
-  const handleSaveVapeTypes = async () => {
-    setSaving(true);
-    try {
-      const { success, error } = await updateProfile({
-        vape_types: tempVapeTypes
-      });
-      
-      if (success) {
-        setCurrentVapeTypes(tempVapeTypes);
-        setEditingVapeTypes(false);
-        showSuccess('Vape Types Updated', 'Your vape types have been updated successfully');
-      } else {
-        throw new Error(error || 'Failed to update vape types');
-      }
-    } catch (error) {
-      console.error('Error updating vape types:', error);
-      showError(
-        'Update Failed', 
-        'Failed to update vape types. Please try again.',
-        {
-          label: 'Retry',
-          onPress: () => handleSaveVapeTypes()
-        }
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
 
 
 
-  const toggleVapeType = (typeId: VapeTypeId) => {
-    const newTypes = [...tempVapeTypes];
-    const existingIndex = newTypes.findIndex(vt => vt.type === typeId);
-    
-    if (existingIndex > -1) {
-      // Remove this vape type
-      newTypes.splice(existingIndex, 1);
-    } else {
-      // Add this vape type with default values
-      newTypes.push({
-        type: typeId,
-        quantity: 1,
-        frequency: 'day',
-        unitCost: 0,
-        otherText: typeId === 'other' ? '' : undefined
-      });
-    }
-    setTempVapeTypes(newTypes);
-  };
 
   const handleDeleteAccount = async () => {
     Alert.alert(
@@ -646,7 +584,7 @@ export default function SettingsScreen() {
 
       Alert.alert(
         'Account Deleted',
-        'Your account has been successfully deleted. Thank you for using CrushNic.',
+        'Your account has been successfully deleted. Thank you for using CrushBooze.',
         [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
       );
 
@@ -664,13 +602,13 @@ export default function SettingsScreen() {
 
   const handleContactSupport = async () => {
     try {
-      await WebBrowser.openBrowserAsync('https://crushnic.com/support/', {
+      await WebBrowser.openBrowserAsync('https://crushbooze.com/support/', {
         presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
-        controlsColor: '#35998d',
+        controlsColor: '#03045e',
       });
     } catch (error) {
       console.error('Error opening support page:', error);
-      Alert.alert('Error', 'Unable to open support page. Please visit crushnic.com/support directly.');
+      Alert.alert('Error', 'Unable to open support page. Please visit crushbooze.com/support directly.');
     }
   };
 
@@ -766,8 +704,8 @@ export default function SettingsScreen() {
         goals: goalsResult.data || [],
         craving_logs: logsResult.data || [],
         exported_at: new Date().toISOString(),
-        app_version: '1.0.88',
-        export_format: 'CrushNic_Data_Export_v1'
+        app_version: '1.0.0',
+        export_format: 'CrushBooze_Data_Export_v1'
       };
 
       // Create formatted JSON string
@@ -896,7 +834,7 @@ export default function SettingsScreen() {
           <View style={styles.profileCard}>
             <Text style={styles.profileEmail}>{session?.user?.email || 'Loading...'}</Text>
             <Text style={styles.profileSubtext}>
-              {quitDate ? `${days} days smoke-free since ${formatDate(quitDate)}` : 'Getting started on your quit journey'}
+              {quitDate ? `${days} days alcohol-free since ${formatDate(quitDate)}` : 'Getting started on your sober journey'}
             </Text>
           </View>
         </View>
@@ -978,34 +916,6 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Vape Types</Text>
-              <Text style={styles.settingValue} numberOfLines={2}>
-                {currentVapeTypes.length ? 
-                  currentVapeTypes
-                    .map(vt => {
-                      if (vt.type === 'other' && vt.otherText) {
-                        return vt.otherText;
-                      }
-                      const typeObj = VAPE_TYPES.find(t => t.id === vt.type);
-                      return typeObj ? typeObj.title : vt.type;
-                    })
-                    .join(', ') :
-                  'Add vape types'}
-              </Text>
-            </View>
-            <TouchableOpacity 
-              style={styles.editButton}
-              onPress={() => {
-                setTempVapeTypes([...currentVapeTypes]);
-                setEditingVapeTypes(true);
-              }}
-            >
-              <Edit3 size={16} color="#35998d" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.settingItem}>
-            <View style={styles.settingContent}>
               <Text style={styles.settingLabel}>Currency</Text>
               <Text style={styles.settingValue}>{getCurrencyDisplay()}</Text>
             </View>
@@ -1017,18 +927,19 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Daily Costs */}
+          {/* Weekly Spending */}
           <View style={styles.settingItem}>
             <View style={styles.settingContent}>
-              <Text style={styles.settingLabel}>Daily Spending</Text>
+              <Text style={styles.settingLabel}>Weekly Spending</Text>
               <Text style={styles.settingValue}>
-                {currency}{profile?.daily_cost || '0'} per day
+                {currency}{(profile?.daily_cost || 0).toFixed(2)} per week
               </Text>
             </View>
             <TouchableOpacity 
               style={styles.editButton}
               onPress={() => {
-                setTempDailyCost(profile?.daily_cost?.toString() || '0');
+                // daily_cost column stores WEEKLY spend for CrushBooze
+                setTempWeeklySpend((profile?.daily_cost || 0).toFixed(2));
                 setEditingDailyCosts(true);
               }}
             >
@@ -1130,7 +1041,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.settingValue}>1.0.93 (176)</Text>
+            <Text style={styles.settingValue}>1.0.0 (1)</Text>
           </View>
 
         </View>
@@ -1430,74 +1341,7 @@ export default function SettingsScreen() {
 
 
 
-      {/* Edit Vape Types Modal */}
-      <Modal
-        visible={editingVapeTypes}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setEditingVapeTypes(false)}
-      >
-        <KeyboardAvoidingView 
-          style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Select Vape Types</Text>
-                <TouchableOpacity onPress={() => setEditingVapeTypes(false)}>
-                  <X size={20} color="#8E8E93" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.vapeTypesGrid}>
-                {VAPE_TYPES.map((type) => (
-                  <TouchableOpacity
-                    key={type.id}
-                    style={[
-                      styles.vapeTypeCard,
-                      tempVapeTypes.some(vt => vt.type === type.id) && styles.vapeTypeCardSelected,
-                    ]}
-                    onPress={() => toggleVapeType(type.id)}
-                  >
-                    <Text style={styles.vapeTypeEmoji}>{type.emoji}</Text>
-                    <Text style={[
-                      styles.vapeTypeLabel,
-                      tempVapeTypes.some(vt => vt.type === type.id) && styles.vapeTypeLabelSelected,
-                    ]}>
-                      {type.title}
-                    </Text>
-                    {tempVapeTypes.some(vt => vt.type === type.id) && (
-                      <View style={styles.vapeTypeCheck}>
-                        <Check size={12} color="#FFFFFF" />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
-              
-              <View style={styles.modalButtons}>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.cancelButton]} 
-                  onPress={() => setEditingVapeTypes(false)}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.saveButton]} 
-                  onPress={handleSaveVapeTypes}
-                  disabled={saving || tempVapeTypes.length === 0}
-                >
-                  <Check size={16} color="#FFFFFF" />
-                  <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-
-      {/* Edit Daily Costs Modal */}
+      {/* Edit Weekly Spending Modal */}
       <Modal
         visible={editingDailyCosts}
         transparent={true}
@@ -1511,20 +1355,20 @@ export default function SettingsScreen() {
           <View style={styles.modalContent}>
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Edit Daily Spending</Text>
+                <Text style={styles.modalTitle}>Edit Weekly Spending</Text>
                 <TouchableOpacity onPress={() => setEditingDailyCosts(false)}>
                   <X size={20} color="#8E8E93" />
                 </TouchableOpacity>
               </View>
               
               <View style={styles.costInputContainer}>
-                <Text style={styles.costLabel}>Daily spending on vaping</Text>
+                <Text style={styles.costLabel}>Weekly spending on alcohol</Text>
                 <View style={styles.costInputWrapper}>
                   <Text style={styles.currencySymbol}>{currency}</Text>
                   <TextInput
                     style={styles.costInput}
-                    value={tempDailyCost}
-                    onChangeText={setTempDailyCost}
+                    value={tempWeeklySpend}
+                    onChangeText={setTempWeeklySpend}
                     placeholder="0.00"
                     placeholderTextColor="#8E8E93"
                     keyboardType="decimal-pad"
@@ -1541,7 +1385,7 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.modalButton, styles.saveButton]} 
-                  onPress={handleSaveDailyCosts}
+                  onPress={handleSaveWeeklySpend}
                   disabled={saving}
                 >
                   <Check size={16} color="#FFFFFF" />
@@ -1702,42 +1546,42 @@ export default function SettingsScreen() {
                 <View style={styles.faqItem}>
                   <Text style={styles.faqQuestion}>How do I track my quit progress?</Text>
                   <Text style={styles.faqAnswer}>
-                    Your quit progress is automatically tracked from your quit date. You can see your days clean, money saved, and health improvements on the home screen.
+                    Your quit progress is automatically tracked from your quit date. You can see your days sober, money saved, and health improvements on the home screen.
                   </Text>
                 </View>
 
                 <View style={styles.faqItem}>
                   <Text style={styles.faqQuestion}>How is my money saved calculated?</Text>
                   <Text style={styles.faqAnswer}>
-                    Money saved is calculated based on your daily vaping costs and the number of days since your quit date. Update your daily costs in settings if needed.
+                    Money saved is calculated based on your weekly alcohol spending and the number of days since your quit date. Update your weekly spending in settings if needed.
                   </Text>
                 </View>
 
                                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>Can I change my quit date?</Text>
                    <Text style={styles.faqAnswer}>
-                     Yes! Go to Settings {`>`} Quit Journey {`>`} Edit quit date. This will recalculate all your progress and statistics.
+                     Yes! Go to Settings → Quit Journey → Edit quit date. This will recalculate all your progress and statistics.
                    </Text>
                  </View>
 
                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>How do goals work?</Text>
                    <Text style={styles.faqAnswer}>
-                     Set financial goals to stay motivated. The app tracks your progress toward each goal based on money saved from not vaping.
+                     Set financial goals to stay motivated. The app tracks your progress toward each goal based on money saved from not drinking.
                    </Text>
                  </View>
 
                 <View style={styles.faqItem}>
-                  <Text style={styles.faqQuestion}>What are craving logs?</Text>
+                  <Text style={styles.faqQuestion}>What are urge logs?</Text>
                   <Text style={styles.faqAnswer}>
-                    Log your cravings to track triggers, intensity, and coping strategies. This helps identify patterns and improve your quit strategy.
+                    Log your urges to track triggers, intensity, and coping strategies. This helps identify patterns and improve your sobriety journey.
                   </Text>
                 </View>
 
                                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>How do I export my data?</Text>
                    <Text style={styles.faqAnswer}>
-                     Go to Settings {`>`} Account Management {`>`} Export My Data. This creates a JSON file with all your progress, goals, and logs.
+                     Go to Settings → Account Management → Export My Data. This creates a JSON file with all your progress, goals, and logs.
                    </Text>
                  </View>
 
@@ -1751,14 +1595,14 @@ export default function SettingsScreen() {
                                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>How do I delete my account?</Text>
                    <Text style={styles.faqAnswer}>
-                     Go to Settings {`>`} Account Management {`>`} Delete Account. This permanently removes all your data and cannot be undone.
+                     Go to Settings → Account Management → Delete Account. This permanently removes all your data and cannot be undone.
                    </Text>
                  </View>
 
                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>Need more help?</Text>
                    <Text style={styles.faqAnswer}>
-                     Contact our support team through Settings {`>`} Support & Info {`>`} Contact Support, or visit crushnic.com/support.
+                     Contact our support team through Settings → Support & Info → Contact Support, or visit crushbooze.com/support.
                    </Text>
                  </View>
               </View>
@@ -1793,18 +1637,18 @@ export default function SettingsScreen() {
               
               <View style={styles.legalDocContainer}>
                 <Text style={styles.legalDocText}>
-                  Last updated: July 24, 2025{'\n\n'}
+                  Last updated: March 2026{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Introduction{'\n\n'}</Text>
-                  Welcome to CrushNic ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushNic mobile application (the "App") and website at crushnic.com.{'\n\n'}
+                  Welcome to CrushBooze ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushBooze mobile application (the "App") and website at crushbooze.com.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Information We Collect{'\n\n'}</Text>
                   <Text style={styles.legalDocSubheader}>Information You Provide Directly{'\n\n'}</Text>
                   • Account information (email address, password){'\n'}
                   • Quit date and personal motivation statements{'\n'}
-                  • Selected personal goals and vaping product information{'\n'}
-                  • Financial goals and daily vaping costs{'\n'}
-                  • Craving logs and coping strategy notes{'\n\n'}
+                  • Selected personal goals and weekly spending{'\n'}
+                  • Financial goals and savings targets{'\n'}
+                  • Urge logs and coping strategy notes{'\n\n'}
                   
                   <Text style={styles.legalDocSubheader}>Information Collected Automatically{'\n\n'}</Text>
                   • App usage patterns and session duration{'\n'}
@@ -1817,7 +1661,7 @@ export default function SettingsScreen() {
                   <Text style={styles.legalDocHeader}>How We Use Your Information{'\n\n'}</Text>
                   • Track your progress and calculate savings{'\n'}
                   • Provide personalized achievements and milestones{'\n'}
-                  • Analyze craving patterns and provide support{'\n'}
+                  • Analyze urge patterns and provide support{'\n'}
                   • Improve app performance and user experience{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Data Security{'\n\n'}</Text>
@@ -1827,14 +1671,14 @@ export default function SettingsScreen() {
                   You have the right to access, correct, export, or delete your personal information at any time through the app settings. You can also control notification preferences and withdraw consent.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Contact Us{'\n\n'}</Text>
-                  Support: crushnic.com/support{'\n\n'}
+                  Support: crushbooze.com/support{'\n\n'}
                   
                   Odiono LTD{'\n'}
                   20-22 Wenlock Road{'\n'}
                   London, N1 7GU{'\n'}
                   United Kingdom{'\n\n'}
                   
-                  This policy is effective as of July 24, 2025.
+                  This policy is effective as of March 2026.
                 </Text>
               </View>
               
@@ -1868,22 +1712,22 @@ export default function SettingsScreen() {
               
               <View style={styles.legalDocContainer}>
                 <Text style={styles.legalDocText}>
-                  Last updated: July 24, 2025{'\n\n'}
+                  Last updated: March 2026{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Agreement to Terms{'\n\n'}</Text>
-                  By using the CrushNic mobile application or website, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.{'\n\n'}
+                  By using the CrushBooze mobile application or website, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Description of Service{'\n\n'}</Text>
-                  CrushNic is a digital health and wellness application designed to support individuals in quitting vaping and nicotine use. The App provides progress tracking, financial calculations, goal setting, craving support, and achievement systems.{'\n\n'}
+                  CrushBooze is a digital health and wellness application designed to support individuals in reducing or quitting alcohol consumption. The App provides progress tracking, financial calculations, goal setting, urge support, and achievement systems.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Eligibility{'\n\n'}</Text>
                   You must be at least 18 years old to use this Service. You must provide accurate information during registration and maintain the security of your account.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Acceptable Use{'\n\n'}</Text>
-                  You may use the Service to track your quit journey, set goals, and access support resources. You may not violate laws, infringe rights of others, transmit harmful content, or attempt unauthorized access.{'\n\n'}
+                  You may use the Service to track your sobriety journey, set goals, and access support resources. You may not violate laws, infringe rights of others, transmit harmful content, or attempt unauthorized access.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Health Disclaimers{'\n\n'}</Text>
-                  <Text style={styles.legalDocImportant}>IMPORTANT:</Text> CrushNic is not a medical device and does not provide medical advice. The App is for educational and motivational purposes only. Always consult healthcare professionals for medical decisions.{'\n\n'}
+                  <Text style={styles.legalDocImportant}>IMPORTANT:</Text> CrushBooze is not a medical device and does not provide medical advice. The App is for educational and motivational purposes only. Always consult healthcare professionals for medical decisions.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Privacy{'\n\n'}</Text>
                   Your privacy is protected according to our Privacy Policy. We implement security measures but cannot guarantee absolute security. You use the Service at your own risk regarding data security.{'\n\n'}
@@ -1898,14 +1742,14 @@ export default function SettingsScreen() {
                   These Terms are governed by the laws of England and Wales. Disputes are subject to the exclusive jurisdiction of English courts.{'\n\n'}
                   
                   <Text style={styles.legalDocHeader}>Contact Information{'\n\n'}</Text>
-                  Support: crushnic.com/support{'\n\n'}
+                  Support: crushbooze.com/support{'\n\n'}
                   
                   Odiono LTD{'\n'}
                   20-22 Wenlock Road{'\n'}
                   London, N1 7GU{'\n'}
                   United Kingdom{'\n\n'}
                   
-                  Effective Date: July 24, 2025
+                  Effective Date: March 2026
                 </Text>
               </View>
               
@@ -1949,19 +1793,19 @@ export default function SettingsScreen() {
                 </View>
                 
                 <Text style={styles.legalDocText}>
-                  <Text style={styles.legalDocImportant}>NOT A MEDICAL DEVICE:</Text> CrushNic is not a medical device and is not intended for medical use. This app does not provide medical advice, diagnosis, or treatment.{'\n\n'}
+                  <Text style={styles.legalDocImportant}>NOT A MEDICAL DEVICE:</Text> CrushBooze is not a medical device and is not intended for medical use. This app does not provide medical advice, diagnosis, or treatment.{'\n\n'}
                   
-                  <Text style={styles.legalDocImportant}>GENERAL FITNESS & WELLNESS ONLY:</Text> This app is designed for general fitness and wellness purposes only to help track your smoking cessation journey and provide motivational support.{'\n\n'}
+                  <Text style={styles.legalDocImportant}>GENERAL FITNESS & WELLNESS ONLY:</Text> This app is designed for general fitness and wellness purposes only to help track your sobriety journey and provide motivational support.{'\n\n'}
                   
-                  <Text style={styles.legalDocImportant}>CONSULT HEALTHCARE PROFESSIONALS:</Text> Before starting any smoking cessation program, always consult with qualified healthcare professionals, especially if you have medical conditions, are pregnant, or experience withdrawal symptoms.{'\n\n'}
+                  <Text style={styles.legalDocImportant}>CONSULT HEALTHCARE PROFESSIONALS:</Text> Before reducing or quitting alcohol, always consult with qualified healthcare professionals, especially if you have medical conditions, are pregnant, or may experience withdrawal symptoms.{'\n\n'}
                   
-                  <Text style={styles.legalDocImportant}>NO MEDICAL SUPERVISION:</Text> This app does not replace professional medical supervision, counseling, or approved smoking cessation treatments such as nicotine replacement therapy or prescription medications.{'\n\n'}
+                  <Text style={styles.legalDocImportant}>NO MEDICAL SUPERVISION:</Text> This app does not replace professional medical supervision, counseling, or approved alcohol cessation treatments. Alcohol withdrawal can be dangerous - seek medical guidance.{'\n\n'}
                   
                   <Text style={styles.legalDocImportant}>ESTIMATES ONLY:</Text> Health recovery timelines, savings calculations, and progress indicators are estimates based on general research and population averages. Individual results may vary significantly and should not be considered medical predictions or guarantees.{'\n\n'}
                   
                   <Text style={styles.legalDocImportant}>EMERGENCY SITUATIONS:</Text> If you experience severe withdrawal symptoms, mental health crises, or medical emergencies, seek immediate professional medical attention. Do not rely on this app for emergency situations.{'\n\n\n'}
                   
-                  <Text style={styles.legalDocImportant}>Agreement:</Text> By using CrushNic, you acknowledge that you have read, understood, and agree to this medical disclaimer. You understand that this app is for educational and motivational purposes only and agree to use it at your own discretion. You will consult healthcare professionals for medical advice regarding smoking cessation.
+                  <Text style={styles.legalDocImportant}>Agreement:</Text> By using CrushBooze, you acknowledge that you have read, understood, and agree to this medical disclaimer. You understand that this app is for educational and motivational purposes only and agree to use it at your own discretion. You will consult healthcare professionals for medical advice regarding alcohol cessation.
                 </Text>
               </View>
               
@@ -2473,52 +2317,6 @@ const styles = StyleSheet.create({
   },
   selectionButtonTextSelected: {
     color: '#FFFFFF',
-  },
-  vapeTypesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  vapeTypeCard: {
-    width: '48%',
-    aspectRatio: 1,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E1E3E6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    position: 'relative',
-  },
-  vapeTypeCardSelected: {
-    backgroundColor: '#35998d',
-    borderColor: '#35998d',
-  },
-  vapeTypeEmoji: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  vapeTypeLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1C1C1E',
-    textAlign: 'center',
-  },
-  vapeTypeLabelSelected: {
-    color: '#FFFFFF',
-  },
-  vapeTypeCheck: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 20,
-    height: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   disclaimerInModal: {
     marginBottom: 20,

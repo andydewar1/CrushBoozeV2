@@ -14,7 +14,14 @@ import {
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Ionicons } from "@expo/vector-icons";
+import { saveOnboardingData } from "@/lib/onboarding";
+
+// 🚨 DEV MODE: Set to true to show skip button during development
+// ⚠️ IMPORTANT: Set back to false before submitting to App Store!
+const DEV_MODE = true;
 
 type Plan = "annual" | "monthly";
 
@@ -34,12 +41,54 @@ export default function PaywallScreen() {
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const { packages, loading, purchasing, error, purchasePackage, restorePurchases, getPackageByType } = usePaywall();
   const { data, yearlySpend } = useOnboarding();
+  const { session } = useAuth();
+  const { refetchProfile } = useSettings();
   const router = useRouter();
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const testimonialAnim = useRef(new Animated.Value(1)).current;
 
   const { height } = Dimensions.get("window");
   const compact = height < 750;
+
+  // DEV MODE: Skip paywall and go directly to app
+  const handleDevSkip = async () => {
+    if (!DEV_MODE) return;
+    
+    console.log('🔧 DEV MODE: Skipping paywall...');
+    console.log('🔧 DEV MODE: Onboarding data:', {
+      name: data.name,
+      weeklySpend: data.weeklySpend,
+      currency: data.currency,
+      quitDate: data.quitDate,
+      quitReasons: data.quitReasons,
+      personalWhy: data.personalWhy,
+      financialGoal: data.financialGoal,
+    });
+    
+    // Save onboarding data (using actual data from onboarding)
+    if (session?.user?.id) {
+      const onboardingData = {
+        name: data.name,
+        quitDate: data.quitDate,
+        weeklySpend: data.weeklySpend,
+        currency: data.currency,
+        quitReasons: data.quitReasons,
+        personalWhy: data.personalWhy,
+        financialGoal: data.financialGoal,
+      };
+      
+      console.log('💾 DEV MODE: Saving onboarding data...', onboardingData);
+      const result = await saveOnboardingData(session.user.id, onboardingData);
+      console.log('💾 DEV MODE: Save result:', result);
+      
+      // Refetch profile so the app has the latest data
+      console.log('🔄 DEV MODE: Refetching profile...');
+      await refetchProfile();
+    }
+    
+    // Navigate to main app
+    router.replace('/(tabs)');
+  };
 
   // Subtle pulse animation on CTA
   useEffect(() => {
@@ -97,7 +146,17 @@ export default function PaywallScreen() {
   const handlePurchase = async () => {
     const selectedPackage = plan === 'annual' ? annualPackage : monthlyPackage;
     if (selectedPackage) {
-      await purchasePackage(selectedPackage);
+      // Build onboarding data to save after purchase
+      const onboardingData = {
+        name: data.name,
+        quitDate: data.quitDate,
+        weeklySpend: data.weeklySpend,
+        currency: data.currency,
+        quitReasons: data.quitReasons,
+        personalWhy: data.personalWhy,
+        financialGoal: data.financialGoal,
+      };
+      await purchasePackage(selectedPackage, onboardingData);
     }
   };
 
@@ -130,6 +189,13 @@ export default function PaywallScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* DEV MODE: Skip button */}
+        {DEV_MODE && (
+          <Pressable style={styles.devSkipButton} onPress={handleDevSkip}>
+            <Text style={styles.devSkipText}>🔧 DEV: Skip Paywall</Text>
+          </Pressable>
+        )}
+
         {/* Header */}
         <View style={[styles.header, { marginTop: compact ? 8 : 16 }]}>
           <Text style={[styles.headline, { fontSize: compact ? 24 : 28 }]}>
@@ -286,6 +352,21 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: WHITE,
+  },
+  devSkipButton: {
+    position: 'absolute',
+    top: Platform.select({ ios: 50, android: 10 }),
+    right: 16,
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    zIndex: 999,
+  },
+  devSkipText: {
+    color: WHITE,
+    fontSize: 12,
+    fontWeight: '600',
   },
   container: {
     flex: 1,

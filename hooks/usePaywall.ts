@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import RevenueCatService from '@/services/RevenueCatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { initializeRevenueCatIfNeeded } from '@/lib/subscription';
+import { saveOnboardingData, OnboardingData } from '@/lib/onboarding';
 
 interface PaywallPackage {
   identifier: string;
@@ -72,7 +73,7 @@ export function usePaywall() {
   }, [session]);
 
   // Purchase a package
-  const purchasePackage = async (packageToPurchase: PaywallPackage) => {
+  const purchasePackage = async (packageToPurchase: PaywallPackage, onboardingData?: OnboardingData) => {
     if (purchasing) return;
 
     try {
@@ -81,12 +82,21 @@ export function usePaywall() {
       const result = await RevenueCatService.purchasePackage(packageToPurchase);
       
       if (result.success) {
+        // Save onboarding data if provided
+        if (onboardingData && session?.user?.id) {
+          console.log('💾 Saving onboarding data after purchase...');
+          const saveResult = await saveOnboardingData(session.user.id, onboardingData);
+          if (!saveResult.success) {
+            console.error('⚠️ Failed to save onboarding data:', saveResult.error);
+          }
+        }
+
         Alert.alert(
-          'Purchase Successful!',
-          'Welcome to CrushNic Premium! You now have access to all features.',
+          'Welcome to CrushBooze!',
+          'Your alcohol-free journey starts now. You have access to all features.',
           [
             {
-              text: 'Continue',
+              text: 'Let\'s Go!',
               onPress: () => router.replace('/(tabs)'),
             },
           ]
