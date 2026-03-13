@@ -48,15 +48,15 @@ export function useCravingLogs() {
           .from('craving_logs')
           .select('*')
           .eq('user_id', session.user!.id)
-          .order('timestamp', { ascending: false });
+          .order('created_at', { ascending: false });
 
         if (logsError) throw logsError;
 
         // Transform the data
         const transformedLogs = (cravingLogs || []).map(log => ({
           ...log,
-          timestamp: new Date(log.timestamp || log.created_at),
-          trigger: log.trigger || log.trigger_type || log.trigger_description || 'Unknown trigger'
+          timestamp: new Date(log.created_at),
+          trigger: log.trigger_type || log.trigger_description || 'Unknown trigger'
         }));
 
         // Calculate statistics
@@ -94,9 +94,8 @@ export function useCravingLogs() {
         .from('craving_logs')
         .insert([{
           user_id: session.user.id,
-          timestamp: log.timestamp.toISOString(),
           intensity: log.intensity,
-          trigger: log.trigger,
+          trigger_type: log.trigger,
           coping_strategy: log.coping_strategy,
           notes: log.notes
         }])
@@ -108,7 +107,8 @@ export function useCravingLogs() {
       // Update local state
       const newLog = {
         ...data,
-        timestamp: new Date(data.timestamp)
+        timestamp: new Date(data.created_at),
+        trigger: data.trigger_type || 'Unknown trigger'
       };
 
       setLogs(prevLogs => [newLog, ...prevLogs]);
@@ -139,9 +139,8 @@ export function useCravingLogs() {
 
     try {
       const updateData: any = {};
-      if (updates.timestamp) updateData.timestamp = updates.timestamp.toISOString();
       if (updates.intensity !== undefined) updateData.intensity = updates.intensity;
-      if (updates.trigger !== undefined) updateData.trigger = updates.trigger;
+      if (updates.trigger !== undefined) updateData.trigger_type = updates.trigger;
       if (updates.coping_strategy !== undefined) updateData.coping_strategy = updates.coping_strategy;
       if (updates.notes !== undefined) updateData.notes = updates.notes;
 
@@ -158,7 +157,8 @@ export function useCravingLogs() {
       // Update local state
       const updatedLog = {
         ...data,
-        timestamp: new Date(data.timestamp)
+        timestamp: new Date(data.created_at),
+        trigger: data.trigger_type || 'Unknown trigger'
       };
 
       const oldLog = logs.find(log => log.id === logId);
