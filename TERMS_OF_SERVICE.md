@@ -4,16 +4,16 @@
 
 ## 1. Agreement to Terms
 
-By downloading, installing, or using the CrushNic mobile application ("App") or accessing our website at [crushnic.com](https://crushnic.com) ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
+By downloading, installing, or using the CrushBooze mobile application ("App") or accessing our website at [crushbooze.com](https://crushbooze.com) ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
 
 ## 2. Description of Service
 
-### 2.1 CrushNic App
+### 2.1 CrushBooze App
 
-CrushNic is a digital health and wellness application designed to support individuals in their journey to quit vaping and nicotine use. The App provides:
+CrushBooze is a digital health and wellness application designed to support individuals in their journey to reduce or quit alcohol consumption. The App provides:
 
 - **Progress Tracking:** Monitor your quit journey with real-time statistics
-- **Financial Calculations:** Track money saved from not purchasing vaping products
+- **Financial Calculations:** Track money saved from not purchasing alcohol
 - **Goal Setting:** Set and track personal and financial goals
 - **Craving Support:** Log cravings and access coping strategies
 - **Health Milestones:** Visualize health improvements over time
@@ -22,7 +22,7 @@ CrushNic is a digital health and wellness application designed to support indivi
 
 ### 2.2 Educational Nature
 
-The App is intended for educational and motivational purposes to support smoking/vaping cessation efforts. It is not a medical device and does not provide medical advice, diagnosis, or treatment.
+The App is intended for educational and motivational purposes to support alcohol reduction or cessation efforts. It is not a medical device and does not provide medical advice, diagnosis, or treatment.
 
 ## 3. Eligibility and Account Registration
 
@@ -54,7 +54,7 @@ You are responsible for:
 
 You may use the Service to:
 - Track your personal quit journey and progress
-- Set and monitor personal goals related to quitting vaping
+- Set and monitor personal goals related to reducing or quitting alcohol
 - Log cravings and access support resources
 - Share anonymized progress data for research purposes (optional)
 - Export your personal data for backup or transfer purposes
@@ -83,7 +83,7 @@ Any content you provide must:
 
 ### 5.1 Not Medical Advice
 
-**IMPORTANT:** CrushNic is not a medical device and does not provide medical advice. The App:
+**IMPORTANT:** CrushBooze is not a medical device and does not provide medical advice. The App:
 - Is intended for educational and motivational purposes only
 - Should not replace professional medical advice or treatment
 - Does not diagnose, treat, cure, or prevent any medical condition
@@ -93,7 +93,7 @@ Any content you provide must:
 
 You should:
 - Consult with qualified healthcare professionals before making health decisions
-- Seek professional medical advice for nicotine withdrawal symptoms
+- Seek professional medical advice for alcohol withdrawal symptoms
 - Continue any prescribed treatments or medications as directed by your doctor
 - Contact emergency services for any medical emergencies
 
@@ -101,7 +101,7 @@ You should:
 
 - Results and experiences may vary between individuals
 - The App provides general information and support tools
-- Success in quitting vaping depends on many personal factors
+- Success in reducing or quitting alcohol depends on many personal factors
 - Past performance or testimonials do not guarantee future results
 
 ### 5.4 Health Information Accuracy
@@ -116,7 +116,7 @@ While we strive for accuracy in health-related information:
 
 ### 6.1 Our Intellectual Property
 
-The Service and its original content, features, and functionality are and will remain the exclusive property of CrushNic and its licensors. The Service is protected by copyright, trademark, and other laws. You may not:
+The Service and its original content, features, and functionality are and will remain the exclusive property of CrushBooze and its licensors. The Service is protected by copyright, trademark, and other laws. You may not:
 - Copy, modify, or distribute our content without permission
 - Use our trademarks, logos, or brand elements without authorization
 - Create derivative works based on our intellectual property
@@ -167,7 +167,7 @@ We implement reasonable security measures to protect your information, but:
 
 ### 8.1 Free Services
 
-Currently, CrushNic offers its core services free of charge. This may change in the future with appropriate notice to users.
+Currently, CrushBooze offers its core services free of charge. This may change in the future with appropriate notice to users.
 
 ### 8.2 Future Premium Features
 
@@ -238,7 +238,7 @@ We are not liable for delays or failures due to:
 
 ## 11. Indemnification
 
-You agree to defend, indemnify, and hold harmless CrushNic, its officers, directors, employees, and agents from and against any claims, damages, costs, and expenses (including reasonable attorneys' fees) arising from:
+You agree to defend, indemnify, and hold harmless CrushBooze, its officers, directors, employees, and agents from and against any claims, damages, costs, and expenses (including reasonable attorneys' fees) arising from:
 - Your use of the Service
 - Your violation of these Terms
 - Your violation of any rights of another party
@@ -334,7 +334,7 @@ To the extent permitted by applicable law:
 
 ### 16.1 Entire Agreement
 
-These Terms, together with our Privacy Policy, constitute the entire agreement between you and CrushNic regarding the Service.
+These Terms, together with our Privacy Policy, constitute the entire agreement between you and CrushBooze regarding the Service.
 
 ### 16.2 Severability
 
@@ -366,7 +366,7 @@ These Terms are written in English. Any translations are provided for convenienc
 ### 17.1 Customer Support
 
 For questions about these Terms or the Service:
-- **Website:** [crushnic.com/support](https://crushnic.com/support)
+- **Website:** [crushbooze.com/support](https://crushbooze.com/support)
 
 ### 17.2 Business Address
 
@@ -379,7 +379,7 @@ United Kingdom
 
 ## Acknowledgment
 
-By using CrushNic, you acknowledge that:
+By using CrushBooze, you acknowledge that:
 - You have read and understand these Terms of Service
 - You agree to be bound by these Terms
 - You are at least 18 years old and legally capable of entering into this agreement
@@ -389,4 +389,4 @@ By using CrushNic, you acknowledge that:
 
 ---
 
-*Thank you for choosing CrushNic to support your quit journey. Together, we can help you achieve your goals and live a healthier, vape-free life.* 
+*Thank you for choosing CrushBooze to support your sobriety journey. Together, we can help you achieve your goals and live a healthier, alcohol-free life.* 

@@ -40,7 +40,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
-      name: 'CrushNic Notifications',
+      name: 'CrushBooze Notifications',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#03045e',

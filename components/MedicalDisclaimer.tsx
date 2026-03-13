@@ -20,19 +20,19 @@ export default function MedicalDisclaimer({ style }: MedicalDisclaimerProps) {
       </View>
       
       <Text style={styles.disclaimer}>
-        <Text style={styles.bold}>NOT A MEDICAL DEVICE:</Text> CrushNic is <Text style={styles.bold}>not a medical device</Text> and is <Text style={styles.bold}>not intended for medical use</Text>. This app does not provide medical advice, diagnosis, or treatment.
+        <Text style={styles.bold}>NOT A MEDICAL DEVICE:</Text> CrushBooze is <Text style={styles.bold}>not a medical device</Text> and is <Text style={styles.bold}>not intended for medical use</Text>. This app does not provide medical advice, diagnosis, or treatment.
       </Text>
       
       <Text style={styles.disclaimer}>
-        <Text style={styles.bold}>GENERAL FITNESS & WELLNESS ONLY:</Text> This app is designed for <Text style={styles.bold}>general fitness and wellness purposes only</Text> to help track your smoking cessation journey and provide motivational support.
+        <Text style={styles.bold}>GENERAL FITNESS & WELLNESS ONLY:</Text> This app is designed for <Text style={styles.bold}>general fitness and wellness purposes only</Text> to help track your sobriety journey and provide motivational support.
       </Text>
       
       <Text style={styles.disclaimer}>
-        <Text style={styles.bold}>CONSULT HEALTHCARE PROFESSIONALS:</Text> Before starting any smoking cessation program, <Text style={styles.bold}>always consult with qualified healthcare professionals</Text>, especially if you have medical conditions, are pregnant, or experience withdrawal symptoms.
+        <Text style={styles.bold}>CONSULT HEALTHCARE PROFESSIONALS:</Text> Before reducing or stopping alcohol consumption, <Text style={styles.bold}>always consult with qualified healthcare professionals</Text>, especially if you have medical conditions, are pregnant, or experience withdrawal symptoms.
       </Text>
       
       <Text style={styles.disclaimer}>
-        <Text style={styles.bold}>NO MEDICAL SUPERVISION:</Text> This app does not replace professional medical supervision, counseling, or approved smoking cessation treatments such as nicotine replacement therapy or prescription medications.
+        <Text style={styles.bold}>NO MEDICAL SUPERVISION:</Text> This app does not replace professional medical supervision, counseling, or approved alcohol treatment programs such as medication-assisted treatment or rehabilitation services.
       </Text>
       
       <Text style={styles.disclaimer}>
@@ -44,7 +44,7 @@ export default function MedicalDisclaimer({ style }: MedicalDisclaimerProps) {
       </Text>
       
       <Text style={styles.footer}>
-        By using CrushNic, you acknowledge that you have read, understood, and agree to this medical disclaimer. You understand that this app is for educational and motivational purposes only and agree to use it at your own discretion. You will consult healthcare professionals for medical advice regarding smoking cessation.
+        By using CrushBooze, you acknowledge that you have read, understood, and agree to this medical disclaimer. You understand that this app is for educational and motivational purposes only and agree to use it at your own discretion. You will consult healthcare professionals for medical advice regarding alcohol reduction or cessation.
       </Text>
     </View>
   );

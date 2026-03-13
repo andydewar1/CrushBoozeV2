@@ -8,7 +8,6 @@ import {
   X, 
   User, 
   Calendar, 
-  Cigarette,
   Crown, 
   HelpCircle, 
   Shield, 
@@ -713,7 +712,7 @@ export default function SettingsScreen() {
       
       // Create filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
-      const filename = `CrushNic_Data_Export_${timestamp}.json`;
+      const filename = `CrushBooze_Data_Export_${timestamp}.json`;
       
       // Save to file system
       const fileUri = FileSystem.documentDirectory + filename;
@@ -726,7 +725,7 @@ export default function SettingsScreen() {
       if (isAvailable) {
         await Sharing.shareAsync(fileUri, {
           mimeType: 'application/json',
-          dialogTitle: 'Export Your CrushNic Data',
+          dialogTitle: 'Export Your CrushBooze Data',
           UTI: 'public.json'
         });
       } else {

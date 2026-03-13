@@ -64,7 +64,7 @@ export default function DisclaimerAcceptance({ onAccept, onDecline }: Disclaimer
           <View style={styles.disclaimerSection}>
             <Text style={styles.disclaimerTitle}>🚫 NOT A MEDICAL DEVICE</Text>
             <Text style={styles.disclaimerText}>
-              CrushNic is <Text style={styles.bold}>NOT a medical device</Text> and is <Text style={styles.bold}>NOT intended for medical use</Text>. 
+              CrushBooze is <Text style={styles.bold}>NOT a medical device</Text> and is <Text style={styles.bold}>NOT intended for medical use</Text>. 
               This app does not provide medical advice, diagnosis, or treatment of any kind.
             </Text>
           </View>
@@ -73,23 +73,23 @@ export default function DisclaimerAcceptance({ onAccept, onDecline }: Disclaimer
             <Text style={styles.disclaimerTitle}>🏃‍♂️ GENERAL FITNESS & WELLNESS ONLY</Text>
             <Text style={styles.disclaimerText}>
               This app is designed for <Text style={styles.bold}>general fitness and wellness purposes only</Text> to help you track 
-              your smoking cessation journey and provide motivational support.
+              your sobriety journey and provide motivational support.
             </Text>
           </View>
 
           <View style={styles.disclaimerSection}>
             <Text style={styles.disclaimerTitle}>👨‍⚕️ CONSULT HEALTHCARE PROFESSIONALS</Text>
             <Text style={styles.disclaimerText}>
-              <Text style={styles.bold}>ALWAYS consult with qualified healthcare professionals</Text> before starting any smoking 
-              cessation program, especially if you have medical conditions, are pregnant, breastfeeding, or experience withdrawal symptoms.
+              <Text style={styles.bold}>ALWAYS consult with qualified healthcare professionals</Text> before reducing or stopping alcohol consumption, 
+              especially if you have medical conditions, are pregnant, breastfeeding, or experience withdrawal symptoms.
             </Text>
           </View>
 
           <View style={styles.disclaimerSection}>
             <Text style={styles.disclaimerTitle}>🏥 NO MEDICAL SUPERVISION</Text>
             <Text style={styles.disclaimerText}>
-              This app does not replace professional medical supervision, counseling, or approved smoking cessation treatments 
-              such as nicotine replacement therapy, prescription medications, or behavioral therapy programs.
+              This app does not replace professional medical supervision, counseling, or approved alcohol treatment programs 
+              such as medication-assisted treatment, rehabilitation services, or behavioral therapy programs.
             </Text>
           </View>
 
@@ -132,7 +132,7 @@ export default function DisclaimerAcceptance({ onAccept, onDecline }: Disclaimer
             <Text style={styles.finalNoticeText}>
               By proceeding, you acknowledge that you have read, understood, and agree to this medical disclaimer. 
               You understand that this app is for educational and motivational purposes only. You agree to consult 
-              healthcare professionals for medical advice regarding smoking cessation and will use this app at your own discretion.
+              healthcare professionals for medical advice regarding alcohol reduction or cessation and will use this app at your own discretion.
             </Text>
           </View>
         </View>

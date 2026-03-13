@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Welcome to CrushNic ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushNic mobile application (the "App") and website at [crushnic.com](https://crushnic.com).
+Welcome to CrushBooze ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushBooze mobile application (the "App") and website at [crushbooze.com](https://crushbooze.com).
 
 ## Information We Collect
 
@@ -19,8 +19,8 @@ Welcome to CrushNic ("we," "our," or "us"). We respect your privacy and are comm
 - Quit date and quit status
 - Personal motivation statements and reasons for quitting
 - Selected personal goals (health, financial, lifestyle)
-- Vaping product information (types, quantities, costs)
-- Daily vaping costs and financial calculations
+- Alcohol consumption information (types, quantities, costs)
+- Weekly alcohol spending and financial calculations
 
 **Goal and Progress Tracking:**
 - Financial goals and target amounts
@@ -72,7 +72,7 @@ We explicitly do not collect:
 
 **Progress Tracking:**
 - Calculate days, hours, and minutes since your quit date
-- Track money saved based on your vaping costs and quit duration
+- Track money saved based on your alcohol spending and quit duration
 - Generate health recovery milestones and achievements
 - Provide personalized statistics and progress reports
 
@@ -256,7 +256,7 @@ We may share data only in these specific circumstances:
 - If we discover a user is under 18, we will immediately delete their account
 - Parents may contact us to report underage usage
 - We implement age verification measures during registration
-- Educational resources about vaping cessation are age-appropriate
+- Educational resources about alcohol cessation are age-appropriate
 
 ## International Data Transfers
 
@@ -312,7 +312,7 @@ We may share data only in these specific circumstances:
 - Local storage for app preferences and offline functionality
 - No cross-app tracking or advertising identifiers
 
-### Website (crushnic.com)
+### Website (crushbooze.com)
 
 - Essential cookies for website functionality only
 - No advertising or tracking cookies
@@ -393,7 +393,7 @@ We may share data only in these specific circumstances:
 
 ### Privacy Inquiries
 
-**Support Website:** [crushnic.com/support](https://crushnic.com/support)
+**Support Website:** [crushbooze.com/support](https://crushbooze.com/support)
 
 ### Business Address
 

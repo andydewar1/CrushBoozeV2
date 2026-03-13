@@ -55,7 +55,7 @@ export const useReviewPrompt = () => {
 
   const showReviewPrompt = () => {
     Alert.alert(
-      '🌟 Loving CrushNic?',
+      '🌟 Loving CrushBooze?',
       'Your progress is amazing! Would you mind leaving us a review? It helps others discover our app and keeps us motivated to make it even better.',
       [
         {

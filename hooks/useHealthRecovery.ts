@@ -13,52 +13,41 @@ export interface HealthMilestone {
   achieved: boolean;
 }
 
-// WHO-based health recovery milestones for vaping cessation
+// Health recovery milestones for alcohol cessation
 const HEALTH_MILESTONES: Omit<HealthMilestone, 'achieved'>[] = [
   {
-    id: '20min',
-    timeValue: 20,
-    timeDisplay: '20 MINUTES',
-    title: 'Heart rate normalizes',
-    description: 'Heart rate and blood pressure drop to normal levels',
-    icon: '❤️',
-    iconType: 'heart',
-    iconColor: '#FF69B4',
-  },
-  {
-    id: '12hours',
-    timeValue: 12 * 60, // 12 hours in minutes
-    timeDisplay: '12 HOURS',
-    title: 'Carbon monoxide clears',
-    description: 'Carbon monoxide level in blood normalizes, oxygen levels increase',
-    icon: '🫁',
+    id: '8hours',
+    timeValue: 8 * 60, // 8 hours in minutes
+    timeDisplay: '8 HOURS',
+    title: 'Blood alcohol clears',
+    description: 'Alcohol is fully metabolized and leaves your bloodstream',
+    icon: '🩸',
     iconType: 'emoji',
   },
   {
-    id: '1day',
-    timeValue: 24 * 60, // 1 day in minutes
-    timeDisplay: '1 DAY',
-    title: 'Heart attack risk drops',
-    description: 'Risk of heart attack begins to decrease',
-    icon: '❤️',
-    iconType: 'heart',
-    iconColor: '#FF4757',
+    id: '24hours',
+    timeValue: 24 * 60, // 24 hours in minutes
+    timeDisplay: '24 HOURS',
+    title: 'Blood sugar stabilizes',
+    description: 'Blood sugar levels begin to normalize, energy improves',
+    icon: '⚡',
+    iconType: 'emoji',
   },
   {
-    id: '2days',
-    timeValue: 2 * 24 * 60, // 2 days in minutes
-    timeDisplay: '2 DAYS',
-    title: 'Nerve endings regrow',
-    description: 'Damaged nerve endings start to regrow, taste and smell improve',
-    icon: '🔔',
+    id: '48hours',
+    timeValue: 48 * 60, // 48 hours in minutes
+    timeDisplay: '48 HOURS',
+    title: 'Hydration restored',
+    description: 'Body rehydrates fully, headaches and fatigue decrease',
+    icon: '💧',
     iconType: 'emoji',
   },
   {
     id: '3days',
     timeValue: 3 * 24 * 60, // 3 days in minutes
     timeDisplay: '3 DAYS',
-    title: 'Nicotine withdrawal peaks',
-    description: 'Nicotine is completely out of your system, lung capacity increases',
+    title: 'Withdrawal eases',
+    description: 'Acute withdrawal symptoms begin to subside',
     icon: '🧠',
     iconType: 'emoji',
   },
@@ -66,53 +55,63 @@ const HEALTH_MILESTONES: Omit<HealthMilestone, 'achieved'>[] = [
     id: '1week',
     timeValue: 7 * 24 * 60, // 1 week in minutes
     timeDisplay: '1 WEEK',
-    title: 'Circulation improves',
-    description: 'Blood circulation improves significantly',
-    icon: '🩸',
+    title: 'Sleep improves',
+    description: 'Sleep quality and REM cycles begin to normalize',
+    icon: '😴',
     iconType: 'emoji',
   },
   {
     id: '2weeks',
     timeValue: 14 * 24 * 60, // 2 weeks in minutes
     timeDisplay: '2 WEEKS',
-    title: 'Lung function increases',
-    description: 'Lung function begins to improve, coughing and shortness of breath decrease',
-    icon: '🫁',
+    title: 'Liver begins healing',
+    description: 'Liver starts to repair, digestion and nutrient absorption improve',
+    icon: '🫀',
     iconType: 'emoji',
   },
   {
     id: '1month',
     timeValue: 30 * 24 * 60, // 1 month in minutes
     timeDisplay: '1 MONTH',
-    title: 'Cilia regrow',
-    description: 'Cilia in lungs regrow, reducing infection risk and clearing mucus',
-    icon: '🌿',
+    title: 'Brain fog lifts',
+    description: 'Mental clarity improves, mood stabilizes significantly',
+    icon: '🧠',
     iconType: 'emoji',
   },
   {
     id: '3months',
     timeValue: 90 * 24 * 60, // 3 months in minutes
     timeDisplay: '3 MONTHS',
-    title: 'Circulation normalizes',
-    description: 'Circulation and lung function significantly improve',
-    icon: '💨',
-    iconType: 'emoji',
+    title: 'Liver fat reduces',
+    description: 'Liver fat can reduce by up to 15%, blood pressure normalizes',
+    icon: '❤️',
+    iconType: 'heart',
+    iconColor: '#FF69B4',
   },
   {
-    id: '9months',
-    timeValue: 270 * 24 * 60, // 9 months in minutes
-    timeDisplay: '9 MONTHS',
-    title: 'Lung healing accelerates',
-    description: 'Lung capacity increases by up to 10%, reducing cough and shortness of breath',
-    icon: '🌱',
+    id: '6months',
+    timeValue: 180 * 24 * 60, // 6 months in minutes
+    timeDisplay: '6 MONTHS',
+    title: 'Skin transforms',
+    description: 'Skin dramatically improves, looking healthier and more hydrated',
+    icon: '✨',
     iconType: 'emoji',
   },
   {
     id: '1year',
     timeValue: 365 * 24 * 60, // 1 year in minutes
     timeDisplay: '1 YEAR',
-    title: 'Heart disease risk halved',
-    description: 'Risk of coronary heart disease is cut in half compared to a smoker',
+    title: 'Liver recovery',
+    description: 'Liver function can return to normal, overall health significantly improved',
+    icon: '🎉',
+    iconType: 'emoji',
+  },
+  {
+    id: '2years',
+    timeValue: 2 * 365 * 24 * 60, // 2 years in minutes
+    timeDisplay: '2 YEARS',
+    title: 'Heart disease risk drops',
+    description: 'Risk of heart disease significantly reduced',
     icon: '❤️',
     iconType: 'heart',
     iconColor: '#03045e',
@@ -121,9 +120,9 @@ const HEALTH_MILESTONES: Omit<HealthMilestone, 'achieved'>[] = [
     id: '5years',
     timeValue: 5 * 365 * 24 * 60, // 5 years in minutes
     timeDisplay: '5 YEARS',
-    title: 'Stroke risk normalizes',
-    description: 'Risk of stroke drops to that of a non-smoker',
-    icon: '🧠',
+    title: 'Long-term health gains',
+    description: 'Risk of liver disease, stroke, and certain cancers significantly reduced',
+    icon: '🏆',
     iconType: 'emoji',
   },
 ];
