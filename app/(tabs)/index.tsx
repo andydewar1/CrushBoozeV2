@@ -204,8 +204,8 @@ export default function HomeScreen() {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 100) return '#35998d';
-    if (progress >= 75) return '#35998d';
+    if (progress >= 100) return '#03045e';
+    if (progress >= 75) return '#03045e';
     if (progress >= 50) return '#FF9500';
     return '#FF6B47';
   };
@@ -286,7 +286,7 @@ export default function HomeScreen() {
         {/* Money Saved Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <DollarSign size={20} color="#35998d" />
+            <DollarSign size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Money Saved</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Total savings so far</Text>
@@ -333,7 +333,7 @@ export default function HomeScreen() {
         {/* Achievements Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Trophy size={20} color="#35998d" />
+            <Trophy size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your progress milestones</Text>
@@ -435,7 +435,7 @@ export default function HomeScreen() {
         {/* Financial Goals Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Target size={20} color="#35998d" />
+            <Target size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Financial Goals</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your savings goals</Text>
@@ -524,7 +524,7 @@ export default function HomeScreen() {
         {/* Remember Your Why Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MessageCircle size={20} color="#35998d" />
+            <MessageCircle size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Remember Your Why</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
@@ -659,13 +659,13 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   progressCard: {
-    backgroundColor: '#35998D',
+    backgroundColor: '#03045e',
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#35998D',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 12,
@@ -787,7 +787,7 @@ const styles = StyleSheet.create({
   moneyAmount: {
     fontSize: 36,
     fontWeight: '700',
-    color: '#35998D',
+    color: '#03045e',
     marginBottom: 20,
   },
   moneyAmountLarge: {
@@ -808,12 +808,10 @@ const styles = StyleSheet.create({
   rateValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   motivationBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
+    backgroundColor: '#caf0f8',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -825,7 +823,7 @@ const styles = StyleSheet.create({
   },
   motivationText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '500',
     flex: 1,
   },
@@ -845,9 +843,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   celebrationBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.3)',
+    backgroundColor: '#caf0f8',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -859,7 +855,7 @@ const styles = StyleSheet.create({
   },
   celebrationText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '600',
     flex: 1,
   },
@@ -908,7 +904,7 @@ const styles = StyleSheet.create({
   daysToGoBox: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#35998d',
+    borderColor: '#03045e',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -918,7 +914,7 @@ const styles = StyleSheet.create({
   daysToGoNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
     marginBottom: 4,
   },
   daysToGoLabel: {
@@ -943,7 +939,7 @@ const styles = StyleSheet.create({
   progressPercentage: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   achievementProgressBar: {
     height: 8,
@@ -952,7 +948,7 @@ const styles = StyleSheet.create({
   },
   achievementProgressFill: {
     height: '100%',
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 4,
   },
   goalItem: {
@@ -975,7 +971,7 @@ const styles = StyleSheet.create({
   goalAmount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   progressBarContainer: {
     flexDirection: 'row',
@@ -990,20 +986,20 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 4,
   },
   progressPercent: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   viewAllButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,
@@ -1035,7 +1031,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#35998d',
+    borderColor: '#03045e',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -1046,7 +1042,7 @@ const styles = StyleSheet.create({
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   timelineContent: {
     flex: 1,
@@ -1060,14 +1056,14 @@ const styles = StyleSheet.create({
   timelineTime: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
     letterSpacing: 0.5,
   },
   checkmark: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1144,7 +1140,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalTag: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1178,7 +1174,7 @@ const styles = StyleSheet.create({
   goalTarget: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
   },
 
   goalDescription: {
@@ -1199,7 +1195,7 @@ const styles = StyleSheet.create({
   goalProgressPercentage: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   remainingText: {
     fontSize: 12,
@@ -1207,9 +1203,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   achievedBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
+    backgroundColor: '#caf0f8',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
@@ -1224,19 +1218,19 @@ const styles = StyleSheet.create({
   achievedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
 
   // Test button styles
   testButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 4,

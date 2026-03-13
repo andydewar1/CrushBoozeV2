@@ -43,7 +43,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
       name: 'CrushNic Notifications',
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#35998d',
+      lightColor: '#03045e',
     });
   }
 

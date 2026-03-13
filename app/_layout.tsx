@@ -22,7 +22,7 @@ function AppContent() {
     <Stack screenOptions={{
       headerShown: false,
       contentStyle: {
-        backgroundColor: '#35998d',
+        backgroundColor: '#03045e',
       },
       animation: 'slide_from_right',
     }} />
@@ -102,6 +102,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
 });

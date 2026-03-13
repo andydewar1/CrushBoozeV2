@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   buttonSelected: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   title: {
     fontSize: 17,

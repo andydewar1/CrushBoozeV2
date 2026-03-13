@@ -59,8 +59,8 @@ export default function GoalsScreen() {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 100) return '#35998d';
-    if (progress >= 75) return '#35998d';
+    if (progress >= 100) return '#03045e';
+    if (progress >= 75) return '#03045e';
     if (progress >= 50) return '#FF9500';
     return '#FF6B47';
   };
@@ -206,7 +206,7 @@ export default function GoalsScreen() {
         {/* Stats Section */}
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
-            <Target size={24} color="#35998d" />
+            <Target size={24} color="#03045e" />
             <Text style={styles.progressTitle}>Goals Progress</Text>
           </View>
           <Text style={styles.progressSubtitle}>Overall completion of your financial goals</Text>
@@ -253,7 +253,7 @@ export default function GoalsScreen() {
                         style={styles.actionButton}
                         onPress={() => handleEditGoal(goal)}
                       >
-                        <Pencil size={16} color="#35998d" />
+                        <Pencil size={16} color="#03045e" />
                       </TouchableOpacity>
                       <TouchableOpacity 
                         style={styles.actionButton}
@@ -322,7 +322,7 @@ export default function GoalsScreen() {
                       style={styles.actionButton}
                       onPress={() => handleEditGoal(goal)}
                     >
-                      <Pencil size={16} color="#35998d" />
+                      <Pencil size={16} color="#03045e" />
                     </TouchableOpacity>
                     <TouchableOpacity 
                       style={styles.actionButton}
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 24,
     marginBottom: 16,
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 16,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     shadowRadius: 32,
     elevation: 16,
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   progressPercentage: {
     fontSize: 48,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
     marginBottom: 8,
   },
   progressGoalsCount: {
@@ -480,9 +480,9 @@ const styles = StyleSheet.create({
   },
   bigProgressFill: {
     height: '100%',
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 6,
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -506,13 +506,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   addButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,
@@ -556,8 +556,8 @@ const styles = StyleSheet.create({
   },
   achievedGoalCard: {
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
-    shadowColor: '#35998d',
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   goalTarget: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
   },
   goalDescription: {
     fontSize: 14,
@@ -624,7 +624,7 @@ const styles = StyleSheet.create({
   goalProgressPercentage: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   progressBarContainer: {
     marginBottom: 8,
@@ -644,7 +644,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   completeButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -656,9 +656,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   achievedBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
+    backgroundColor: '#caf0f8',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
@@ -673,7 +671,7 @@ const styles = StyleSheet.create({
   achievedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   emptyStateTitle: {
     fontSize: 20,

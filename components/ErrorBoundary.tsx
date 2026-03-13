@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   title: {
     fontSize: 24,
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: '#35998d',
+    color: '#03045e',
     fontSize: 16,
     fontWeight: '600',
   },

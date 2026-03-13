@@ -50,7 +50,7 @@ export default function DisclaimerAcceptance({ onAccept, onDecline }: Disclaimer
       >
         <View style={styles.disclaimerCard}>
           <View style={styles.sectionHeader}>
-            <Heart size={20} color="#35998d" />
+            <Heart size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Important Medical Notice</Text>
           </View>
 
@@ -191,7 +191,7 @@ export default function DisclaimerAcceptance({ onAccept, onDecline }: Disclaimer
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   header: {
     alignItems: 'center',
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   acceptButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },

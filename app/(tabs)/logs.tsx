@@ -22,7 +22,7 @@ export default function LogsScreen() {
   };
 
   const getIntensityColor = (intensity: number) => {
-    if (intensity <= 3) return '#35998d';    // Green for low
+    if (intensity <= 3) return '#03045e';    // Green for low
     if (intensity <= 6) return '#FF9500';    // Orange for medium
     return '#FF6B47';                        // Red for high
   };
@@ -99,7 +99,7 @@ export default function LogsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#35998d" />
+          <ActivityIndicator size="large" color="#03045e" />
           <Text style={styles.loadingText}>Loading your logs...</Text>
         </View>
       </SafeAreaView>
@@ -137,7 +137,7 @@ export default function LogsScreen() {
         {/* Stats Section */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Clock size={24} color="#35998d" />
+            <Clock size={24} color="#03045e" />
             <Text style={styles.statNumber}>{stats.totalLogs}</Text>
             <Text style={styles.statLabel}>Total Logs</Text>
           </View>
@@ -183,7 +183,7 @@ export default function LogsScreen() {
                   </View>
                   <View style={styles.logActions}>
                     <TouchableOpacity style={styles.actionButton} onPress={() => handleEditLog(log)}>
-                      <Pencil size={16} color="#35998d" />
+                      <Pencil size={16} color="#03045e" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.actionButton} onPress={() => handleDeleteLog(log)}>
                       <Trash2 size={16} color="#FF6B47" />
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 0.5,
-    borderColor: 'rgba(53, 153, 141, 0.08)',
+    borderColor: 'rgba(3, 4, 94, 0.08)',
     aspectRatio: 1,
     justifyContent: 'center',
   },
@@ -359,13 +359,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   addButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,

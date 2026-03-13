@@ -115,7 +115,7 @@ const HEALTH_MILESTONES: Omit<HealthMilestone, 'achieved'>[] = [
     description: 'Risk of coronary heart disease is cut in half compared to a smoker',
     icon: '❤️',
     iconType: 'heart',
-    iconColor: '#35998d',
+    iconColor: '#03045e',
   },
   {
     id: '5years',

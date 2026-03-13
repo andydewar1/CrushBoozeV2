@@ -29,7 +29,7 @@ export default function AchievementsScreen() {
         {/* Stats Section */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Trophy size={24} color="#35998d" />
+            <Trophy size={24} color="#03045e" />
             <Text style={styles.statNumber}>
               {loading ? '...' : error ? '0' : stats.totalEarned}
             </Text>
@@ -55,7 +55,7 @@ export default function AchievementsScreen() {
             </Text>
           </View>
           <View style={styles.statBox}>
-            <TrendingUp size={24} color="#35998d" />
+            <TrendingUp size={24} color="#03045e" />
             <Text style={styles.statNumber}>
               {loading ? '...' : error ? '0' : stats.totalToGo}
             </Text>
@@ -72,7 +72,7 @@ export default function AchievementsScreen() {
                 {/* Achievements Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Trophy size={20} color="#35998d" />
+            <Trophy size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your progress milestones</Text>
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 8,
     borderWidth: 0.5,
-    borderColor: 'rgba(53, 153, 141, 0.08)',
+    borderColor: 'rgba(3, 4, 94, 0.08)',
     aspectRatio: 1,
     justifyContent: 'center',
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   daysToGoBox: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#35998d',
+    borderColor: '#03045e',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
   daysToGoNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
     marginBottom: 4,
   },
   daysToGoLabel: {
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   progressPercentage: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
   },
   achievementProgressBar: {
     height: 8,
@@ -460,13 +460,11 @@ const styles = StyleSheet.create({
   },
   achievementProgressFill: {
     height: '100%',
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 4,
   },
   motivationBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
+    backgroundColor: '#caf0f8',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -478,7 +476,7 @@ const styles = StyleSheet.create({
   },
   motivationText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '500',
     flex: 1,
     flexWrap: 'wrap',
@@ -501,7 +499,7 @@ const styles = StyleSheet.create({
   },
   milestoneUnlocked: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,
@@ -510,7 +508,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.2)',
+    borderColor: 'rgba(3, 4, 94, 0.2)',
   },
   milestoneLocked: {
     backgroundColor: 'rgba(245, 245, 245, 0.6)',
@@ -563,7 +561,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -603,9 +601,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   celebrationBanner: {
-    backgroundColor: 'rgba(53, 153, 141, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.3)',
+    backgroundColor: '#caf0f8',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -617,7 +613,7 @@ const styles = StyleSheet.create({
   },
   celebrationText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '600',
     flex: 1,
     flexShrink: 1,

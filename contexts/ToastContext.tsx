@@ -88,7 +88,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         >
           <View style={styles.toastContent}>
             <View style={styles.toastIcon}>
-              {toast.type === 'success' && <CheckCircle size={24} color="#35998d" />}
+              {toast.type === 'success' && <CheckCircle size={24} color="#03045e" />}
               {toast.type === 'error' && <AlertCircle size={24} color="#FF3B30" />}
               {toast.type === 'info' && <Info size={24} color="#007AFF" />}
             </View>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   successToast: {
     borderLeftWidth: 4,
-    borderLeftColor: '#35998d',
+    borderLeftColor: '#03045e',
   },
   infoToast: {
     borderLeftWidth: 4,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
     textAlign: 'center',
   },
 }); 

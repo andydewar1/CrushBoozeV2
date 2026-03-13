@@ -10,7 +10,7 @@ export default function MedicalDisclaimer({ style }: MedicalDisclaimerProps) {
   return (
     <View style={[styles.container, style]}>
       <View style={styles.header}>
-        <Heart size={18} color="#35998d" />
+        <Heart size={18} color="#03045e" />
         <Text style={styles.title}>Health & Medical Disclaimer</Text>
       </View>
       

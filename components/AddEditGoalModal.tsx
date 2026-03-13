@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   currencySymbol: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#35998d',
+    color: '#03045e',
     marginRight: 12,
   },
   amountInput: {
@@ -280,12 +280,12 @@ const styles = StyleSheet.create({
     minHeight: 0,
   },
   saveButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,

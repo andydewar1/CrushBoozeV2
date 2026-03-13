@@ -6,7 +6,7 @@ export default function AuthLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: {
-          backgroundColor: '#35998d',
+          backgroundColor: '#03045e',
         },
         // Use simple fade animation to prevent navigation issues
         animation: 'fade',

@@ -154,7 +154,7 @@ export default function SOSScreen() {
         {/* Remember Your Why Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MessageCircle size={20} color="#35998d" />
+            <MessageCircle size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Remember Your Why</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
@@ -211,7 +211,7 @@ export default function SOSScreen() {
 
           <View style={styles.techniquesGrid}>
             <TouchableOpacity style={styles.techniqueCard}>
-              <Brain size={24} color="#35998d" />
+              <Brain size={24} color="#03045e" />
               <Text style={styles.techniqueTitle}>5-4-3-2-1 Grounding</Text>
               <Text style={styles.techniqueDescription}>
                 Name 5 things you see, 4 you hear, 3 you touch, 2 you smell, 1 you taste.
@@ -219,7 +219,7 @@ export default function SOSScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.techniqueCard}>
-              <Music size={24} color="#35998d" />
+              <Music size={24} color="#03045e" />
               <Text style={styles.techniqueTitle}>Listen to Music</Text>
               <Text style={styles.techniqueDescription}>
                 Put on your favorite song and focus on the lyrics or melody.
@@ -227,7 +227,7 @@ export default function SOSScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.techniqueCard}>
-              <Gamepad2 size={24} color="#35998d" />
+              <Gamepad2 size={24} color="#03045e" />
               <Text style={styles.techniqueTitle}>Play a Game</Text>
               <Text style={styles.techniqueDescription}>
                 Engage your mind with a quick mobile game or puzzle.
@@ -235,7 +235,7 @@ export default function SOSScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.techniqueCard}>
-              <Phone size={24} color="#35998d" />
+              <Phone size={24} color="#03045e" />
               <Text style={styles.techniqueTitle}>Call Someone</Text>
               <Text style={styles.techniqueDescription}>
                 Reach out to a friend, family member, or support person.
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     shadowRadius: 32,
     elevation: 16,
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   breathingHeader: {
     flexDirection: 'row',
@@ -347,10 +347,10 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 16,
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 6,
     borderWidth: 0.5,
-    borderColor: 'rgba(53, 153, 141, 0.08)',
+    borderColor: 'rgba(3, 4, 94, 0.08)',
   },
   techniqueTitle: {
     fontSize: 16,
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   },
   motivationText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '500',
   },
   customReasonContainer: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalTag: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,

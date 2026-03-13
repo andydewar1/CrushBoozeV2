@@ -124,11 +124,11 @@ export default function OnboardingScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   safeArea: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   progressContainer: {
     paddingHorizontal: 20,
@@ -158,11 +158,11 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   content: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   contentContainer: {
     padding: 20,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     paddingBottom: Platform.OS === 'ios' ? 34 : 24,
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   nextButton: {
     backgroundColor: '#FFFFFF',
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#35998d',
+    color: '#03045e',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
 }); 

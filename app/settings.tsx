@@ -827,7 +827,7 @@ export default function SettingsScreen() {
         {/* Profile Overview */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <User size={20} color="#35998d" />
+            <User size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Profile Overview</Text>
           </View>
           
@@ -842,7 +842,7 @@ export default function SettingsScreen() {
         {/* Quit Journey Details */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Calendar size={20} color="#35998d" />
+            <Calendar size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Quit Journey Details</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Update your key information</Text>
@@ -860,7 +860,7 @@ export default function SettingsScreen() {
                 setEditingQuitDate(true);
               }}
             >
-              <Edit3 size={16} color="#35998d" />
+              <Edit3 size={16} color="#03045e" />
             </TouchableOpacity>
           </View>
 
@@ -878,7 +878,7 @@ export default function SettingsScreen() {
                 setEditingPersonalWhy(true);
               }}
             >
-              <Edit3 size={16} color="#35998d" />
+              <Edit3 size={16} color="#03045e" />
             </TouchableOpacity>
           </View>
 
@@ -908,7 +908,7 @@ export default function SettingsScreen() {
                 setEditingPersonalGoals(true);
               }}
             >
-              <Edit3 size={16} color="#35998d" />
+              <Edit3 size={16} color="#03045e" />
             </TouchableOpacity>
           </View>
 
@@ -923,7 +923,7 @@ export default function SettingsScreen() {
               style={styles.editButton}
               onPress={() => setEditingCurrency(true)}
             >
-              <Edit3 size={16} color="#35998d" />
+              <Edit3 size={16} color="#03045e" />
             </TouchableOpacity>
           </View>
 
@@ -943,7 +943,7 @@ export default function SettingsScreen() {
                 setEditingDailyCosts(true);
               }}
             >
-              <Edit3 size={16} color="#35998d" />
+              <Edit3 size={16} color="#03045e" />
             </TouchableOpacity>
           </View>
         </View>
@@ -951,7 +951,7 @@ export default function SettingsScreen() {
         {/* Account Management */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Shield size={20} color="#35998d" />
+            <Shield size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Account Management</Text>
           </View>
 
@@ -985,7 +985,7 @@ export default function SettingsScreen() {
         {/* Subscription Management */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Crown size={20} color="#35998d" />
+            <Crown size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Subscription</Text>
           </View>
 
@@ -1010,7 +1010,7 @@ export default function SettingsScreen() {
         {/* Support */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <HelpCircle size={20} color="#35998d" />
+            <HelpCircle size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Support & Info</Text>
           </View>
 
@@ -1086,7 +1086,7 @@ export default function SettingsScreen() {
               <View style={styles.dateSection}>
                 <Text style={styles.dateLabel}>Current Quit Date</Text>
                 <View style={styles.currentDateDisplay}>
-                  <Calendar size={20} color="#35998d" />
+                  <Calendar size={20} color="#03045e" />
                   <Text style={styles.currentDateText}>
                     {format(tempQuitDate, 'MMMM d, yyyy')} at {format(tempQuitDate, 'h:mm a')}
                   </Text>
@@ -1254,7 +1254,7 @@ export default function SettingsScreen() {
                 >
                   <Text style={styles.currencyText}>{curr.symbol} - {curr.name}</Text>
                   {tempCurrency === curr.symbol && (
-                    <Check size={16} color="#35998d" />
+                    <Check size={16} color="#03045e" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -1313,7 +1313,7 @@ export default function SettingsScreen() {
                 >
                   <Text style={styles.goalText}>{goal.title}</Text>
                   {tempPersonalGoals.includes(goal.id) && (
-                    <Check size={16} color="#35998d" />
+                    <Check size={16} color="#03045e" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -1783,7 +1783,7 @@ export default function SettingsScreen() {
               
               <View style={styles.legalDocContainer}>
                 <View style={styles.disclaimerModalHeader}>
-                  <Heart size={18} color="#35998d" />
+                  <Heart size={18} color="#03045e" />
                   <Text style={styles.disclaimerModalTitle}>Health & Medical Disclaimer</Text>
                 </View>
                 
@@ -1894,7 +1894,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   profileEmail: {
     fontSize: 16,
@@ -1931,7 +1931,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: 'rgba(53, 153, 141, 0.1)',
+    backgroundColor: '#caf0f8',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -2053,7 +2053,7 @@ const styles = StyleSheet.create({
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     marginLeft: 8,
     fontWeight: '500',
   },
@@ -2069,7 +2069,7 @@ const styles = StyleSheet.create({
   },
   timeButtonText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '500',
   },
   currentTimeDisplay: {
@@ -2101,7 +2101,7 @@ const styles = StyleSheet.create({
   },
   androidTimeButtonText: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '500',
   },
   textInput: {
@@ -2136,9 +2136,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   selectedCurrencyOption: {
-    backgroundColor: 'rgba(53, 153, 141, 0.1)',
+    backgroundColor: '#caf0f8',
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.3)',
+    borderColor: 'rgba(3, 4, 94, 0.3)',
   },
   currencyText: {
     fontSize: 16,
@@ -2156,9 +2156,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   selectedGoalOption: {
-    backgroundColor: 'rgba(53, 153, 141, 0.1)',
+    backgroundColor: '#caf0f8',
     borderWidth: 1,
-    borderColor: 'rgba(53, 153, 141, 0.3)',
+    borderColor: 'rgba(3, 4, 94, 0.3)',
   },
   goalText: {
     fontSize: 16,
@@ -2184,7 +2184,7 @@ const styles = StyleSheet.create({
   },
   currencySymbol: {
     fontSize: 16,
-    color: '#35998d',
+    color: '#03045e',
     fontWeight: '600',
     marginRight: 8,
   },
@@ -2211,7 +2211,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
   },
   saveButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   cancelButtonText: {
     fontSize: 16,
@@ -2307,8 +2307,8 @@ const styles = StyleSheet.create({
     borderColor: '#E1E3E6',
   },
   selectionButtonSelected: {
-    backgroundColor: '#35998d',
-    borderColor: '#35998d',
+    backgroundColor: '#03045e',
+    borderColor: '#03045e',
   },
   selectionButtonText: {
     fontSize: 16,
@@ -2373,7 +2373,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   toggleActive: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
   },
   toggleSlider: {
     width: 22,

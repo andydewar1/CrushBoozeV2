@@ -52,7 +52,7 @@ export default function LogModal({ visible, onClose, onSave, onUpdate, editingLo
   };
 
   const getIntensityColor = (intensity: number) => {
-    if (intensity <= 3) return '#35998d';    // Green for low
+    if (intensity <= 3) return '#03045e';    // Green for low
     if (intensity <= 6) return '#FF9500';    // Orange for medium
     return '#FF6B47';                        // Red for high
   };
@@ -383,12 +383,12 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
   },
   saveButton: {
-    backgroundColor: '#35998d',
+    backgroundColor: '#03045e',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#35998d',
+    shadowColor: '#03045e',
     shadowOffset: {
       width: 0,
       height: 8,
