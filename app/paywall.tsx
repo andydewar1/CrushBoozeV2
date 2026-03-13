@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 import RevenueCatService from "@/services/RevenueCatService";
 
 type Plan = "annual" | "monthly";
 
-const BRAND = "#35998D"; // Exact teal from screenshot
+const BRAND = "#03045e"; // Navy
+const LIGHT_BLUE = "#caf0f8";
 const WHITE = "#FFFFFF";
 const WHITE_90 = "rgba(255,255,255,0.9)";
 const WHITE_70 = "rgba(255,255,255,0.7)";
@@ -26,6 +28,7 @@ const BORDER = "rgba(255,255,255,0.3)";
 export default function PaywallScreen() {
   const [plan, setPlan] = useState<Plan>("annual");
   const { packages, loading, purchasing, error, purchasePackage, restorePurchases, getPackageByType } = usePaywall();
+  const { data, ninetyDaySavings } = useOnboarding();
   const router = useRouter();
 
   const { height } = Dimensions.get("window");
@@ -36,6 +39,16 @@ export default function PaywallScreen() {
   // Get packages
   const annualPackage = getPackageByType('ANNUAL');
   const monthlyPackage = getPackageByType('MONTHLY');
+
+  // Get currency symbol
+  const getCurrencySymbol = () => {
+    const symbols: Record<string, string> = {
+      'GBP': '£', 'USD': '$', 'EUR': '€', 'CAD': 'C$', 'AUD': 'A$',
+      'NZD': 'NZ$', 'CHF': 'CHF ', 'SEK': 'kr ', 'NOK': 'kr ', 'DKK': 'kr ',
+      'PLN': 'zł ', 'INR': '₹', 'JPY': '¥', 'CNY': '¥', 'BRL': 'R$', 'MXN': 'MX$',
+    };
+    return symbols[data.currency] || '£';
+  };
 
   // Handle purchase
   const handlePurchase = async () => {
@@ -71,9 +84,6 @@ export default function PaywallScreen() {
           <Text style={[styles.benefitText, { textAlign: 'center', marginBottom: 20, fontSize: 16 }]}>
             {error}
           </Text>
-          <Text style={[styles.benefitText, { textAlign: 'center', marginBottom: 20, fontSize: 12, opacity: 0.7 }]}>
-            Debug Info: RevenueCat initialized: {RevenueCatService.isInitialized() ? 'Yes' : 'No'}
-          </Text>
           <Pressable
             style={styles.cta}
             onPress={() => router.replace('/paywall')}
@@ -92,13 +102,21 @@ export default function PaywallScreen() {
         <View>
           {/* Headline */}
           <Text
-            style={[styles.headline, { fontSize: compact ? 28 : 32, lineHeight: compact ? 32 : 36, marginBottom: compact ? 20 : 24 }]}
+            style={[styles.headline, { fontSize: compact ? 28 : 32, lineHeight: compact ? 34 : 40, marginBottom: compact ? 20 : 24 }]}
           >
-            Vaping doesn't define{"\n"}you. Crush it for good.
+            {data.name ? `${data.name}, you're` : "You're"} ready{"\n"}to take back control.
           </Text>
 
+          {/* Personalized stat */}
+          {ninetyDaySavings > 0 && (
+            <View style={[styles.statCard, { marginBottom: compact ? 16 : 20 }]}>
+              <Text style={styles.statLabel}>In 90 days, you'll save</Text>
+              <Text style={styles.statValue}>{getCurrencySymbol()}{ninetyDaySavings.toLocaleString()}</Text>
+            </View>
+          )}
+
           {/* Benefits */}
-          <View style={{ marginBottom: compact ? 20 : 24 }}>
+          <View style={{ marginBottom: compact ? 16 : 20 }}>
             <View style={styles.benefitRow}>
               <Text style={[styles.tick, { fontSize: compact ? 16 : 18 }]}>✓</Text>
               <Text style={[styles.benefitText, { fontSize: compact ? 14 : 16 }]}>
@@ -108,24 +126,24 @@ export default function PaywallScreen() {
             <View style={styles.benefitRow}>
               <Text style={[styles.tick, { fontSize: compact ? 16 : 18 }]}>✓</Text>
               <Text style={[styles.benefitText, { fontSize: compact ? 14 : 16 }]}>
-                SOS breathing + relapse-proof reminders
+                SOS support when urges hit
               </Text>
             </View>
             <View style={styles.benefitRow}>
               <Text style={[styles.tick, { fontSize: compact ? 16 : 18 }]}>✓</Text>
               <Text style={[styles.benefitText, { fontSize: compact ? 14 : 16 }]}>
-                Health milestones, achievement badges & custom goals
+                Health recovery timeline & milestones
               </Text>
             </View>
           </View>
 
           {/* Testimonial */}
-          <View style={[styles.testimonialCard, { marginBottom: compact ? 20 : 24 }]}>
+          <View style={[styles.testimonialCard, { marginBottom: compact ? 16 : 20 }]}>
             <Text style={[styles.testimonialText, { fontSize: compact ? 13 : 14 }]}>
-              "Whenever I wanted to cave, I opened the app{"\n"}and saw my savings and health progress. It{"\n"}kept me focused. 6 weeks quit, $250 saved."
+              "I tried to quit so many times. This app helped{"\n"}me finally stay accountable. 3 months sober{"\n"}and I've never felt better."
             </Text>
             <Text style={[styles.testimonialMeta, { fontSize: compact ? 11 : 12 }]}>
-              – Rafel, 20, Denver, CO
+              – Sarah, 32, London, UK
             </Text>
           </View>
         </View>
@@ -139,9 +157,9 @@ export default function PaywallScreen() {
           >
             <View style={styles.planHeader}>
               <Radio selected={plan === "annual"} />
-              <Text style={[styles.planTitle, { fontSize: compact ? 18 : 20 }]}>Annual -</Text>
+              <Text style={[styles.planTitle, { fontSize: compact ? 18 : 20 }]}>Annual</Text>
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>75% OFF</Text>
+                <Text style={styles.badgeText}>BEST VALUE</Text>
               </View>
             </View>
             <View style={styles.planCopy}>
@@ -165,10 +183,10 @@ export default function PaywallScreen() {
             </View>
             <View style={styles.planCopy}>
               <Text style={[styles.planTopLine, { fontSize: compact ? 15 : 16 }]}>
-                {monthlyPackage?.product.priceString || '£9.99'}/mo · Less than a vape!
+                {monthlyPackage?.product.priceString || '£9.99'}/mo · Less than a night out!
               </Text>
               <Text style={[styles.planBottomLine, { fontSize: compact ? 14 : 15 }]}>
-                3-day free trial, cancel anytime.
+                3-day free trial, cancel anytime
               </Text>
             </View>
           </Pressable>
@@ -186,19 +204,19 @@ export default function PaywallScreen() {
               <ActivityIndicator size="small" color={BRAND} />
             ) : (
               <Text style={[styles.ctaText, { fontSize: compact ? 18 : 20 }]}>
-                Start Your Quit Journey Today
+                Start My Free Trial
               </Text>
             )}
           </Pressable>
-          <Text style={[styles.ctaSub, { marginBottom: compact ? 20 : 24 }]}>3 days free · Cancel anytime</Text>
+          <Text style={[styles.ctaSub, { marginBottom: compact ? 16 : 20 }]}>3 days free · Cancel anytime</Text>
 
           {/* Legal */}
           <View style={styles.footerLinks}>
-            <Pressable onPress={() => open("https://crushnic.com/privacy-policy/")}>
+            <Pressable onPress={() => open("https://crushbooze.com/privacy-policy/")}>
               <Text style={styles.link}>Privacy Policy</Text>
             </Pressable>
             <Text style={styles.dot}>·</Text>
-            <Pressable onPress={() => open("https://crushnic.com/terms-of-service/")}>
+            <Pressable onPress={() => open("https://crushbooze.com/terms-of-service/")}>
               <Text style={styles.link}>Terms of Use</Text>
             </Pressable>
           </View>
@@ -233,15 +251,33 @@ const styles = StyleSheet.create({
     fontWeight: "800",
   },
 
+  // Stat card
+  statCard: {
+    backgroundColor: LIGHT_BLUE,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  statLabel: {
+    color: BRAND,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  statValue: {
+    color: BRAND,
+    fontSize: 32,
+    fontWeight: '800',
+  },
+
   // Benefits
-  benefitRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 14 },
-  tick: { color: WHITE, lineHeight: 22, fontWeight: "bold" },
+  benefitRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
+  tick: { color: LIGHT_BLUE, lineHeight: 22, fontWeight: "bold" },
   benefitText: { color: WHITE, lineHeight: 22, flexShrink: 1, fontWeight: "600" },
-  bold: { fontWeight: "700", color: WHITE },
 
   // Testimonial
   testimonialCard: {
-    backgroundColor: "rgba(0,0,0,0.2)",
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
@@ -266,7 +302,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.1)",
   },
   planCardSelected: {
-    borderColor: WHITE,
+    borderColor: LIGHT_BLUE,
     backgroundColor: "rgba(255,255,255,0.15)",
   },
   planHeader: {
@@ -281,13 +317,13 @@ const styles = StyleSheet.create({
   planBottomLine: { color: WHITE_70, marginTop: 1 },
 
   badge: {
-    backgroundColor: WHITE,
+    backgroundColor: LIGHT_BLUE,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     marginLeft: 8,
   },
-  badgeText: { color: BRAND, fontWeight: "800", fontSize: 13 },
+  badgeText: { color: BRAND, fontWeight: "800", fontSize: 12 },
 
   // Radio
   radioOuter: {
@@ -303,12 +339,12 @@ const styles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: WHITE,
+    backgroundColor: LIGHT_BLUE,
   },
 
   // CTA
   cta: {
-    backgroundColor: WHITE,
+    backgroundColor: LIGHT_BLUE,
     borderRadius: 25,
     paddingVertical: 16,
     paddingHorizontal: 20,
@@ -342,8 +378,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  link: { color: WHITE, textDecorationLine: "underline" },
+  link: { color: WHITE, textDecorationLine: "underline", fontSize: 13 },
   dot: { color: WHITE_70, fontSize: 16, marginHorizontal: 2 },
 
-  restore: { color: WHITE_55, fontSize: 15, textAlign: "center" },
+  restore: { color: WHITE_55, fontSize: 14, textAlign: "center" },
 });

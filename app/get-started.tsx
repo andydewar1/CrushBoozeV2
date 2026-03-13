@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function GetStartedScreen() {
   const router = useRouter();
@@ -9,64 +10,70 @@ export default function GetStartedScreen() {
     router.push('/auth/signup');
   };
 
+  const handleSignIn = () => {
+    router.push('/auth/login');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Let's Begin Your{'\n'}Journey</Text>
+        {/* Hero Section */}
+        <View style={styles.hero}>
+          <Text style={styles.emoji}>🍷</Text>
+          <Text style={styles.title}>Take Back{'\n'}Control</Text>
           <Text style={styles.subtitle}>
-            We'll help you quit drinking with a personalized plan based on your habits and goals.
+            Your journey to an alcohol-free life starts here. We'll guide you every step of the way.
           </Text>
         </View>
 
-        <View style={styles.steps}>
-          <View style={styles.step}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>1</Text>
+        {/* Features */}
+        <View style={styles.features}>
+          <View style={styles.feature}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="trending-up" size={24} color="#03045e" />
             </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Create Your Account</Text>
-              <Text style={styles.stepDescription}>Sign up to track your progress and save your data</Text>
-            </View>
-          </View>
-
-          <View style={styles.step}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>2</Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Tell Us About Your Drinking</Text>
-              <Text style={styles.stepDescription}>Share your drinking habits and spending</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Track Your Progress</Text>
+              <Text style={styles.featureDescription}>See your savings and health improve daily</Text>
             </View>
           </View>
 
-          <View style={styles.step}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>3</Text>
+          <View style={styles.feature}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="heart" size={24} color="#03045e" />
             </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Set Your Goals</Text>
-              <Text style={styles.stepDescription}>Choose your quit date and what you want to achieve</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Health Recovery Timeline</Text>
+              <Text style={styles.featureDescription}>Watch your body heal over time</Text>
             </View>
           </View>
 
-          <View style={styles.step}>
-            <View style={styles.stepNumber}>
-              <Text style={styles.stepNumberText}>4</Text>
+          <View style={styles.feature}>
+            <View style={styles.featureIcon}>
+              <Ionicons name="flash" size={24} color="#03045e" />
             </View>
-            <View style={styles.stepContent}>
-              <Text style={styles.stepTitle}>Start Your Journey</Text>
-              <Text style={styles.stepDescription}>Get your personalized plan and begin crushing it</Text>
+            <View style={styles.featureText}>
+              <Text style={styles.featureTitle}>Craving Support</Text>
+              <Text style={styles.featureDescription}>Tools to help when urges hit</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.buttonContainer}>
+        {/* Buttons */}
+        <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.button}
+            style={styles.primaryButton}
             onPress={handleContinue}
           >
-            <Text style={styles.buttonText}>Continue</Text>
+            <Text style={styles.primaryButtonText}>Get Started</Text>
+            <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handleSignIn}
+          >
+            <Text style={styles.secondaryButtonText}>I already have an account</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -84,80 +91,86 @@ const styles = StyleSheet.create({
     padding: 24,
     justifyContent: 'space-between',
   },
-  header: {
-    gap: 16,
-    marginBottom: 32,
+  hero: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  emoji: {
+    fontSize: 72,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: '700',
-    color: '#000000',
+    color: '#1A1A2E',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    lineHeight: 48,
+    marginBottom: 16,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666666',
+    fontSize: 18,
+    color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 26,
+    paddingHorizontal: 20,
   },
-  steps: {
-    gap: 24,
+  features: {
+    gap: 20,
   },
-  step: {
+  feature: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 16,
-    alignItems: 'flex-start',
-  },
-  stepNumber: {
-    width: 32,
-    height: 32,
+    backgroundColor: '#F8F9FA',
+    padding: 16,
     borderRadius: 16,
-    backgroundColor: '#03045e',
+  },
+  featureIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#caf0f8',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  stepNumberText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  stepContent: {
+  featureText: {
     flex: 1,
-    gap: 4,
   },
-  stepTitle: {
+  featureTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1A1A2E',
+    marginBottom: 4,
+  },
+  featureDescription: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  buttons: {
+    gap: 12,
+  },
+  primaryButton: {
+    backgroundColor: '#03045e',
+    paddingVertical: 18,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
-    color: '#000000',
   },
-  stepDescription: {
-    fontSize: 14,
-    color: '#666666',
-    lineHeight: 20,
-  },
-  buttonContainer: {
-    marginTop: 32,
-  },
-  button: {
-    backgroundColor: '#03045e',
+  secondaryButton: {
     paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 100,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+  secondaryButtonText: {
+    color: '#6B7280',
+    fontSize: 16,
+    fontWeight: '500',
   },
-}); 
+});

@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -98,15 +98,9 @@ export default function LandingScreen() {
             <View style={styles.spacer} />
             
             <View style={styles.mainContent}>
-              <Image
-                source={require('@/assets/images/CrushNic Logo (2).png')}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-              
               <View style={styles.messageContainer}>
-                <Text style={styles.title}>Ready to Quit{'\n'}for Good?</Text>
-                <Text style={styles.subtitle}>Let's Crush This.</Text>
+                <Text style={styles.title}>It's time to take{'\n'}back control.</Text>
+                <Text style={styles.subtitle}>Your alcohol-free journey starts here.</Text>
               </View>
 
               <View style={styles.buttonContainer}>
@@ -160,39 +154,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 24,
   },
-  logo: {
-    width: 280,
-    height: 56,
-    tintColor: '#FFFFFF',
-    marginBottom: 24,
-  },
   messageContainer: {
     alignItems: 'center',
     gap: 8,
     marginBottom: 24,
   },
   title: {
-    fontSize: 40,
+    fontSize: 44,
     color: '#FFFFFF',
     fontWeight: '700',
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    letterSpacing: 0.5,
+    lineHeight: 52,
   },
   subtitle: {
-    fontSize: 32,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: 22,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
     textAlign: 'center',
     fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
-    letterSpacing: 0.5,
+    marginTop: 12,
   },
   buttonContainer: {
     width: '100%',
     gap: 16,
   },
   button: {
-    backgroundColor: '#35998D',
+    backgroundColor: '#03045e',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 100,

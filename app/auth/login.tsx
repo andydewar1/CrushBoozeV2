@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-
 import { Eye, EyeOff } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
@@ -37,8 +37,6 @@ export default function LoginScreen() {
       // Save timestamp for auto-logout
       await AsyncStorage.setItem('last_activity', Date.now().toString());
       
-      // SECURITY FIX: Check subscription status after successful login
-      // Don't route directly to main app - let the main index handle routing securely
       console.log('✅ Login successful - redirecting to secure routing');
       router.replace('/');
 
@@ -51,125 +49,141 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.headerContainer}>
-          <Image
-            source={require('@/assets/images/CrushNic Logo (2).png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to continue your quit journey</Text>
-        </View>
-
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              placeholder="Enter your email"
-              placeholderTextColor="rgba(255, 255, 255, 0.5)"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                placeholder="Enter your password"
-                placeholderTextColor="rgba(255, 255, 255, 0.5)"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff size={20} color="rgba(255, 255, 255, 0.7)" />
-                ) : (
-                  <Eye size={20} color="rgba(255, 255, 255, 0.7)" />
-                )}
-              </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent} 
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.emoji}>👋</Text>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to continue your journey</Text>
             </View>
+
+            {/* Form */}
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  editable={!loading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password</Text>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#9CA3AF"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeButton}
+                    onPress={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <EyeOff size={20} color="#6B7280" />
+                    ) : (
+                      <Eye size={20} color="#6B7280" />
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+
+            {/* Button */}
+            <TouchableOpacity
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Text style={styles.buttonText}>Sign In</Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Link */}
+            <TouchableOpacity
+              style={styles.linkButton}
+              onPress={() => router.push('/auth/signup')}
+              disabled={loading}
+            >
+              <Text style={styles.linkText}>
+                Don't have an account? <Text style={styles.linkTextBold}>Sign up</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#35998d" />
-            ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => router.push('/auth/signup')}
-          >
-            <Text style={styles.linkText}>
-              Don't have an account? <Text style={styles.linkTextBold}>Sign up</Text>
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#35998d',
+    backgroundColor: '#FFFFFF',
   },
-  scrollContainer: {
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
+    padding: 24,
   },
-  headerContainer: {
+  content: {
+    width: '100%',
+    maxWidth: 400,
+    alignSelf: 'center',
+  },
+  header: {
     alignItems: 'center',
     marginBottom: 40,
   },
-  logo: {
-    width: 200,
-    height: 40,
-    tintColor: '#FFFFFF',
+  emoji: {
+    fontSize: 64,
     marginBottom: 24,
   },
   title: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
+    color: '#1A1A2E',
+    marginBottom: 12,
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   subtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 17,
+    color: '#6B7280',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
-  formContainer: {
+  form: {
+    marginBottom: 32,
     gap: 20,
   },
   inputContainer: {
@@ -178,77 +192,59 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1A1A2E',
     marginLeft: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    fontSize: 17,
+    color: '#1A1A2E',
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
   },
   passwordInput: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    fontSize: 17,
+    color: '#1A1A2E',
   },
   eyeButton: {
-    padding: 16,
+    padding: 18,
   },
   button: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: '#03045e',
+    borderRadius: 16,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginBottom: 20,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#35998d',
+    color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   linkButton: {
     alignItems: 'center',
     padding: 12,
-    marginTop: 8,
   },
   linkText: {
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: '#6B7280',
     fontSize: 16,
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   linkTextBold: {
-    color: '#FFFFFF',
+    color: '#03045e',
     fontWeight: '600',
   },
-}); 
+});
