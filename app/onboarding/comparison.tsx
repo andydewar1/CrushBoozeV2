@@ -13,6 +13,13 @@ export default function ComparisonScreen() {
     router.push('/onboarding/regret');
   };
 
+  // Determine if user is a heavy drinker
+  const isHeavyDrinker = 
+    data.drinkingFrequency === 'daily' || 
+    data.drinkingFrequency === 'most_days' ||
+    data.drinksPerSession === '7-9' ||
+    data.drinksPerSession === '10+';
+
   return (
     <OnboardingScreen
       currentStep={5}
@@ -23,14 +30,30 @@ export default function ComparisonScreen() {
       continueText="Continue"
     >
       <View style={styles.content}>
-        <Text style={styles.text}>
-          Based on your answers, your drinking is higher than{' '}
-          <Text style={styles.highlight}>{data.comparisonPercentage}%</Text>
-          {' '}of people.
-        </Text>
-        <Text style={styles.subtext}>
-          No judgement, just awareness.
-        </Text>
+        {isHeavyDrinker ? (
+          <>
+            <Text style={styles.text}>
+              Based on your answers, your drinking is higher than{' '}
+              <Text style={styles.highlight}>{data.comparisonPercentage}%</Text>
+              {' '}of people.
+            </Text>
+            <Text style={styles.subtext}>
+              No judgement, just awareness.
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.text}>
+              Even moderate drinking affects your{' '}
+              <Text style={styles.highlight}>sleep</Text>,{' '}
+              <Text style={styles.highlight}>energy</Text> and{' '}
+              <Text style={styles.highlight}>long-term health</Text>.
+            </Text>
+            <Text style={styles.subtext}>
+              The good news? Every drink you skip makes a difference.
+            </Text>
+          </>
+        )}
       </View>
     </OnboardingScreen>
   );

@@ -16,6 +16,12 @@ import { Ionicons } from '@expo/vector-icons';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TOTAL_STEPS = 25;
 
+// Non-linear progress: starts at ~25%, moves fast early, slows down later
+const calculateProgress = (current: number, total: number): number => {
+  const linearProgress = current / total;
+  return 20 + (80 * Math.pow(linearProgress, 0.6));
+};
+
 const previews = [
   {
     emoji: '📊',
@@ -52,8 +58,8 @@ export default function PreviewsScreen() {
     router.back();
   };
 
-  // Progress calculation
-  const progress = (19 / TOTAL_STEPS) * 100;
+  // Progress calculation (non-linear)
+  const progress = calculateProgress(19, TOTAL_STEPS);
 
   return (
     <SafeAreaView style={styles.safeArea}>

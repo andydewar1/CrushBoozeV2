@@ -14,11 +14,12 @@ export default function FutureVisionScreen() {
   };
 
   const getCurrencySymbol = () => {
-    switch (data.currency) {
-      case 'USD': return '$';
-      case 'EUR': return '€';
-      default: return '£';
-    }
+    const symbols: Record<string, string> = {
+      'GBP': '£', 'USD': '$', 'EUR': '€', 'CAD': 'C$', 'AUD': 'A$',
+      'NZD': 'NZ$', 'CHF': 'CHF ', 'SEK': 'kr ', 'NOK': 'kr ', 'DKK': 'kr ',
+      'PLN': 'zł ', 'INR': '₹', 'JPY': '¥', 'CNY': '¥', 'BRL': 'R$', 'MXN': 'MX$',
+    };
+    return symbols[data.currency] || '£';
   };
 
   return (

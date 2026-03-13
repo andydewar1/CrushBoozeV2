@@ -60,6 +60,15 @@ interface OnboardingScreenProps {
   hasInput?: boolean;
 }
 
+// Non-linear progress: starts at ~25%, moves fast early, slows down later
+// Makes onboarding feel faster and less daunting
+const calculateProgress = (current: number, total: number): number => {
+  const linearProgress = current / total;
+  // Start at 20%, use exponential curve for remaining 80%
+  // Power of 0.6 makes early progress faster
+  return 20 + (80 * Math.pow(linearProgress, 0.6));
+};
+
 export default function OnboardingScreen({
   currentStep,
   totalSteps,
@@ -78,6 +87,7 @@ export default function OnboardingScreen({
   hasInput = false,
 }: OnboardingScreenProps) {
   const isDark = variant === 'dark';
+  const progress = calculateProgress(currentStep, totalSteps);
   
   const handleSelect = (value: string) => {
     if (!onSelect) return;
@@ -120,7 +130,7 @@ export default function OnboardingScreen({
             style={[
               styles.progressFill, 
               { 
-                width: `${(currentStep / totalSteps) * 100}%`,
+                width: `${progress}%`,
                 backgroundColor: isDark ? COLORS.white : COLORS.lightBlue,
               }
             ]} 
