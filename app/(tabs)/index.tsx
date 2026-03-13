@@ -159,7 +159,7 @@ export default function HomeScreen() {
       ? timerError === 'future_quit_date'
         ? 'days until quit'
         : 'days'
-      : 'days strong';
+      : 'days sober';
 
   // Show loading or error state for savings
   const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
@@ -220,6 +220,7 @@ export default function HomeScreen() {
         />
 
         {/* Main Progress Card */}
+        {/* Main Progress Card */}
         <View style={styles.progressCard}>
           <View style={styles.circularProgress}>
             <View style={styles.progressRing}>
@@ -246,41 +247,6 @@ export default function HomeScreen() {
                 : 'Since you quit'
             }
           </Text>
-          
-          {/* Stats Row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statEmoji}>💰</Text>
-              <Text style={[
-                styles.statValue,
-                // Make text smaller for large amounts to prevent wrapping
-                displayTotalSaved >= 10000 && styles.statValueSmall
-              ]}>
-                {displayCurrency}{formatMoneyCompact(displayTotalSaved)}
-              </Text>
-              <Text style={styles.statLabel}>Saved</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statEmoji}>🫁</Text>
-              <Text style={styles.statValue}>
-                {displayDays === 0 
-                  ? '0%' 
-                  : `${Math.min(Math.floor(displayDays * 0.3), 100)}%`
-                }
-              </Text>
-              <Text style={styles.statLabel}>Lung Recovery</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statEmoji}>❤️</Text>
-              <Text style={styles.statValue}>
-                {displayDays === 0 
-                  ? '0%' 
-                  : `${Math.min(Math.floor(displayDays * 0.4), 100)}%`
-                }
-              </Text>
-              <Text style={styles.statLabel}>Circulation</Text>
-            </View>
-          </View>
         </View>
 
         {/* Money Saved Section */}
@@ -662,29 +628,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
     marginHorizontal: 20,
     borderRadius: 16,
-    padding: 24,
+    paddingVertical: 40,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#03045e',
+    marginBottom: 16,
+    shadowColor: '#000000',
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 4,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 12,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
   circularProgress: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
   },
   progressRing: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 8,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 12,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    borderTopColor: 'rgba(255, 255, 255, 0.8)',
+    borderTopColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -693,62 +660,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   daysNumber: {
-    fontSize: 48,
+    fontSize: 72,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   daysNumberLarge: {
-    fontSize: 36,
+    fontSize: 56,
   },
   daysText: {
-    fontSize: 16,
+    fontSize: 20,
     color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 4,
+    fontWeight: '600',
   },
   timeText: {
-    fontSize: 14,
+    fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 4,
   },
   sinceText: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.9)',
-    marginBottom: 24,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  statItem: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  statEmoji: {
-    fontSize: 24,
-    marginBottom: 8,
-  },
-  statValue: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  statValueSmall: {
-    fontSize: 16,
-  },
-  statLabel: {
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    lineHeight: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontWeight: '500',
   },
   section: {
     backgroundColor: '#FFFFFF',
