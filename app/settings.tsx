@@ -78,6 +78,7 @@ export default function SettingsScreen() {
   const { showSuccess, showError, showInfo } = useToast();
 
   // Edit states
+  const [editingName, setEditingName] = useState(false);
   const [editingQuitDate, setEditingQuitDate] = useState(false);
   const [editingPersonalWhy, setEditingPersonalWhy] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState(false);
@@ -102,6 +103,7 @@ export default function SettingsScreen() {
 
 
   // Temp data states
+  const [tempName, setTempName] = useState(profile?.name || '');
   const [tempQuitDate, setTempQuitDate] = useState<Date>(quitDate || new Date());
   const [tempPersonalWhy, setTempPersonalWhy] = useState(motivation?.quitReason || '');
   const [tempCurrency, setTempCurrency] = useState(currency || '$');
@@ -145,6 +147,9 @@ export default function SettingsScreen() {
     if (profile?.daily_cost !== undefined) {
       // daily_cost column stores WEEKLY spend for CrushBooze
       setTempWeeklySpend(profile.daily_cost.toString());
+    }
+    if (profile?.name !== undefined) {
+      setTempName(profile.name || '');
     }
   }, [motivation, quitDate, currency, profile]);
 
@@ -262,6 +267,36 @@ export default function SettingsScreen() {
         {
           label: 'Retry',
           onPress: () => handleSaveQuitDate()
+        }
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveName = async () => {
+    if (!session?.user?.id) return;
+    
+    setSaving(true);
+    try {
+      const { success, error } = await updateProfile({
+        name: tempName.trim()
+      });
+      
+      if (success) {
+        setEditingName(false);
+        showSuccess('Name Updated', 'Your name has been updated successfully');
+      } else {
+        throw new Error(error || 'Failed to update name');
+      }
+    } catch (error) {
+      console.error('Error updating name:', error);
+      showError(
+        'Update Failed', 
+        'Failed to update name. Please try again.',
+        {
+          label: 'Retry',
+          onPress: () => handleSaveName()
         }
       );
     } finally {
@@ -846,6 +881,23 @@ export default function SettingsScreen() {
           </View>
           <Text style={styles.sectionSubtitle}>Update your key information</Text>
 
+          {/* Name */}
+          <View style={styles.settingItem}>
+            <View style={styles.settingContent}>
+              <Text style={styles.settingLabel}>Name</Text>
+              <Text style={styles.settingValue}>{profile?.name || 'Add your name'}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => {
+                setTempName(profile?.name || '');
+                setEditingName(true);
+              }}
+            >
+              <Edit3 size={16} color="#03045e" />
+            </TouchableOpacity>
+          </View>
+
           {/* Quit Date */}
           <View style={styles.settingItem}>
             <View style={styles.settingContent}>
@@ -1160,6 +1212,57 @@ export default function SettingsScreen() {
                   style={[styles.modalButton, styles.saveButton]} 
                   onPress={handleSaveQuitDate}
                   disabled={saving}
+                >
+                  <Check size={16} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Edit Name Modal */}
+      <Modal
+        visible={editingName}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setEditingName(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Edit Name</Text>
+                <TouchableOpacity onPress={() => setEditingName(false)}>
+                  <X size={20} color="#8E8E93" />
+                </TouchableOpacity>
+              </View>
+              
+              <TextInput
+                style={styles.nameInput}
+                value={tempName}
+                onChangeText={setTempName}
+                placeholder="Enter your name"
+                placeholderTextColor="#8E8E93"
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={() => setEditingName(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.saveButton]} 
+                  onPress={handleSaveName}
+                  disabled={saving || !tempName.trim()}
                 >
                   <Check size={16} color="#FFFFFF" />
                   <Text style={styles.saveButtonText}>{saving ? 'Saving...' : 'Save'}</Text>
@@ -2113,6 +2216,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     marginBottom: 20,
     minHeight: 100,
+  },
+  nameInput: {
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#1C1C1E',
+    backgroundColor: '#F8F9FA',
+    marginBottom: 20,
   },
   passwordInput: {
     borderWidth: 1,

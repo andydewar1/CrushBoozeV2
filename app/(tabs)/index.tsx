@@ -1136,13 +1136,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   achievedBanner: {
-    backgroundColor: '#F5F8FA',
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.15)',
   },
   achievedEmoji: {
     fontSize: 16,

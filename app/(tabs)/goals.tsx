@@ -649,11 +649,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   achievedBanner: {
-    backgroundColor: '#03045e',
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.15)',
     justifyContent: 'center',
     marginTop: 12,
   },
@@ -664,7 +666,7 @@ const styles = StyleSheet.create({
   achievedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#03045e',
   },
   emptyStateTitle: {
     fontSize: 20,
