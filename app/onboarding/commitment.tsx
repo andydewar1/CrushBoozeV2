@@ -27,8 +27,8 @@ export default function CommitmentScreen() {
     ]).start();
   }, []);
 
+  // Data was already saved during the analyzing screen
   const handleContinue = () => {
-    // Just navigate to paywall - data is saved after successful purchase
     router.push('/paywall');
   };
 

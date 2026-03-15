@@ -3,9 +3,8 @@ import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import RevenueCatService from '@/services/RevenueCatService';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSettings } from '@/contexts/SettingsContext';
 import { initializeRevenueCatIfNeeded } from '@/lib/subscription';
-import { saveOnboardingData, OnboardingData } from '@/lib/onboarding';
+import { supabase } from '@/lib/supabase';
 
 interface PaywallPackage {
   identifier: string;
@@ -32,7 +31,6 @@ export function usePaywall() {
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { session } = useAuth();
-  const { refetchProfile } = useSettings();
   const router = useRouter();
 
   // Load packages from RevenueCat
@@ -74,34 +72,8 @@ export function usePaywall() {
     loadPackages();
   }, [session]);
 
-  // Save onboarding data with retry logic for network issues after payment sheet
-  const saveOnboardingWithRetry = async (userId: string, data: OnboardingData, maxRetries = 3): Promise<boolean> => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      console.log(`💾 Save attempt ${attempt}/${maxRetries}...`);
-      
-      // Small delay before retry (network often unstable after payment sheet closes)
-      if (attempt > 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-      }
-      
-      try {
-        const result = await saveOnboardingData(userId, data);
-        if (result.success) {
-          console.log('✅ Onboarding data saved successfully');
-          await refetchProfile();
-          return true;
-        } else {
-          console.error(`⚠️ Save attempt ${attempt} failed:`, result.error);
-        }
-      } catch (err) {
-        console.error(`⚠️ Save attempt ${attempt} threw error:`, err);
-      }
-    }
-    return false;
-  };
-
-  // Purchase a package and save onboarding data
-  const purchasePackage = async (packageToPurchase: PaywallPackage, onboardingData?: OnboardingData) => {
+  // Purchase a package
+  const purchasePackage = async (packageToPurchase: PaywallPackage) => {
     if (purchasing) return;
 
     try {
@@ -110,13 +82,18 @@ export function usePaywall() {
       const result = await RevenueCatService.purchasePackage(packageToPurchase);
       
       if (result.success) {
-        // Save onboarding data after purchase with retry
-        if (onboardingData && session?.user?.id) {
-          console.log('💾 Saving onboarding data after purchase...');
-          const saved = await saveOnboardingWithRetry(session.user.id, onboardingData);
-          if (!saved) {
-            console.error('❌ Failed to save onboarding data after all retries');
-            // Continue anyway - user paid, we should let them in
+        // Mark onboarding as complete AFTER successful purchase
+        if (session?.user?.id) {
+          console.log('✅ Purchase successful, marking onboarding complete...');
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ onboarding_completed: true })
+            .eq('id', session.user.id);
+          
+          if (updateError) {
+            console.error('⚠️ Failed to mark onboarding complete:', updateError);
+          } else {
+            console.log('✅ Onboarding marked as complete!');
           }
         }
 
@@ -125,7 +102,7 @@ export function usePaywall() {
           'Your alcohol-free journey starts now. You have access to all features.',
           [
             {
-              text: 'Let\'s Go!',
+              text: "Let's Go!",
               onPress: () => router.replace('/(tabs)'),
             },
           ]

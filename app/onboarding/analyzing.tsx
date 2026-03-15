@@ -1,7 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
+import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSettings } from '@/contexts/SettingsContext';
+import { saveOnboardingData } from '@/lib/onboarding';
 
 const TOTAL_STEPS = 25;
 
@@ -14,7 +18,49 @@ const STEPS = [
 export default function AnalyzingScreen() {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress] = useState(new Animated.Value(0));
-  const [isComplete, setIsComplete] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const [saveComplete, setSaveComplete] = useState(false);
+  const { data } = useOnboarding();
+  const { user } = useAuth();
+  const { refetchProfile } = useSettings();
+  const saveAttempted = useRef(false);
+
+  // Save data in background during animation
+  useEffect(() => {
+    const saveData = async () => {
+      if (!user || saveAttempted.current) return;
+      saveAttempted.current = true;
+
+      console.log('💾 [ANALYZING] Saving onboarding data in background...');
+      
+      try {
+        const onboardingData = {
+          name: data.name || 'Friend',
+          quitDate: data.quitDate instanceof Date ? data.quitDate : new Date(),
+          weeklySpend: data.weeklySpend || 0,
+          currency: data.currency || 'USD',
+          quitReasons: data.quitReasons || [],
+          personalWhy: data.personalWhy || '',
+          financialGoal: data.financialGoal || { description: '', amount: 0 },
+        };
+        
+        const result = await saveOnboardingData(user.id, onboardingData);
+        
+        if (result.success) {
+          console.log('✅ [ANALYZING] Onboarding data saved successfully!');
+          await refetchProfile();
+        } else {
+          console.error('❌ [ANALYZING] Save failed:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ [ANALYZING] Save error:', error);
+      } finally {
+        setSaveComplete(true);
+      }
+    };
+
+    saveData();
+  }, [user]);
 
   useEffect(() => {
     // Animate through the steps
@@ -31,17 +77,18 @@ export default function AnalyzingScreen() {
       }, index * stepDuration);
     });
 
-    // Auto-navigate after animation completes
+    // Animation completes after all steps
     setTimeout(() => {
-      setIsComplete(true);
+      setAnimationComplete(true);
     }, STEPS.length * stepDuration + 500);
   }, []);
 
+  // Navigate when BOTH animation and save are complete
   useEffect(() => {
-    if (isComplete) {
+    if (animationComplete && saveComplete) {
       router.push('/onboarding/summary');
     }
-  }, [isComplete]);
+  }, [animationComplete, saveComplete]);
 
   const progressWidth = progress.interpolate({
     inputRange: [0, 1],
@@ -56,7 +103,7 @@ export default function AnalyzingScreen() {
       variant="dark"
       onContinue={() => router.push('/onboarding/summary')}
       continueText="Continue"
-      canContinue={isComplete}
+      canContinue={animationComplete && saveComplete}
       showBackButton={false}
     >
       <View style={styles.container}>
