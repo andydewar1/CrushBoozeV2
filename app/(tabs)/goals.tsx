@@ -55,7 +55,7 @@ export default function GoalsScreen() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `${currency}${amount.toLocaleString()}`;
+    return `${currency}${Math.floor(amount).toLocaleString()}`;
   };
 
   const getProgressColor = (progress: number) => {

@@ -195,12 +195,12 @@ export default function HomeScreen() {
     if (amount >= 10000) {
       return Math.floor(amount).toLocaleString();
     }
-    // For smaller amounts, show with decimals
-    return amount.toFixed(2);
+    // For smaller amounts, show with 2 decimals and commas
+    return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   const formatCurrency = (amount: number) => {
-    return `${currency}${amount.toLocaleString()}`;
+    return `${currency}${Math.floor(amount).toLocaleString()}`;
   };
 
   const getProgressColor = (progress: number) => {
