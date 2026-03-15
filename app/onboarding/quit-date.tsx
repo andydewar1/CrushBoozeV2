@@ -8,9 +8,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 const TOTAL_STEPS = 25;
 
+// Get today's date at current time
+const getToday = () => new Date();
+
 export default function QuitDateScreen() {
   const { data, updateData } = useOnboarding();
-  const [date, setDate] = useState(data.quitDate || new Date());
+  
+  // Initialize with TODAY - not from context
+  const [date, setDate] = useState(getToday);
   const [pickerMode, setPickerMode] = useState<'date' | 'time' | null>(null);
 
   const handleContinue = () => {
@@ -23,18 +28,7 @@ export default function QuitDateScreen() {
       setPickerMode(null);
     }
     if (selectedValue) {
-      if (pickerMode === 'date') {
-        const newDate = new Date(date);
-        newDate.setFullYear(selectedValue.getFullYear());
-        newDate.setMonth(selectedValue.getMonth());
-        newDate.setDate(selectedValue.getDate());
-        setDate(newDate);
-      } else if (pickerMode === 'time') {
-        const newDate = new Date(date);
-        newDate.setHours(selectedValue.getHours());
-        newDate.setMinutes(selectedValue.getMinutes());
-        setDate(newDate);
-      }
+      setDate(selectedValue);
     }
   };
 
@@ -111,6 +105,8 @@ export default function QuitDateScreen() {
                     display="spinner"
                     onChange={onPickerChange}
                     style={styles.picker}
+                    textColor="#1A1A2E"
+                    themeVariant="light"
                   />
                 </View>
               </View>

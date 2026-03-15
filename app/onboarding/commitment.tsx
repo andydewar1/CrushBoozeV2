@@ -28,7 +28,7 @@ export default function CommitmentScreen() {
   }, []);
 
   const handleContinue = () => {
-    // Navigate to paywall
+    // Just navigate to paywall - data is saved after successful purchase
     router.push('/paywall');
   };
 

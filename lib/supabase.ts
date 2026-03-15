@@ -4,10 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 
 // Supabase configuration from environment variables with fallbacks
-const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL || process.env.SUPABASE_URL || 'lkfimuzzujgwcfcxbuhl.supabase.co';
+// Full URL with https - no prefix needed
+const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL || process.env.SUPABASE_URL || 'https://lkfimuzzujgwcfcxbuhl.supabase.co';
 const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrZmltdXp6dWpnd2NmY3hidWhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMzI0NjIsImV4cCI6MjA4ODkwODQ2Mn0.mjdvpoCkkU_joSWWLTb3tDz_ULRDFgQsJ6Eni9JoJaY';
 
-export const supabase = createClient(`https://${supabaseUrl}`, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,

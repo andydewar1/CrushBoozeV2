@@ -7,7 +7,8 @@ import {
   KeyboardAvoidingView, 
   Platform,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  ScrollView
 } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -49,43 +50,50 @@ export default function PersonalWhyScreen() {
           </View>
         </View>
 
-        {/* Content */}
-        <View style={styles.content}>
-          <Text style={styles.title}>Now write your personal why.</Text>
-          <Text style={styles.subtitle}>
-            This is your anchor. When things get tough, you'll come back to this. Make it real. Make it yours.
-          </Text>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Content */}
+          <View style={styles.content}>
+            <Text style={styles.title}>Now write your personal why.</Text>
+            <Text style={styles.subtitle}>
+              This is your anchor. When things get tough, you'll come back to this. Make it real. Make it yours.
+            </Text>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="I want to quit drinking because..."
-              placeholderTextColor="#9CA3AF"
-              multiline
-              maxLength={200}
-              value={personalWhy}
-              onChangeText={setPersonalWhy}
-              autoFocus
-              textAlignVertical="top"
-            />
-            <Text style={styles.charCount}>{personalWhy.length}/200</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.textInput}
+                placeholder="I want to quit drinking because..."
+                placeholderTextColor="#9CA3AF"
+                multiline
+                maxLength={200}
+                value={personalWhy}
+                onChangeText={setPersonalWhy}
+                autoFocus
+                textAlignVertical="top"
+              />
+              <Text style={styles.charCount}>{personalWhy.length}/200</Text>
+            </View>
+
+            <Text style={styles.hint}>
+              💡 Tip: Think about the people you love, the life you want, or the person you're becoming.
+            </Text>
           </View>
 
-          <Text style={styles.hint}>
-            💡 Tip: Think about the people you love, the life you want, or the person you're becoming.
-          </Text>
-        </View>
-
-        {/* Bottom button */}
-        <View style={styles.bottomSection}>
-          <TouchableOpacity 
-            style={[styles.continueButton, !personalWhy.trim() && styles.continueButtonDisabled]}
-            onPress={handleContinue}
-            disabled={!personalWhy.trim()}
-          >
-            <Text style={styles.continueText}>Continue</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Bottom button */}
+          <View style={styles.bottomSection}>
+            <TouchableOpacity 
+              style={[styles.continueButton, !personalWhy.trim() && styles.continueButtonDisabled]}
+              onPress={handleContinue}
+              disabled={!personalWhy.trim()}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -98,6 +106,13 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
@@ -121,7 +136,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   content: {
-    flex: 1,
     paddingHorizontal: 24,
     paddingTop: 32,
   },
@@ -166,6 +180,7 @@ const styles = StyleSheet.create({
   bottomSection: {
     paddingHorizontal: 24,
     paddingBottom: 32,
+    paddingTop: 32,
   },
   continueButton: {
     backgroundColor: '#03045e',

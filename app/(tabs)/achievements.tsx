@@ -199,7 +199,10 @@ export default function AchievementsScreen() {
 
         {/* Milestones Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Achievement Milestones</Text>
+          <View style={styles.sectionHeader}>
+            <Crosshair size={20} color="#03045e" />
+            <Text style={styles.sectionTitle}>Achievement Milestones</Text>
+          </View>
           <Text style={styles.sectionSubtitle}>Your journey milestones and badges.</Text>
           
           {loading ? (
@@ -207,10 +210,10 @@ export default function AchievementsScreen() {
               <Text style={styles.loadingText}>Loading achievements...</Text>
             </View>
           ) : error ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.errorText}>
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>
                 {error === 'future_quit_date'
-                  ? 'Achievements will unlock when you quit'
+                  ? 'Your milestones will appear here once your journey begins'
                   : 'Complete onboarding to see achievements'
                 }
               </Text>
@@ -382,6 +385,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
+    marginLeft: 28,
   },
   achievementInfo: {
     marginBottom: 12,
@@ -587,6 +591,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',
+  },
+  emptyStateContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    textAlign: 'center',
+    lineHeight: 24,
   },
   achievementContainer: {
     flexDirection: 'row',

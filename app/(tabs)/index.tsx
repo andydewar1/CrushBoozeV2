@@ -240,11 +240,15 @@ export default function HomeScreen() {
             </View>
           </View>
           <Text style={styles.sinceText}>
-            {timerError && timerError !== 'future_quit_date'
-              ? 'Add your quit and habit data in settings to see your results' 
-              : quitDate 
-                ? `Since ${format(quitDate, 'MMMM d, yyyy')}` 
-                : 'Since you quit'
+            {timerError === 'future_quit_date'
+              ? quitDate 
+                ? `Your journey begins ${format(quitDate, 'MMMM d, yyyy')}`
+                : 'Your journey begins soon'
+              : timerError
+                ? 'Add your quit date in settings to see your results' 
+                : quitDate 
+                  ? `Since ${format(quitDate, 'MMMM d, yyyy')}` 
+                  : 'Since you quit'
             }
           </Text>
         </View>
@@ -287,7 +291,7 @@ export default function HomeScreen() {
                   ? quitDate 
                     ? `Savings begin on ${format(quitDate, 'MMMM d, yyyy')}!`
                     : 'Savings will start when you quit!'
-                  : 'Add your quit and habit data in settings to see your results' 
+                  : 'Add your quit date in settings to see your results' 
                 : displayTotalSaved > 0 
                   ? 'Every minute counts!' 
                   : 'Your savings will start growing once you quit!'
@@ -314,7 +318,7 @@ export default function HomeScreen() {
               <Text style={styles.achievementName}>
                 {achievementsError === 'future_quit_date' 
                   ? 'Achievements coming soon' 
-                  : 'Add your quit and habit data in settings to see your results'
+                  : 'Add your quit date in settings to see your results'
                 }
               </Text>
               <Text style={styles.achievementDescription}>
@@ -411,7 +415,7 @@ export default function HomeScreen() {
               <View style={styles.goalHeader}>
                 <View style={styles.goalInfo}>
                   <Text style={styles.goalName}>
-                    {goalError ? 'Add your quit and habit data in settings to see your results' : 'No financial goals set'}
+                    {goalError ? 'Add your quit date in settings to see your results' : 'No financial goals set'}
                   </Text>
                   <Text style={styles.goalTarget}>--</Text>
                 </View>
@@ -498,7 +502,7 @@ export default function HomeScreen() {
           {motivationError || !motivation ? (
             <View style={styles.motivationContainer}>
               <Text style={styles.motivationText}>
-                {motivationError ? 'Add your quit and habit data in settings to see your results' : 'No motivation set yet'}
+                {motivationError ? 'Add your quit date in settings to see your results' : 'No motivation set yet'}
               </Text>
             </View>
           ) : (
@@ -539,7 +543,12 @@ export default function HomeScreen() {
           {healthError ? (
             <View style={styles.timelineContainer}>
               <Text style={styles.timelineDescription}>
-                Add your quit and habit data in settings to see your results
+                {healthError === 'future_quit_date'
+                  ? quitDate 
+                    ? `Your health recovery begins ${format(quitDate, 'MMMM d, yyyy')}`
+                    : 'Your health recovery begins when you quit'
+                  : 'Add your quit date in settings to see your results'
+                }
               </Text>
             </View>
           ) : (
@@ -1134,6 +1143,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
+    marginTop: 8,
   },
   achievedBanner: {
     backgroundColor: 'rgba(3, 4, 94, 0.08)',

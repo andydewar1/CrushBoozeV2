@@ -248,7 +248,13 @@ export default function OnboardingScreen({
 
   return (
     <SafeAreaView style={containerStyle}>
-      {content}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContentFlex}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        {content}
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -262,6 +268,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+  },
+  scrollContentFlex: {
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   header: {
     paddingHorizontal: 20,

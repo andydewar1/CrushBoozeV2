@@ -25,7 +25,7 @@ export interface OnboardingResult {
  */
 export async function saveOnboardingData(userId: string, data: OnboardingData): Promise<OnboardingResult> {
   try {
-    console.log('💾 Saving onboarding data for user:', userId);
+    console.log('💾 CRITICAL: Saving onboarding data for user:', userId);
     console.log('💾 Onboarding data:', {
       name: data.name,
       quitDate: data.quitDate,
@@ -57,15 +57,15 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       updated_at: new Date().toISOString()
     };
 
-    console.log('💾 Profile data prepared for upsert:', { 
+    console.log('💾 CRITICAL: Profile data prepared for upsert:', { 
       userId, 
       name: profileData.name,
+      onboarding_completed: true,
       dailyCost: profileData.daily_cost,
-      hasQuit: profileData.has_quit,
       personalGoalsCount: profileData.personal_goals.length 
     });
 
-    // Use upsert to handle create or update
+    // Use upsert to handle create or update without pre-checking
     const { data: savedProfile, error } = await supabase
       .from('profiles')
       .upsert(profileData, { onConflict: 'id' })
@@ -73,7 +73,8 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       .single();
 
     if (error) {
-      console.error('❌ Profile save failed:', error);
+      console.error('❌ CRITICAL: Profile save failed:', error);
+      console.error('❌ Error details:', { code: error.code, message: error.message, details: error.details });
       return { success: false, error: `Profile save failed: ${error.message}` };
     }
 
@@ -93,11 +94,13 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
 
         if (goalError) {
           console.error('⚠️ Warning: Failed to create financial goal:', goalError);
+          // Don't fail the entire onboarding if goal creation fails
         } else {
           console.log('✅ Financial goal created successfully');
         }
       } catch (goalError) {
         console.error('⚠️ Error handling financial goal:', goalError);
+        // Don't fail the entire onboarding if goal creation fails
       }
     }
 

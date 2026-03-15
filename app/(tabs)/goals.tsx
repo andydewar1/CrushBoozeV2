@@ -635,6 +635,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
+    marginTop: 8,
   },
   completeButton: {
     backgroundColor: '#03045e',

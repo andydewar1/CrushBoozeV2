@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Animated,
+  Alert,
 } from "react-native";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
@@ -55,6 +56,7 @@ export default function PaywallScreen() {
     if (!DEV_MODE) return;
     
     console.log('🔧 DEV MODE: Skipping paywall...');
+    console.log('🔧 DEV MODE: Session:', session?.user?.id);
     console.log('🔧 DEV MODE: Onboarding data:', {
       name: data.name,
       weeklySpend: data.weeklySpend,
@@ -67,23 +69,43 @@ export default function PaywallScreen() {
     
     // Save onboarding data (using actual data from onboarding)
     if (session?.user?.id) {
-      const onboardingData = {
-        name: data.name,
-        quitDate: data.quitDate,
-        weeklySpend: data.weeklySpend,
-        currency: data.currency,
-        quitReasons: data.quitReasons,
-        personalWhy: data.personalWhy,
-        financialGoal: data.financialGoal,
-      };
-      
-      console.log('💾 DEV MODE: Saving onboarding data...', onboardingData);
-      const result = await saveOnboardingData(session.user.id, onboardingData);
-      console.log('💾 DEV MODE: Save result:', result);
-      
-      // Refetch profile so the app has the latest data
-      console.log('🔄 DEV MODE: Refetching profile...');
-      await refetchProfile();
+      try {
+        // Ensure quitDate is a valid Date
+        const quitDate = data.quitDate instanceof Date ? data.quitDate : new Date(data.quitDate || Date.now());
+        
+        const onboardingData = {
+          name: data.name || 'Friend',
+          quitDate: quitDate,
+          weeklySpend: data.weeklySpend || 0,
+          currency: data.currency || 'USD',
+          quitReasons: data.quitReasons || [],
+          personalWhy: data.personalWhy || '',
+          financialGoal: data.financialGoal || { description: '', amount: 0 },
+        };
+        
+        console.log('💾 DEV MODE: Saving onboarding data...', onboardingData);
+        const result = await saveOnboardingData(session.user.id, onboardingData);
+        console.log('💾 DEV MODE: Save result:', result);
+        
+        if (!result.success) {
+          console.error('❌ DEV MODE: Save failed:', result.error);
+          Alert.alert('Save Error', result.error || 'Failed to save onboarding data');
+          return;
+        }
+        
+        // Refetch profile so the app has the latest data
+        console.log('🔄 DEV MODE: Refetching profile...');
+        await refetchProfile();
+        console.log('✅ DEV MODE: Profile refetched');
+      } catch (error) {
+        console.error('❌ DEV MODE: Error saving data:', error);
+        Alert.alert('Error', 'Failed to save your data. Please try again.');
+        return;
+      }
+    } else {
+      console.error('❌ DEV MODE: No session found!');
+      Alert.alert('Not Logged In', 'Please log in first.');
+      return;
     }
     
     // Navigate to main app
@@ -147,15 +169,21 @@ export default function PaywallScreen() {
     const selectedPackage = plan === 'annual' ? annualPackage : monthlyPackage;
     if (selectedPackage) {
       // Build onboarding data to save after purchase
+      const quitDate = data.quitDate instanceof Date && !isNaN(data.quitDate.getTime())
+        ? data.quitDate
+        : new Date();
+      
       const onboardingData = {
-        name: data.name,
-        quitDate: data.quitDate,
-        weeklySpend: data.weeklySpend,
-        currency: data.currency,
-        quitReasons: data.quitReasons,
-        personalWhy: data.personalWhy,
-        financialGoal: data.financialGoal,
+        name: data.name || 'Friend',
+        quitDate: quitDate,
+        weeklySpend: data.weeklySpend || 0,
+        currency: data.currency || 'USD',
+        quitReasons: Array.isArray(data.quitReasons) ? data.quitReasons : [],
+        personalWhy: data.personalWhy || '',
+        financialGoal: data.financialGoal || { description: '', amount: 0 },
       };
+      
+      console.log('📦 Onboarding data for purchase:', JSON.stringify(onboardingData, null, 2));
       await purchasePackage(selectedPackage, onboardingData);
     }
   };
@@ -197,16 +225,16 @@ export default function PaywallScreen() {
         )}
 
         {/* Header */}
-        <View style={[styles.header, { marginTop: compact ? 8 : 16 }]}>
-          <Text style={[styles.headline, { fontSize: compact ? 24 : 28 }]}>
-            {data.name ? `${data.name}, your` : "Your"} personalised{"\n"}plan is ready
+        <View style={[styles.header, { marginTop: compact ? 4 : 12 }]}>
+          <Text style={[styles.headline, { fontSize: compact ? 22 : 26 }]}>
+            {data.name || "Your"}, your plan is ready
           </Text>
         </View>
 
         {/* Spending stat */}
         <View style={styles.spendCard}>
-          <Text style={[styles.spendText, { fontSize: compact ? 15 : 17 }]}>
-            You currently spend <Text style={styles.spendHighlight}>{getCurrencySymbol()}{yearlySpend.toLocaleString()}/year</Text> on alcohol
+          <Text style={[styles.spendText, { fontSize: compact ? 13 : 15 }]}>
+            You spend <Text style={styles.spendHighlight}>{getCurrencySymbol()}{yearlySpend.toLocaleString()}/yr</Text> on alcohol
           </Text>
         </View>
 
@@ -228,24 +256,20 @@ export default function PaywallScreen() {
         <View style={styles.benefitsSection}>
           <View style={styles.benefitsList}>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={22} color={NAVY} />
-              <Text style={[styles.benefitText, { fontSize: compact ? 15 : 16 }]}>Watch your progress grow in real-time</Text>
+              <Ionicons name="checkmark-circle" size={20} color={NAVY} />
+              <Text style={[styles.benefitText, { fontSize: compact ? 14 : 15 }]}>Track your progress in real-time</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={22} color={NAVY} />
-              <Text style={[styles.benefitText, { fontSize: compact ? 15 : 16 }]}>See exactly how much money you're saving</Text>
+              <Ionicons name="checkmark-circle" size={20} color={NAVY} />
+              <Text style={[styles.benefitText, { fontSize: compact ? 14 : 15 }]}>See exactly how much money you're saving</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={22} color={NAVY} />
-              <Text style={[styles.benefitText, { fontSize: compact ? 15 : 16 }]}>Get instant support when urges hit hardest</Text>
+              <Ionicons name="checkmark-circle" size={20} color={NAVY} />
+              <Text style={[styles.benefitText, { fontSize: compact ? 14 : 15 }]}>Get instant support when urges hit</Text>
             </View>
             <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={22} color={NAVY} />
-              <Text style={[styles.benefitText, { fontSize: compact ? 15 : 16 }]}>Spot your triggers and break the patterns</Text>
-            </View>
-            <View style={styles.benefitItem}>
-              <Ionicons name="checkmark-circle" size={22} color={NAVY} />
-              <Text style={[styles.benefitText, { fontSize: compact ? 15 : 16 }]}>Set and crush your personal financial goals</Text>
+              <Ionicons name="checkmark-circle" size={20} color={NAVY} />
+              <Text style={[styles.benefitText, { fontSize: compact ? 14 : 15 }]}>Spot your triggers and break patterns</Text>
             </View>
           </View>
         </View>
@@ -436,7 +460,7 @@ const styles = StyleSheet.create({
 
   // Testimonial
   testimonialSection: {
-    marginBottom: 12,
+    marginBottom: 10,
     alignItems: 'center',
   },
   testimonialCard: {
@@ -475,10 +499,10 @@ const styles = StyleSheet.create({
 
   // Benefits
   benefitsSection: {
-    marginBottom: 12,
+    marginBottom: 10,
   },
   benefitsList: {
-    gap: 10,
+    gap: 8,
   },
   benefitItem: {
     flexDirection: 'row',
