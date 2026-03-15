@@ -21,7 +21,7 @@ import { saveOnboardingData } from "@/lib/onboarding";
 
 // 🚨 DEV MODE: Set to true to show skip button during development
 // ⚠️ IMPORTANT: Set back to false before submitting to App Store!
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 type Plan = "annual" | "monthly";
 
@@ -334,11 +334,11 @@ export default function PaywallScreen() {
               <Text style={[styles.footerLink, purchasing && { opacity: 0.5 }]}>Restore</Text>
             </Pressable>
             <Text style={styles.footerDot}>·</Text>
-            <Pressable onPress={() => open("https://crushbooze.com/terms-of-service/")}>
+            <Pressable onPress={() => open("https://crushnic.com/terms-of-service/")}>
               <Text style={styles.footerLink}>Terms</Text>
             </Pressable>
             <Text style={styles.footerDot}>·</Text>
-            <Pressable onPress={() => open("https://crushbooze.com/privacy-policy/")}>
+            <Pressable onPress={() => open("https://crushnic.com/privacy-policy/")}>
               <Text style={styles.footerLink}>Privacy</Text>
             </Pressable>
           </View>

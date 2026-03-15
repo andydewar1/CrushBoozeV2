@@ -111,6 +111,10 @@ export default function SummaryScreen() {
             <Text style={styles.whyText}>"{data.personalWhy}"</Text>
           </View>
         )}
+
+        <Text style={styles.disclaimerText}>
+          Disclaimer: This app is for wellness purposes only and does not provide medical advice. Consult a healthcare professional before changing your alcohol consumption.
+        </Text>
       </View>
     </OnboardingScreen>
   );
@@ -119,17 +123,17 @@ export default function SummaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    paddingBottom: 20,
+    justifyContent: 'flex-start',
+    marginTop: -50,
   },
   emoji: {
-    fontSize: 56,
-    marginBottom: 20,
+    fontSize: 48,
+    marginBottom: 12,
   },
   intro: {
     fontSize: 22,
     color: '#FFFFFF',
-    marginBottom: 24,
+    marginBottom: 16,
     lineHeight: 30,
   },
   card: {
@@ -185,5 +189,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontStyle: 'italic',
     lineHeight: 24,
+  },
+  disclaimerText: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    lineHeight: 16,
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.15)',
   },
 });

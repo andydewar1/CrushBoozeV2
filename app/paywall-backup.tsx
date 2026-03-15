@@ -215,11 +215,11 @@ export default function PaywallBackupScreen() {
 
           {/* Legal */}
           <View style={styles.footerLinks}>
-            <Pressable onPress={() => open("https://crushbooze.com/privacy-policy/")}>
+            <Pressable onPress={() => open("https://crushnic.com/privacy-policy/")}>
               <Text style={styles.link}>Privacy Policy</Text>
             </Pressable>
             <Text style={styles.dot}>·</Text>
-            <Pressable onPress={() => open("https://crushbooze.com/terms-of-service/")}>
+            <Pressable onPress={() => open("https://crushnic.com/terms-of-service/")}>
               <Text style={styles.link}>Terms of Use</Text>
             </Pressable>
           </View>
