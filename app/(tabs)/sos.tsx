@@ -120,7 +120,7 @@ export default function SOSScreen() {
             <Text style={styles.breathingEmoji}>🧘</Text>
             <Text style={styles.breathingTitle}>Box Breathing Exercise</Text>
           </View>
-          <Text style={styles.breathingSubtitle}>Calm your mind and reduce cravings</Text>
+          <Text style={styles.breathingSubtitle}>Calm your mind and ease the urge</Text>
 
           <View style={styles.breathingContainer}>
             <TouchableOpacity style={styles.breathingCircle} onPress={toggleBreathing}>
@@ -147,7 +147,7 @@ export default function SOSScreen() {
           </View>
 
           <Text style={styles.breathingInstructions}>
-            Focus on your breath and let the craving pass.
+            Focus on your breath and let the urge pass.
           </Text>
         </View>
 
@@ -207,7 +207,7 @@ export default function SOSScreen() {
         {/* Quick Distraction Techniques */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Distraction Techniques</Text>
-          <Text style={styles.sectionSubtitle}>Redirect your mind when cravings hit.</Text>
+          <Text style={styles.sectionSubtitle}>Redirect your mind when urges hit.</Text>
 
           <View style={styles.techniquesGrid}>
             <TouchableOpacity style={styles.techniqueCard}>

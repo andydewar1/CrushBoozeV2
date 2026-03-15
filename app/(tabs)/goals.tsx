@@ -555,16 +555,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   achievedGoalCard: {
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(3, 4, 94, 0.2)',
-    shadowColor: '#03045e',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    borderColor: '#E5E5EA',
   },
   goalHeader: {
     flexDirection: 'row',
@@ -656,13 +649,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   achievedBanner: {
-    backgroundColor: '#F5F8FA',
+    backgroundColor: '#03045e',
     borderRadius: 8,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 12,
   },
   achievedEmoji: {
     fontSize: 16,
@@ -671,7 +664,7 @@ const styles = StyleSheet.create({
   achievedText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#03045e',
+    color: '#FFFFFF',
   },
   emptyStateTitle: {
     fontSize: 20,

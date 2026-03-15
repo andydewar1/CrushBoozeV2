@@ -66,12 +66,12 @@ export default function LogModal({ visible, onClose, onSave, onUpdate, editingLo
 
   const handleSave = async () => {
     if (!trigger.trim()) {
-      Alert.alert('Validation Error', 'Please enter what triggered the craving.');
+      Alert.alert('Validation Error', 'Please enter what triggered the urge.');
       return;
     }
 
     if (!copingStrategy.trim()) {
-      Alert.alert('Validation Error', 'Please enter how you dealt with the craving.');
+      Alert.alert('Validation Error', 'Please enter how you dealt with the urge.');
       return;
     }
 
@@ -114,7 +114,7 @@ export default function LogModal({ visible, onClose, onSave, onUpdate, editingLo
       >
         <View style={styles.header}>
           <Text style={styles.title}>
-            {isEditing ? 'Edit Craving Log' : 'Log New Craving'}
+            {isEditing ? 'Edit Urge Log' : 'Log New Urge'}
           </Text>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <X size={24} color="#8E8E93" />
@@ -129,7 +129,7 @@ export default function LogModal({ visible, onClose, onSave, onUpdate, editingLo
         >
           {/* Intensity Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>How intense was the craving?</Text>
+            <Text style={styles.sectionTitle}>How intense was the urge?</Text>
             <Text style={styles.sectionSubtitle}>Tap a number from 1 (mild) to 10 (overwhelming)</Text>
             
             <View style={styles.intensityContainer}>
@@ -178,7 +178,7 @@ export default function LogModal({ visible, onClose, onSave, onUpdate, editingLo
 
           {/* Trigger Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What triggered the craving?</Text>
+            <Text style={styles.sectionTitle}>What triggered the urge?</Text>
             <Text style={styles.sectionSubtitle}>Identify what led to this feeling</Text>
             <TextInput
               style={styles.textInput}

@@ -56,7 +56,7 @@ export default function LogsScreen() {
   const handleDeleteLog = (log: CravingLog) => {
     Alert.alert(
       'Delete Log',
-      'Are you sure you want to delete this craving log?',
+      'Are you sure you want to delete this urge log?',
       [
         {
           text: 'Cancel',
@@ -157,20 +157,20 @@ export default function LogsScreen() {
         <View style={styles.section}>
           <TouchableOpacity style={styles.addButton} onPress={handleAddLog}>
             <Plus size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Log New Craving</Text>
+            <Text style={styles.addButtonText}>Log New Urge</Text>
           </TouchableOpacity>
         </View>
 
         {/* Logs List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Logs</Text>
-          <Text style={styles.sectionSubtitle}>Track your cravings and how you handled them.</Text>
+          <Text style={styles.sectionSubtitle}>Track your urges and how you handled them.</Text>
           
           {logs.length === 0 ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyStateTitle}>No logs yet</Text>
               <Text style={styles.emptyStateSubtitle}>
-                Start by logging your first craving to track your journey
+                Start by logging your first urge to track your journey
               </Text>
             </View>
           ) : (

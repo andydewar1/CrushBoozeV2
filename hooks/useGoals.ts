@@ -115,15 +115,6 @@ export function useGoals(): UseGoalsReturn {
     }
 
     try {
-      // If making this goal primary, unset any existing primary goal first
-      if (goal.is_primary) {
-        await supabase
-          .from('financial_goals')
-          .update({ is_primary: false })
-          .eq('user_id', session.user.id)
-          .eq('is_primary', true);
-      }
-
       const { data, error: insertError } = await supabase
         .from('financial_goals')
         .insert({
@@ -131,8 +122,6 @@ export function useGoals(): UseGoalsReturn {
           name: goal.name,
           target_amount: goal.target_amount,
           description: goal.description || null,
-          is_primary: goal.is_primary || false,
-          baseline_amount: 0, // New goals start with 0 baseline
         })
         .select()
         .single();

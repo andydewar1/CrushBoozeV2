@@ -230,7 +230,7 @@ export default function HomeScreen() {
                   // Reduce font size for very large day counts (4+ digits)
                   displayDays >= 1000 && styles.daysNumberLarge
                 ]}>
-                  {displayDays}
+                  {displayDays.toLocaleString()}
                 </Text>
                 <Text style={styles.daysText}>{displayText}</Text>
                 {!timerError || timerError === 'future_quit_date' ? (

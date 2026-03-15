@@ -44,7 +44,7 @@ export default function AchievementsScreen() {
           <View style={styles.statBox}>
             <Target size={24} color="#FF6B47" />
             <Text style={styles.statNumber}>
-              {loading ? '...' : error ? '0' : stats.daysFree}
+              {loading ? '...' : error ? '0' : stats.daysFree.toLocaleString()}
             </Text>
             <Text 
               style={styles.statLabel}

@@ -49,12 +49,12 @@ const CURRENCIES = [
 
 
 const PERSONAL_GOALS = [
-  { id: 'money', title: 'Save Money' },
-  { id: 'health', title: 'Improve Health' },
-  { id: 'sleep', title: 'Sleep Better' },
-  { id: 'balance', title: 'More Balance' },
-  { id: 'compassion', title: 'Self-Compassion' },
-  { id: 'stress', title: 'Reduce Stress' },
+  { id: 'money', title: '💰 Save money' },
+  { id: 'health', title: '💪 Feel healthier' },
+  { id: 'sleep', title: '😴 Sleep better' },
+  { id: 'clarity', title: '🧠 Think clearer' },
+  { id: 'relationships', title: '👨‍👩‍👧‍👦 Better relationships' },
+  { id: 'weight', title: '⚖️ Lose weight' },
 ];
 
 
