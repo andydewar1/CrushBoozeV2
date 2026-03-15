@@ -71,10 +71,11 @@ export const useReviewPrompt = () => {
   };
 
   const openAppStore = () => {
-    const appId = 'your-app-id'; // Replace with actual App Store ID
+    // TODO: Update with actual App Store ID once app is published
+    const appId = 'crushbooze'; // Placeholder - update after App Store approval
     const url = Platform.select({
       ios: `https://apps.apple.com/app/id${appId}?action=write-review`,
-      android: `market://details?id=com.crushnic.quitvaping&showAllReviews=true`,
+      android: `market://details?id=com.quitdrinking.crushbooze&showAllReviews=true`,
     });
 
     if (url) {
@@ -82,7 +83,7 @@ export const useReviewPrompt = () => {
         // Fallback to web version
         const webUrl = Platform.select({
           ios: `https://apps.apple.com/app/id${appId}`,
-          android: `https://play.google.com/store/apps/details?id=com.crushnic.quitvaping`,
+          android: `https://play.google.com/store/apps/details?id=com.quitdrinking.crushbooze`,
         });
         if (webUrl) {
           Linking.openURL(webUrl);
