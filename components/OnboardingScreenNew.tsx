@@ -233,6 +233,7 @@ export default function OnboardingScreen({
         <KeyboardAvoidingView 
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
         >
           <ScrollView 
             contentContainerStyle={styles.scrollContent}
@@ -268,6 +269,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 40,
   },
   scrollContentFlex: {
     flexGrow: 1,
