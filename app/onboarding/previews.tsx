@@ -8,7 +8,9 @@ import {
   NativeSyntheticEvent, 
   NativeScrollEvent,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  Image,
+  ImageSourcePropType
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,20 +24,20 @@ const calculateProgress = (current: number, total: number): number => {
   return 20 + (80 * Math.pow(linearProgress, 0.6));
 };
 
-const previews = [
+const previews: { image: ImageSourcePropType; title: string; subtitle: string }[] = [
   {
-    emoji: '📊',
-    title: 'Dashboard Preview',
+    image: require('@/assets/images/Dashboard.png'),
+    title: 'Your Dashboard',
     subtitle: 'Track your progress in real time.',
   },
   {
-    emoji: '🎯',
-    title: 'Goals Preview',
+    image: require('@/assets/images/Goals.png'),
+    title: 'Financial Goals',
     subtitle: 'Turn your drinking money into real goals.',
   },
   {
-    emoji: '🆘',
-    title: 'SOS Feature Preview',
+    image: require('@/assets/images/SOS.png'),
+    title: 'SOS Feature',
     subtitle: 'Break urges in seconds.',
   },
 ];
@@ -93,10 +95,12 @@ export default function PreviewsScreen() {
         >
           {previews.map((preview, index) => (
             <View key={index} style={styles.slide}>
-              <View style={styles.screenshotPlaceholder}>
-                <Text style={styles.placeholderEmoji}>{preview.emoji}</Text>
-                <Text style={styles.placeholderText}>{preview.title}</Text>
-                <Text style={styles.placeholderSubtext}>Screenshot will go here</Text>
+              <View style={styles.screenshotContainer}>
+                <Image 
+                  source={preview.image} 
+                  style={styles.screenshot}
+                  resizeMode="contain"
+                />
               </View>
             </View>
           ))}
@@ -189,31 +193,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  screenshotPlaceholder: {
+  screenshotContainer: {
     width: '100%',
     aspectRatio: 9/16,
-    maxHeight: 400,
-    backgroundColor: '#F5F5F5',
+    maxHeight: 450,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#E5E5E5',
-    borderStyle: 'dashed',
+    overflow: 'hidden',
+    backgroundColor: '#F5F5F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  placeholderEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  placeholderText: {
-    fontSize: 18,
-    color: '#1A1A2E',
-    fontWeight: '600',
-  },
-  placeholderSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
+  screenshot: {
+    width: '100%',
+    height: '100%',
   },
   bottomSection: {
     paddingHorizontal: 24,
