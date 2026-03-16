@@ -90,8 +90,6 @@ export default function SettingsScreen() {
   const [editingChangeEmail, setEditingChangeEmail] = useState(false);
   const [showHelpFAQ, setShowHelpFAQ] = useState(false);
   const [showContactSupport, setShowContactSupport] = useState(false);
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showMedicalDisclaimer, setShowMedicalDisclaimer] = useState(false);
   
   // RevenueCat states
@@ -636,13 +634,13 @@ export default function SettingsScreen() {
 
   const handleContactSupport = async () => {
     try {
-      await WebBrowser.openBrowserAsync('https://crushbooze.com/support/', {
+      await WebBrowser.openBrowserAsync('https://crushnic.com/support/', {
         presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
         controlsColor: '#03045e',
       });
     } catch (error) {
       console.error('Error opening support page:', error);
-      Alert.alert('Error', 'Unable to open support page. Please visit crushbooze.com/support directly.');
+      Alert.alert('Error', 'Unable to open support page. Please visit crushnic.com/support directly.');
     }
   };
 
@@ -650,12 +648,26 @@ export default function SettingsScreen() {
     setShowHelpFAQ(true);
   };
 
-  const handlePrivacyPolicy = () => {
-    setShowPrivacyPolicy(true);
+  const handlePrivacyPolicy = async () => {
+    try {
+      await WebBrowser.openBrowserAsync('https://crushnic.com/privacy-policy/', {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+        controlsColor: '#03045e',
+      });
+    } catch (error) {
+      console.error('Error opening privacy policy:', error);
+    }
   };
 
-  const handleTermsOfService = () => {
-    setShowTermsOfService(true);
+  const handleTermsOfService = async () => {
+    try {
+      await WebBrowser.openBrowserAsync('https://crushnic.com/terms-of-service/', {
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.FORM_SHEET,
+        controlsColor: '#03045e',
+      });
+    } catch (error) {
+      console.error('Error opening terms of service:', error);
+    }
   };
 
   const handleMedicalDisclaimer = () => {
@@ -1704,7 +1716,7 @@ export default function SettingsScreen() {
                  <View style={styles.faqItem}>
                    <Text style={styles.faqQuestion}>Need more help?</Text>
                    <Text style={styles.faqAnswer}>
-                     Contact our support team through Settings → Support & Info → Contact Support, or visit crushbooze.com/support.
+                     Contact our support team through Settings → Support & Info → Contact Support, or visit crushnic.com/support.
                    </Text>
                  </View>
               </View>
@@ -1712,152 +1724,6 @@ export default function SettingsScreen() {
               <TouchableOpacity 
                 style={[styles.modalButton, styles.saveButton]} 
                 onPress={() => setShowHelpFAQ(false)}
-              >
-                <Text style={styles.saveButtonText}>Close</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Privacy Policy Modal */}
-      <Modal
-        visible={showPrivacyPolicy}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowPrivacyPolicy(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Privacy Policy</Text>
-                <TouchableOpacity onPress={() => setShowPrivacyPolicy(false)}>
-                  <X size={20} color="#8E8E93" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.legalDocContainer}>
-                <Text style={styles.legalDocText}>
-                  Last updated: March 2026{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Introduction{'\n\n'}</Text>
-                  Welcome to CrushBooze ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we handle your information when you use our CrushBooze mobile application (the "App") and website at crushbooze.com.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Information We Collect{'\n\n'}</Text>
-                  <Text style={styles.legalDocSubheader}>Information You Provide Directly{'\n\n'}</Text>
-                  • Account information (email address, password){'\n'}
-                  • Quit date and personal motivation statements{'\n'}
-                  • Selected personal goals and weekly spending{'\n'}
-                  • Financial goals and savings targets{'\n'}
-                  • Urge logs and coping strategy notes{'\n\n'}
-                  
-                  <Text style={styles.legalDocSubheader}>Information Collected Automatically{'\n\n'}</Text>
-                  • App usage patterns and session duration{'\n'}
-                  • Device information and performance metrics{'\n'}
-                  • Authentication and security data{'\n\n'}
-                  
-                  <Text style={styles.legalDocSubheader}>Information We Do NOT Collect{'\n\n'}</Text>
-                  We explicitly do not collect: location data, contacts, photos, browser history, information from other apps, social media profiles, or biometric data.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>How We Use Your Information{'\n\n'}</Text>
-                  • Track your progress and calculate savings{'\n'}
-                  • Provide personalized achievements and milestones{'\n'}
-                  • Analyze urge patterns and provide support{'\n'}
-                  • Improve app performance and user experience{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Data Security{'\n\n'}</Text>
-                  Your data is encrypted and stored securely using Supabase infrastructure with industry-standard security measures including TLS 1.3 encryption, secure authentication, and regular security audits.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Your Rights{'\n\n'}</Text>
-                  You have the right to access, correct, export, or delete your personal information at any time through the app settings. You can also control notification preferences and withdraw consent.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Contact Us{'\n\n'}</Text>
-                  Support: crushbooze.com/support{'\n\n'}
-                  
-                  Odiono LTD{'\n'}
-                  20-22 Wenlock Road{'\n'}
-                  London, N1 7GU{'\n'}
-                  United Kingdom{'\n\n'}
-                  
-                  This policy is effective as of March 2026.
-                </Text>
-              </View>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]} 
-                onPress={() => setShowPrivacyPolicy(false)}
-              >
-                <Text style={styles.saveButtonText}>Close</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Terms of Service Modal */}
-      <Modal
-        visible={showTermsOfService}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowTermsOfService(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Terms of Service</Text>
-                <TouchableOpacity onPress={() => setShowTermsOfService(false)}>
-                  <X size={20} color="#8E8E93" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.legalDocContainer}>
-                <Text style={styles.legalDocText}>
-                  Last updated: March 2026{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Agreement to Terms{'\n\n'}</Text>
-                  By using the CrushBooze mobile application or website, you agree to be bound by these Terms of Service. If you disagree with any part of these terms, you may not access the Service.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Description of Service{'\n\n'}</Text>
-                  CrushBooze is a digital health and wellness application designed to support individuals in reducing or quitting alcohol consumption. The App provides progress tracking, financial calculations, goal setting, urge support, and achievement systems.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Eligibility{'\n\n'}</Text>
-                  You must be at least 18 years old to use this Service. You must provide accurate information during registration and maintain the security of your account.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Acceptable Use{'\n\n'}</Text>
-                  You may use the Service to track your sobriety journey, set goals, and access support resources. You may not violate laws, infringe rights of others, transmit harmful content, or attempt unauthorized access.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Health Disclaimers{'\n\n'}</Text>
-                  <Text style={styles.legalDocImportant}>IMPORTANT:</Text> CrushBooze is not a medical device and does not provide medical advice. The App is for educational and motivational purposes only. Always consult healthcare professionals for medical decisions.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Privacy{'\n\n'}</Text>
-                  Your privacy is protected according to our Privacy Policy. We implement security measures but cannot guarantee absolute security. You use the Service at your own risk regarding data security.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Termination{'\n\n'}</Text>
-                  You may terminate your account at any time. We may terminate accounts for violations of these Terms. Upon termination, your data will be deleted as described in our Privacy Policy.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Limitation of Liability{'\n\n'}</Text>
-                  Our liability is limited to £100 or amounts paid in the past 12 months. We are not liable for indirect or consequential damages. The Service is provided "as is" without warranties.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Governing Law{'\n\n'}</Text>
-                  These Terms are governed by the laws of England and Wales. Disputes are subject to the exclusive jurisdiction of English courts.{'\n\n'}
-                  
-                  <Text style={styles.legalDocHeader}>Contact Information{'\n\n'}</Text>
-                  Support: crushbooze.com/support{'\n\n'}
-                  
-                  Odiono LTD{'\n'}
-                  20-22 Wenlock Road{'\n'}
-                  London, N1 7GU{'\n'}
-                  United Kingdom{'\n\n'}
-                  
-                  Effective Date: March 2026
-                </Text>
-              </View>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]} 
-                onPress={() => setShowTermsOfService(false)}
               >
                 <Text style={styles.saveButtonText}>Close</Text>
               </TouchableOpacity>
