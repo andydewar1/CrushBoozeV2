@@ -82,18 +82,37 @@ export function usePaywall() {
       const result = await RevenueCatService.purchasePackage(packageToPurchase);
       
       if (result.success) {
-        // Mark onboarding as complete AFTER successful purchase
+        // Mark onboarding as complete AFTER successful purchase (with retry for network issues)
         if (session?.user?.id) {
           console.log('✅ Purchase successful, marking onboarding complete...');
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ onboarding_completed: true })
-            .eq('id', session.user.id);
           
-          if (updateError) {
-            console.error('⚠️ Failed to mark onboarding complete:', updateError);
-          } else {
-            console.log('✅ Onboarding marked as complete!');
+          // Retry up to 3 times with increasing delays (network can be unstable after payment sheet)
+          let marked = false;
+          for (let attempt = 1; attempt <= 3 && !marked; attempt++) {
+            try {
+              // Small delay before each attempt to let network stabilize
+              if (attempt > 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+              }
+              
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ onboarding_completed: true })
+                .eq('id', session.user.id);
+              
+              if (updateError) {
+                console.error(`⚠️ Attempt ${attempt}/3 failed to mark onboarding complete:`, updateError);
+              } else {
+                console.log('✅ Onboarding marked as complete!');
+                marked = true;
+              }
+            } catch (err) {
+              console.error(`⚠️ Attempt ${attempt}/3 network error:`, err);
+            }
+          }
+          
+          if (!marked) {
+            console.error('❌ All attempts to mark onboarding complete failed');
           }
         }
 
