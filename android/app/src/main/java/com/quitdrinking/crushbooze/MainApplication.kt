@@ -1,4 +1,4 @@
-package com.crushnic.quitvaping
+package com.quitdrinking.crushbooze
 
 import android.app.Application
 import android.content.res.Configuration

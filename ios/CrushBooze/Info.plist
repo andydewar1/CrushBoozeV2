@@ -61,6 +61,8 @@
     <string>This app is for general fitness and wellness purposes only and is not a medical device</string>
     <key>NSHealthUpdateUsageDescription</key>
     <string>This app is for general fitness and wellness purposes only and is not a medical device</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Allow $(PRODUCT_NAME) to access your microphone</string>
     <key>NSUserActivityTypes</key>
     <array>
       <string>$(PRODUCT_BUNDLE_IDENTIFIER).expo.index_route</string>
@@ -72,6 +74,7 @@
     <key>UIBackgroundModes</key>
     <array>
       <string>remote-notification</string>
+      <string>fetch</string>
     </array>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>

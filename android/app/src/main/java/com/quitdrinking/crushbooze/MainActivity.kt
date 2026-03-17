@@ -1,4 +1,4 @@
-package com.crushnic.quitvaping
+package com.quitdrinking.crushbooze
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

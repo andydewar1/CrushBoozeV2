@@ -87,13 +87,13 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.crushnic.quitvaping'
+    namespace 'com.quitdrinking.crushbooze'
     defaultConfig {
-        applicationId 'com.crushnic.quitvaping'
+        applicationId 'com.quitdrinking.crushbooze'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 176
-        versionName "1.0.93"
+        versionCode 1
+        versionName "1.0.0"
     }
     signingConfigs {
         debug {
