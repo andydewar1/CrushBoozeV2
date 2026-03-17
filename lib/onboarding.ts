@@ -61,7 +61,7 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
     console.log('💾 CRITICAL: Profile data prepared for upsert:', { 
       userId, 
       name: profileData.name,
-      onboarding_completed: true,
+      onboarding_completed: profileData.onboarding_completed,
       dailyCost: profileData.daily_cost,
       personalGoalsCount: profileData.personal_goals.length 
     });

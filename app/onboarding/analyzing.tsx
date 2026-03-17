@@ -25,38 +25,63 @@ export default function AnalyzingScreen() {
   const { refetchProfile } = useSettings();
   const saveAttempted = useRef(false);
 
-  // Save data in background during animation
+  // Save data in background during animation with robust retry logic
   useEffect(() => {
+    const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+    
     const saveData = async () => {
       if (!user || saveAttempted.current) return;
       saveAttempted.current = true;
 
       console.log('💾 [ANALYZING] Saving onboarding data in background...');
       
-      try {
-        const onboardingData = {
-          name: data.name || 'Friend',
-          quitDate: data.quitDate instanceof Date ? data.quitDate : new Date(),
-          weeklySpend: data.weeklySpend || 0,
-          currency: data.currency || 'USD',
-          quitReasons: data.quitReasons || [],
-          personalWhy: data.personalWhy || '',
-          financialGoal: data.financialGoal || { description: '', amount: 0 },
-        };
-        
-        const result = await saveOnboardingData(user.id, onboardingData);
-        
-        if (result.success) {
-          console.log('✅ [ANALYZING] Onboarding data saved successfully!');
-          await refetchProfile();
-        } else {
-          console.error('❌ [ANALYZING] Save failed:', result.error);
+      const onboardingData = {
+        name: data.name || 'Friend',
+        quitDate: data.quitDate instanceof Date ? data.quitDate : new Date(),
+        weeklySpend: data.weeklySpend || 0,
+        currency: data.currency || 'USD',
+        quitReasons: data.quitReasons || [],
+        personalWhy: data.personalWhy || '',
+        financialGoal: data.financialGoal || { description: '', amount: 0 },
+      };
+      
+      // Robust retry: 5 attempts with increasing delays (1s, 2s, 3s, 4s)
+      let success = false;
+      const maxAttempts = 5;
+      
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          console.log(`💾 [ANALYZING] Save attempt ${attempt}/${maxAttempts}...`);
+          const result = await saveOnboardingData(user.id, onboardingData);
+          
+          if (result.success) {
+            console.log('✅ [ANALYZING] Onboarding data saved successfully!');
+            await refetchProfile();
+            success = true;
+            break;
+          } else {
+            console.error(`❌ [ANALYZING] Attempt ${attempt}/${maxAttempts} failed:`, result.error);
+            if (attempt < maxAttempts) {
+              const delayMs = 1000 * attempt; // 1s, 2s, 3s, 4s
+              console.log(`⏳ [ANALYZING] Waiting ${delayMs}ms before retry...`);
+              await delay(delayMs);
+            }
+          }
+        } catch (error) {
+          console.error(`❌ [ANALYZING] Attempt ${attempt}/${maxAttempts} error:`, error);
+          if (attempt < maxAttempts) {
+            const delayMs = 1000 * attempt;
+            console.log(`⏳ [ANALYZING] Waiting ${delayMs}ms before retry...`);
+            await delay(delayMs);
+          }
         }
-      } catch (error) {
-        console.error('❌ [ANALYZING] Save error:', error);
-      } finally {
-        setSaveComplete(true);
       }
+      
+      if (!success) {
+        console.error('❌ [ANALYZING] All save attempts failed - will retry after purchase');
+      }
+      
+      setSaveComplete(true);
     };
 
     saveData();

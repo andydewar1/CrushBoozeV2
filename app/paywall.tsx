@@ -14,6 +14,7 @@ import {
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { Ionicons } from "@expo/vector-icons";
 
 type Plan = "annual" | "monthly";
@@ -33,8 +34,15 @@ export default function PaywallScreen() {
   const [plan, setPlan] = useState<Plan>("annual");
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const { packages, loading, purchasing, error, purchasePackage, restorePurchases, getPackageByType } = usePaywall();
-  const { data, yearlySpend } = useOnboarding();
+  const { data, yearlySpend: onboardingYearlySpend } = useOnboarding();
+  const { profile } = useSettings();
   const router = useRouter();
+  
+  // Use onboarding context if available, otherwise fall back to saved profile
+  // daily_cost in profile stores WEEKLY spend, so multiply by 52 for yearly
+  const yearlySpend = onboardingYearlySpend > 0 
+    ? onboardingYearlySpend 
+    : (profile?.daily_cost ? profile.daily_cost * 52 : 0);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const testimonialAnim = useRef(new Animated.Value(1)).current;
 
@@ -77,7 +85,9 @@ export default function PaywallScreen() {
       'NZD': 'NZ$', 'CHF': 'CHF', 'SEK': 'kr', 'NOK': 'kr', 'DKK': 'kr',
       'PLN': 'zł', 'INR': '₹', 'JPY': '¥', 'CNY': '¥', 'BRL': 'R$', 'MXN': 'MX$',
     };
-    return symbols[data.currency] || '£';
+    // Use onboarding data currency if available, otherwise fall back to profile
+    const currency = data.currency || profile?.currency || 'GBP';
+    return symbols[currency] || '£';
   };
 
   // Get actual prices from RevenueCat or use defaults
@@ -133,7 +143,7 @@ export default function PaywallScreen() {
         {/* Header */}
         <View style={[styles.header, { marginTop: compact ? 4 : 12 }]}>
           <Text style={[styles.headline, { fontSize: compact ? 22 : 26 }]}>
-            {data.name || "Your"}, your plan is ready
+            {data.name || profile?.name ? `${data.name || profile?.name}, your plan is ready` : "Your plan is ready"}
           </Text>
         </View>
 

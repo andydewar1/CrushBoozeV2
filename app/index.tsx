@@ -29,8 +29,8 @@ export default function LandingScreen() {
         return;
       }
 
-      if (session && profile) {
-        // Existing user with completed onboarding - route to main app
+      if (session && profile && profile.onboarding_completed) {
+        // Existing user with COMPLETED onboarding - route to main app
         // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
         console.log('🔄 Auto-routing existing user to main app (subscription gate will validate)');
         router.replace('/(tabs)');
@@ -60,11 +60,15 @@ export default function LandingScreen() {
     });
     
     if (session) {
-      if (profile) {
-        // User has completed onboarding - route to main app
+      if (profile && profile.onboarding_completed) {
+        // User has COMPLETED onboarding (including payment) - route to main app
         // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
         console.log('🔄 Routing existing user to main app (subscription gate will validate)');
         router.replace('/(tabs)');
+      } else if (profile && !profile.onboarding_completed) {
+        // User has profile but hasn't completed payment - resume at paywall
+        console.log('🎯 Routing to paywall (onboarding incomplete - needs payment)');
+        router.push('/paywall');
       } else {
         // User is authenticated but hasn't completed onboarding
         console.log('🎯 Routing to onboarding (no profile found)');
