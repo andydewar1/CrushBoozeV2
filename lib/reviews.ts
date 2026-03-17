@@ -23,7 +23,7 @@ const LAST_REVIEW_REQUEST_AT_KEY = 'lastReviewRequestAt';
 const HAS_ASKED_FOR_REVIEW_KEY = 'hasAskedForReview';
 
 // Constants
-const DAYS_BEFORE_REVIEW = 7;
+const DAYS_BEFORE_REVIEW = 1;
 const COOLDOWN_DAYS = 90;
 
 /**
