@@ -1,20 +1,10 @@
 import RevenueCatService from '@/services/RevenueCatService';
 
-// 🚨 DEV MODE: Set to true to bypass RevenueCat during development
-// ⚠️ IMPORTANT: Set back to false before submitting to App Store!
-const DEV_BYPASS_SUBSCRIPTION = true;
-
 /**
  * BULLETPROOF subscription check - ZERO bypass possibilities
  * TESTFLIGHT OPTIMIZED: Handles sandbox subscription edge cases
  */
 export async function checkSubscriptionStatus(): Promise<boolean> {
-  // DEV MODE: Skip all subscription checks
-  if (DEV_BYPASS_SUBSCRIPTION) {
-    console.log('🔧 DEV MODE: Bypassing subscription check');
-    return true;
-  }
-
   try {
     // CRITICAL: Fail fast if service not initialized
     if (!RevenueCatService.isInitialized()) {
@@ -53,15 +43,15 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
 
     // BULLETPROOF CHECK: Multiple validation layers for TestFlight
     const activeEntitlements = Object.keys(customerInfo.entitlements.active);
-    const hasActivePremium = activeEntitlements.includes('Premium');
+    const hasActivePro = activeEntitlements.includes('Pro');
     const hasActiveSubscriptions = customerInfo.activeSubscriptions.length > 0;
     
     // TESTFLIGHT BULLETPROOF: ONLY trust expiration dates, ignore cached entitlements/subscriptions
     let hasValidEntitlement = false;
     const now = new Date();
     
-    if (customerInfo.entitlements.active.Premium) {
-      const entitlement = customerInfo.entitlements.active.Premium;
+    if (customerInfo.entitlements.active.Pro) {
+      const entitlement = customerInfo.entitlements.active.Pro;
       const expiry = entitlement.expirationDate;
       
       if (expiry) {
@@ -77,23 +67,23 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
         });
       } else {
         // TESTFLIGHT SECURITY: No expiry date is suspicious - deny access
-        console.log('⚠️ Premium entitlement has no expiry date - denying access for security');
+        console.log('⚠️ Pro entitlement has no expiry date - denying access for security');
         hasValidEntitlement = false;
       }
     }
     
-    // BULLETPROOF LOGIC: Must have Premium entitlement AND valid expiry date
+    // BULLETPROOF LOGIC: Must have Pro entitlement AND valid expiry date
     // Ignore activeSubscriptions in TestFlight as they can be cached/stale
-    const isFullySubscribed = hasActivePremium && hasValidEntitlement;
+    const isFullySubscribed = hasActivePro && hasValidEntitlement;
     
     console.log('🔍 BULLETPROOF subscription check (TestFlight optimized):', {
-      hasActivePremium,
+      hasActivePro,
       hasActiveSubscriptions, // Log but don't rely on this in TestFlight
       hasValidEntitlement,
       isFullySubscribed,
       activeEntitlements,
       activeSubscriptions: customerInfo.activeSubscriptions,
-      entitlementExpiry: customerInfo.entitlements.active.Premium?.expirationDate,
+      entitlementExpiry: customerInfo.entitlements.active.Pro?.expirationDate,
       latestExpiration: customerInfo.latestExpirationDate,
       // Log customer ID for debugging TestFlight issues
       customerID: customerInfo.originalAppUserId
@@ -117,8 +107,8 @@ export async function checkSubscriptionStatus(): Promise<boolean> {
         await RevenueCatService.invalidateAllCaches();
         const freshCustomerInfo = await RevenueCatService.getCustomerInfo();
         
-        if (freshCustomerInfo && freshCustomerInfo.entitlements.active.Premium) {
-          const freshExpiry = freshCustomerInfo.entitlements.active.Premium.expirationDate;
+        if (freshCustomerInfo && freshCustomerInfo.entitlements.active.Pro) {
+          const freshExpiry = freshCustomerInfo.entitlements.active.Pro.expirationDate;
           if (freshExpiry && new Date(freshExpiry) > now) {
             console.log('✅ TESTFLIGHT: Double-check confirmed subscription is valid');
             return true;

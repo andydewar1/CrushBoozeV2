@@ -37,9 +37,15 @@
           <string>exp+crushbooze</string>
         </array>
       </dict>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>fb1036568345365858</string>
+        </array>
+      </dict>
     </array>
-    <key>CFBundleVersion</key>
-    <string>4</string>
+<key>CFBundleVersion</key>
+	<string>7</string>
     <key>GADApplicationIdentifier</key>
     <string/>
     <key>ITSAppUsesNonExemptEncryption</key>
@@ -71,6 +77,16 @@
     <string>We need to send you notifications about your progress and achievements</string>
     <key>NSUserTrackingUsageDescription</key>
     <string>This allows us to measure ad performance and show you more relevant ads</string>
+    <key>FacebookAppID</key>
+    <string>1036568345365858</string>
+    <key>FacebookClientToken</key>
+    <string>516fca9f2275da01f7c6f6e4ae1e1d03</string>
+    <key>FacebookDisplayName</key>
+    <string>CrushBooze</string>
+    <key>FacebookAutoLogAppEventsEnabled</key>
+    <true/>
+    <key>FacebookAdvertiserIDCollectionEnabled</key>
+    <true/>
     <key>UIBackgroundModes</key>
     <array>
       <string>remote-notification</string>

@@ -266,12 +266,12 @@ export class RevenueCatService {
         minutesUntilExpiry: 0
       };
       
-      // Check if Premium entitlement exists at all
+      // Check if Pro entitlement exists at all
       validationDetails.hasAnyEntitlements = Object.keys(customerInfo.entitlements.active).length > 0;
-      validationDetails.premiumEntitlementExists = !!customerInfo.entitlements.active.Premium;
+      validationDetails.premiumEntitlementExists = !!customerInfo.entitlements.active.Pro;
       
-      if (customerInfo.entitlements.active.Premium) {
-        const premiumEntitlement = customerInfo.entitlements.active.Premium;
+      if (customerInfo.entitlements.active.Pro) {
+        const premiumEntitlement = customerInfo.entitlements.active.Pro;
         validationDetails.premiumExpiryDate = premiumEntitlement.expirationDate;
         
         if (premiumEntitlement.expirationDate) {
@@ -280,7 +280,7 @@ export class RevenueCatService {
           validationDetails.minutesUntilExpiry = Math.round((expiryDate.getTime() - now.getTime()) / (1000 * 60));
         } else {
           // TESTFLIGHT SECURITY: No expiry date is suspicious in TestFlight - be very careful
-          console.log('⚠️ Premium entitlement has no expiry date - treating as invalid in TestFlight');
+          console.log('⚠️ Pro entitlement has no expiry date - treating as invalid in TestFlight');
           validationDetails.isValidByExpiry = false;
         }
       }
