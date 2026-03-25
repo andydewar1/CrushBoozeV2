@@ -41,7 +41,6 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
     const hasQuit = quitDate <= now;
 
     // Prepare profile data - store weekly spend directly (daily_cost column stores weekly for CrushBooze)
-    // NOTE: onboarding_completed stays FALSE until after payment in paywall
     const profileData = {
       id: userId,
       name: data.name,
@@ -54,14 +53,14 @@ export async function saveOnboardingData(userId: string, data: OnboardingData): 
       currency: data.currency,
       financial_goal_description: data.financialGoal.description,
       financial_goal_amount: data.financialGoal.amount,
-      onboarding_completed: false,      // Set to true ONLY after payment
+      onboarding_completed: true,
       updated_at: new Date().toISOString()
     };
 
     console.log('💾 CRITICAL: Profile data prepared for upsert:', { 
       userId, 
       name: profileData.name,
-      onboarding_completed: profileData.onboarding_completed,
+      onboarding_completed: true,
       dailyCost: profileData.daily_cost,
       personalGoalsCount: profileData.personal_goals.length 
     });

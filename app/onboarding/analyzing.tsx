@@ -4,7 +4,6 @@ import { router } from 'expo-router';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSettings } from '@/contexts/SettingsContext';
 import { saveOnboardingData } from '@/lib/onboarding';
 
 const TOTAL_STEPS = 25;
@@ -22,7 +21,6 @@ export default function AnalyzingScreen() {
   const [saveComplete, setSaveComplete] = useState(false);
   const { data } = useOnboarding();
   const { user } = useAuth();
-  const { refetchProfile } = useSettings();
   const saveAttempted = useRef(false);
 
   // Save data in background during animation with robust retry logic
@@ -56,7 +54,6 @@ export default function AnalyzingScreen() {
           
           if (result.success) {
             console.log('✅ [ANALYZING] Onboarding data saved successfully!');
-            await refetchProfile();
             success = true;
             break;
           } else {

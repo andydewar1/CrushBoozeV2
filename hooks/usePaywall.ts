@@ -3,10 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import RevenueCatService from '@/services/RevenueCatService';
 import { useAuth } from '@/contexts/AuthContext';
-import { useOnboarding } from '@/contexts/OnboardingContext';
 import { initializeRevenueCatIfNeeded } from '@/lib/subscription';
-import { supabase } from '@/lib/supabase';
-import { saveOnboardingData } from '@/lib/onboarding';
 
 interface PaywallPackage {
   identifier: string;
@@ -33,7 +30,6 @@ export function usePaywall() {
   const [purchasing, setPurchasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { session } = useAuth();
-  const { data: onboardingData } = useOnboarding();
   const router = useRouter();
 
   // Load packages from RevenueCat
@@ -85,65 +81,6 @@ export function usePaywall() {
       const result = await RevenueCatService.purchasePackage(packageToPurchase);
       
       if (result.success) {
-        // Mark onboarding as complete AFTER successful purchase (with retry for network issues)
-        if (session?.user?.id) {
-          console.log('✅ Purchase successful, ensuring profile data is saved...');
-          
-          // BACKUP SAVE: If analyzing screen failed, save onboarding data now
-          // This ensures data is ALWAYS saved before marking complete
-          const backupData = {
-            name: onboardingData.name || 'Friend',
-            quitDate: onboardingData.quitDate instanceof Date ? onboardingData.quitDate : new Date(),
-            weeklySpend: onboardingData.weeklySpend || 0,
-            currency: onboardingData.currency || 'USD',
-            quitReasons: onboardingData.quitReasons || [],
-            personalWhy: onboardingData.personalWhy || '',
-            financialGoal: onboardingData.financialGoal || { description: '', amount: 0 },
-          };
-          
-          // Try backup save (will upsert - update if exists, create if not)
-          try {
-            console.log('🔄 [PAYWALL] Backup save of onboarding data...');
-            const saveResult = await saveOnboardingData(session.user.id, backupData);
-            if (saveResult.success) {
-              console.log('✅ [PAYWALL] Backup save successful');
-            } else {
-              console.error('⚠️ [PAYWALL] Backup save failed:', saveResult.error);
-            }
-          } catch (saveErr) {
-            console.error('⚠️ [PAYWALL] Backup save error:', saveErr);
-          }
-          
-          // Retry up to 5 times with increasing delays (network can be unstable after payment sheet)
-          let marked = false;
-          for (let attempt = 1; attempt <= 5 && !marked; attempt++) {
-            try {
-              // Small delay before each attempt to let network stabilize
-              if (attempt > 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-              }
-              
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ onboarding_completed: true })
-                .eq('id', session.user.id);
-              
-              if (updateError) {
-                console.error(`⚠️ Attempt ${attempt}/5 failed to mark onboarding complete:`, updateError);
-              } else {
-                console.log('✅ Onboarding marked as complete!');
-                marked = true;
-              }
-            } catch (err) {
-              console.error(`⚠️ Attempt ${attempt}/5 network error:`, err);
-            }
-          }
-          
-          if (!marked) {
-            console.error('❌ All attempts to mark onboarding complete failed');
-          }
-        }
-
         Alert.alert(
           'Welcome to CrushBooze!',
           'Your alcohol-free journey starts now. You have access to all features.',

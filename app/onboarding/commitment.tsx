@@ -1,13 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
 const TOTAL_STEPS = 25;
 
 export default function CommitmentScreen() {
   const { data } = useOnboarding();
+  const { refetchProfile } = useSettings();
+  const [isLoading, setIsLoading] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
 
@@ -27,9 +30,14 @@ export default function CommitmentScreen() {
     ]).start();
   }, []);
 
-  // Data was already saved during the analyzing screen
-  const handleContinue = () => {
-    router.push('/paywall');
+  const handleContinue = async () => {
+    setIsLoading(true);
+    try {
+      await refetchProfile();
+    } catch (e) {
+      console.error('❌ Failed to refresh profile:', e);
+    }
+    router.replace('/paywall');
   };
 
   return (

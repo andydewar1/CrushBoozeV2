@@ -12,7 +12,6 @@ export default function LandingScreen() {
   const { session, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useSettings();
 
-  // AUTOMATIC ROUTING: Existing users should not see landing page
   useEffect(() => {
     const autoRoute = async () => {
       console.log('🔍 [LANDING] Auto-route check:', {
@@ -23,15 +22,12 @@ export default function LandingScreen() {
         sessionId: session?.user?.id,
       });
 
-      // Wait for auth and profile data to load
       if (authLoading || profileLoading) {
         console.log('⏳ [LANDING] Still loading, waiting...');
         return;
       }
 
-      if (session && profile && profile.onboarding_completed) {
-        // Existing user with COMPLETED onboarding - route to main app
-        // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
+      if (session && profile) {
         console.log('🔄 Auto-routing existing user to main app (subscription gate will validate)');
         router.replace('/(tabs)');
       } else if (session && !profile) {
@@ -39,7 +35,6 @@ export default function LandingScreen() {
       } else {
         console.log('ℹ️ [LANDING] No session - staying on landing page');
       }
-      // New users or incomplete onboarding users stay on landing page
     };
 
     autoRoute();
@@ -60,17 +55,10 @@ export default function LandingScreen() {
     });
     
     if (session) {
-      if (profile && profile.onboarding_completed) {
-        // User has COMPLETED onboarding (including payment) - route to main app
-        // Let useSubscriptionGate handle subscription validation to avoid double paywall loading
+      if (profile) {
         console.log('🔄 Routing existing user to main app (subscription gate will validate)');
         router.replace('/(tabs)');
-      } else if (profile && !profile.onboarding_completed) {
-        // User has profile but hasn't completed payment - resume at paywall
-        console.log('🎯 Routing to paywall (onboarding incomplete - needs payment)');
-        router.push('/paywall');
       } else {
-        // User is authenticated but hasn't completed onboarding
         console.log('🎯 Routing to onboarding (no profile found)');
         router.push('/onboarding/name');
       }

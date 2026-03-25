@@ -48,7 +48,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const toast = useToast();
 
   const fetchProfile = useCallback(async () => {
-    // Don't fetch if there's no session
     if (!session?.user?.id) {
       setLoading(false);
       setProfile(null);
@@ -66,7 +65,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         .eq('id', session.user.id)
         .maybeSingle();
 
-      // If no profile exists, that's fine - user hasn't completed onboarding
       if (fetchError?.code === 'PGRST116' || !data) {
         console.log('📝 No profile data found - setting profile to null');
         setProfile(null);
@@ -74,7 +72,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Handle other errors
       if (fetchError) {
         console.error('Profile fetch error:', fetchError);
         setError(fetchError.message);
