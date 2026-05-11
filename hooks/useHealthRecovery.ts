@@ -131,12 +131,13 @@ export function useHealthRecovery() {
   const [milestones, setMilestones] = useState<HealthMilestone[]>([]);
   const [displayMilestones, setDisplayMilestones] = useState<HealthMilestone[]>([]);
   const { days, hours, minutes, loading: timerLoading, error: timerError } = useQuitTimer();
+  const isFutureQuitDate = timerError === 'future_quit_date';
 
   useEffect(() => {
-    if (timerLoading || timerError) return;
+    if (timerLoading || (timerError && !isFutureQuitDate)) return;
 
-    // Calculate total minutes since quit
-    const totalMinutesSinceQuit = (days * 24 * 60) + (hours * 60) + minutes;
+    // Future quit: show full timeline as preview (all grey / inactive), same as CrushNic
+    const totalMinutesSinceQuit = isFutureQuitDate ? 0 : (days * 24 * 60) + (hours * 60) + minutes;
 
     // Mark milestones as achieved based on time since quit
     const updatedMilestones = HEALTH_MILESTONES.map(milestone => ({
@@ -169,12 +170,12 @@ export function useHealthRecovery() {
     }
 
     setDisplayMilestones(displayArray);
-  }, [days, hours, minutes, timerLoading, timerError]);
+  }, [days, hours, minutes, timerLoading, timerError, isFutureQuitDate]);
 
   return {
     milestones: displayMilestones,
     loading: timerLoading,
-    error: timerError,
+    error: isFutureQuitDate ? null : timerError,
     totalAchieved: milestones.filter(m => m.achieved).length,
     totalMilestones: HEALTH_MILESTONES.length,
   };

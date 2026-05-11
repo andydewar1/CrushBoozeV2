@@ -5,19 +5,31 @@ import { TouchableOpacity } from 'react-native';
 import { Trophy, Target, TrendingUp, Settings } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useQuitTimer } from '@/hooks/useQuitTimer';
 
 export default function AchievementsScreen() {
   const router = useRouter();
   const { achievements, stats, loading, error } = useAchievements();
+  const { error: timerError } = useQuitTimer();
+  const isPreQuitMode = timerError === 'future_quit_date';
+
   return (
     <>
       <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scrollContent, isPreQuitMode && styles.preQuitScreenMuted]}
+      >
         {/* Page Header */}
         <View style={styles.pageHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.pageTitle}>Achievements</Text>
-            <Text style={styles.pageSubtitle}>Celebrate the wins, big and small.</Text>
+            <Text style={styles.pageSubtitle}>
+              {isPreQuitMode
+                ? 'Preview — everything here unlocks once your sober clock starts.'
+                : 'Celebrate the wins, big and small.'}
+            </Text>
           </View>
           <TouchableOpacity 
             style={styles.settingsButton}
@@ -75,18 +87,8 @@ export default function AchievementsScreen() {
             </View>
           ) : error ? (
             <View style={styles.achievementInfo}>
-              <Text style={styles.achievementName}>
-                {error === 'future_quit_date' 
-                  ? 'Achievements coming soon' 
-                  : 'Complete onboarding'
-                }
-              </Text>
-              <Text style={styles.achievementDescription}>
-                {error === 'future_quit_date'
-                  ? 'Your achievements will unlock when you quit'
-                  : 'Set your quit date to track progress'
-                }
-              </Text>
+              <Text style={styles.achievementName}>Complete onboarding</Text>
+              <Text style={styles.achievementDescription}>Set your quit date to track progress</Text>
             </View>
           ) : (
             <>
@@ -217,12 +219,7 @@ export default function AchievementsScreen() {
             </View>
           ) : error ? (
             <View style={styles.emptyStateContainer}>
-              <Text style={styles.emptyStateText}>
-                {error === 'future_quit_date'
-                  ? 'Your milestones will appear here once your journey begins'
-                  : 'Complete onboarding to see achievements'
-                }
-              </Text>
+              <Text style={styles.emptyStateText}>Complete onboarding to see achievements</Text>
             </View>
           ) : (
             <View style={styles.milestonesGrid}>
@@ -291,6 +288,9 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 30,
     paddingBottom: 90,
+  },
+  preQuitScreenMuted: {
+    opacity: 0.72,
   },
   pageHeader: {
     flexDirection: 'row',

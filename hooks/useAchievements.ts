@@ -183,85 +183,64 @@ export function useAchievements() {
     progressToNext: 0,
     daysToNext: 0,
   });
-  const { days, loading: timerLoading, error: timerError } = useQuitTimer();
+  const { days, hours, minutes, loading: timerLoading, error: timerError } = useQuitTimer();
+  const isFutureQuitDate = timerError === 'future_quit_date';
 
   useEffect(() => {
-    if (timerLoading || timerError) return;
+    if (timerLoading || (timerError && !isFutureQuitDate)) return;
 
-    const daysFree = days;
+    // CrushNic: full calendar days until quit (ceil), then add sober days for each badge
+    // (e.g. quit in 3 days → First Day badge in 3 + 1 = 4 days).
+    const daysUntilQuit = isFutureQuitDate
+      ? days + (hours > 0 || minutes > 0 ? 1 : 0)
+      : 0;
+    const progressDays = isFutureQuitDate ? -daysUntilQuit : days;
+    const daysFree = Math.max(0, progressDays);
 
-    console.log('🏆 ACHIEVEMENTS DEBUG:', {
-      daysFree,
-      timerLoading,
-      timerError,
-      firstAchievement: ACHIEVEMENTS[0]
-    });
-
-    // Calculate achievements with their status
     const processedAchievements = ACHIEVEMENTS.map(achievement => ({
       ...achievement,
-      achieved: daysFree >= achievement.daysRequired,
-      daysToGo: Math.max(0, achievement.daysRequired - daysFree),
+      achieved: progressDays >= achievement.daysRequired,
+      daysToGo: isFutureQuitDate
+        ? achievement.daysRequired + daysUntilQuit
+        : Math.max(0, achievement.daysRequired - progressDays),
     }));
 
-    const achievedCount = processedAchievements.filter(a => a.achieved).length;
-    console.log('🏆 PROCESSED ACHIEVEMENTS:', {
-      daysFree,
-      totalAchievements: processedAchievements.length,
-      achievedCount,
-      firstFewAchievements: processedAchievements.slice(0, 3).map(a => ({
-        id: a.id,
-        title: a.title,
-        daysRequired: a.daysRequired,
-        achieved: a.achieved,
-        daysToGo: a.daysToGo
-      }))
-    });
-
-    setAchievements(processedAchievements);
-
-    // Calculate stats
     const earnedAchievements = processedAchievements.filter(a => a.achieved);
     const unlockedAchievements = processedAchievements.filter(a => !a.achieved);
-    
-    // Find current achievement (last earned one)
-    const currentAchievement = earnedAchievements.length > 0 ? earnedAchievements[earnedAchievements.length - 1] : null;
-    
-    // Find next achievement (first unlocked one)
+
+    const currentAchievement =
+      earnedAchievements.length > 0 ? earnedAchievements[earnedAchievements.length - 1] : null;
     const nextAchievement = unlockedAchievements[0] || null;
-    
-    // Calculate progress to next achievement
+
     let progressToNext = 0;
     let daysToNext = 0;
-    
+
     if (nextAchievement) {
       const targetDays = nextAchievement.daysRequired;
-      const currentDays = daysFree;
-      
-      // Calculate progress as percentage towards the target achievement
+      const currentDays = Math.max(0, progressDays);
       progressToNext = targetDays > 0 ? Math.min(100, (currentDays / targetDays) * 100) : 0;
-      daysToNext = Math.max(0, targetDays - currentDays);
+      daysToNext = nextAchievement.daysToGo;
     } else {
-      // All achievements unlocked
       progressToNext = 100;
       daysToNext = 0;
     }
 
+    setAchievements(processedAchievements);
     setStats({
       totalEarned: earnedAchievements.length,
-      daysFree: daysFree,
+      daysFree,
       totalToGo: unlockedAchievements.length,
       currentAchievement,
       nextAchievement,
       progressToNext: Math.round(progressToNext),
       daysToNext,
     });
-  }, [days, timerLoading, timerError]);
+  }, [days, hours, minutes, timerLoading, timerError, isFutureQuitDate]);
 
   return {
     achievements,
     stats,
     loading: timerLoading,
-    error: timerError,
+    error: isFutureQuitDate ? null : timerError,
   };
-} 
+}

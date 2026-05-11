@@ -80,7 +80,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 }
 
 // ============================================================================
-// SINGLE SOURCE OF TRUTH: Schedule daily 12pm local notification
+// SINGLE SOURCE OF TRUTH: Schedule daily 8:30pm local notification (CrushNic copy)
 // ============================================================================
 export async function scheduleProgressNotifications() {
   console.log('[NotificationContext] 🔔 scheduleProgressNotifications called');
@@ -95,39 +95,39 @@ export async function scheduleProgressNotifications() {
   }
 
   try {
-    // Check if notifications are already scheduled
     const existingScheduled = await Notifications.getAllScheduledNotificationsAsync();
     console.log('[NotificationContext] 🔍 Existing scheduled notifications:', existingScheduled.length);
-    
-    if (existingScheduled.length > 0) {
-      console.log('[NotificationContext] ✅ Notification already scheduled - skipping reschedule');
-      existingScheduled.forEach((notif, idx) => {
-        console.log(`[NotificationContext]   📋 [${idx}] ID: ${notif.identifier}`);
-        console.log(`[NotificationContext]   ⏰ Trigger:`, JSON.stringify(notif.trigger));
-      });
-      return;
+
+    for (const n of existingScheduled) {
+      const payloadType =
+        n.content?.data &&
+        typeof n.content.data === 'object' &&
+        (n.content.data as { type?: string }).type;
+      if (payloadType === 'daily_progress') {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier);
+        console.log('[NotificationContext] 🗑️ Cancelled prior daily progress notification:', n.identifier);
+      }
     }
 
-    console.log('[NotificationContext] 📅 No notifications scheduled - creating new daily 12pm notification');
+    console.log('[NotificationContext] 📅 Scheduling daily 8:30pm local notification (CrushNic copy)');
 
-    // Schedule daily notification at 12:00 PM local time
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: "Today's progress is in 🎉",
-        body: "Tap here to see your wins 👀",
+        body: "Tap to see your wins 👀 Check in before midnight to keep your streak alive - takes 5 seconds 🔥",
         data: { type: 'daily_progress' },
         sound: true,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: 12,
-        minute: 0,
+        hour: 20,
+        minute: 30,
       },
     });
 
-    console.log('[NotificationContext] ✅ Daily 12pm notification scheduled successfully!');
+    console.log('[NotificationContext] ✅ Daily 8:30pm notification scheduled successfully!');
     console.log('[NotificationContext] 🆔 Notification ID:', notificationId);
-    console.log('[NotificationContext] ⏰ Trigger: DAILY at 12:00 local time');
+    console.log('[NotificationContext] ⏰ Trigger: DAILY at 20:30 local time');
     
     // Verify the notification was scheduled correctly
     const verifyScheduled = await Notifications.getAllScheduledNotificationsAsync();

@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, ScrollView, Alert, Animated } from 'react-nativ
 import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
-import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle, Sun, Calendar, Smile } from 'lucide-react-native';
+import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle, Sun, Calendar, Smile, BarChart2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
@@ -16,6 +16,7 @@ import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useCheckinHistory, moodLabelFromAverage } from '@/hooks/useCheckinHistory';
+import { usePreQuitDrinkSupport, type PrepDrinkChecklist } from '@/hooks/usePreQuitDrinkSupport';
 import { useSettings } from '@/contexts/SettingsContext';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +24,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RevenueCatService from '@/services/RevenueCatService';
 import { format } from 'date-fns';
 import { initializeFacebookSDK, logAppInstall } from '@/lib/facebook';
+
+/** Navy brand accent; kept as `NIC_TEAL` for CrushNic parity and Hermes/bundler compatibility. */
+const NIC_TEAL = '#03045e';
 
 const MOODS = [
   { emoji: '😊', label: 'Great' },
@@ -32,6 +36,7 @@ const MOODS = [
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
+/** Pre-quit home UI matches CrushNic layout; accent is navy (NIC_TEAL). */
 function moodEmojiForStoredLabel(label: string): string {
   const hit = MOODS.find(m => m.label === label);
   if (hit) return hit.emoji;
@@ -42,7 +47,7 @@ function moodEmojiForStoredLabel(label: string): string {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, session } = useAuth();
   const { settings } = useSettings();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
   const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
@@ -50,7 +55,29 @@ export default function HomeScreen() {
   const { activeGoals, achievedGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
-  const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+  const {
+    achievements,
+    stats: achievementStats,
+    loading: achievementsLoading,
+    error: achievementsError,
+  } = useAchievements();
+
+  const isPreQuitMode = timerError === 'future_quit_date';
+  const {
+    checklist,
+    checklistCompletedCount,
+    checklistTotalCount,
+    prepWeekDaysCompleted,
+    prepWeekSlots,
+    todayDrinks,
+    weekDrinks,
+    weekMaxDrinks,
+    toggleChecklistItem,
+    addDrink,
+    removeDrink,
+  } = usePreQuitDrinkSupport(session?.user?.id, isPreQuitMode);
+  const [isEditingPrepChecklist, setIsEditingPrepChecklist] = useState(false);
+  const prevChecklistFullyCompleteRef = useRef(checklistCompletedCount === checklistTotalCount);
 
   const moodPickRef = useRef<string | null>(null);
   const drinkPickRef = useRef<'clean' | 'drank' | null>(null);
@@ -128,7 +155,7 @@ export default function HomeScreen() {
         console.log('[Home] 📋 Permission result:', status);
 
         if (status === 'granted') {
-          console.log('[Home] ✅ Permission granted! Scheduling daily 12pm notification...');
+          console.log('[Home] ✅ Permission granted! Scheduling daily 8:30pm notification...');
           // THIS IS THE CRITICAL FIX: Schedule notification after permission is granted
           const { scheduleProgressNotifications } = await import('@/contexts/NotificationContext');
           await scheduleProgressNotifications();
@@ -213,6 +240,15 @@ export default function HomeScreen() {
     prevHadTodayCheckinRef.current = hasTodayCheckin;
   }, [todayCheckin, checkinFeedbackAnim]);
 
+  useEffect(() => {
+    const isFullyComplete = checklistCompletedCount === checklistTotalCount;
+    const wasFullyComplete = prevChecklistFullyCompleteRef.current;
+    if (!wasFullyComplete && isFullyComplete && isEditingPrepChecklist) {
+      setIsEditingPrepChecklist(false);
+    }
+    prevChecklistFullyCompleteRef.current = isFullyComplete;
+  }, [checklistCompletedCount, checklistTotalCount, isEditingPrepChecklist]);
+
   const onPickMood = async (label: string) => {
     moodPickRef.current = label;
     setPickMood(label);
@@ -276,11 +312,25 @@ export default function HomeScreen() {
         : 'days'
       : 'days sober';
 
-  // Show loading or error state for savings
-  const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
-  const displayDailyRate = (savingsLoading || savingsError) ? 0 : dailyRate;
-  const displayHourlyRate = (savingsLoading || savingsError) ? 0 : hourlyRate;
+  // Show loading or error state for savings (future quit still has projected rates)
+  const savingsDisplayBlocked = savingsLoading || (!!savingsError && !isPreQuitMode);
+  const displayTotalSaved = isPreQuitMode ? 0 : savingsDisplayBlocked ? 0 : totalSaved;
+  const displayDailyRate = savingsDisplayBlocked ? 0 : dailyRate;
+  const displayHourlyRate = savingsDisplayBlocked ? 0 : hourlyRate;
   const displayCurrency = currency || '$';
+
+  const projectedSavingsDate = quitDate
+    ? new Date(quitDate.getTime() + 30 * 24 * 60 * 60 * 1000)
+    : null;
+  const projectedSavingsThirtyDays = displayDailyRate * 30;
+
+  const prepChecklistItems: Array<{ key: keyof PrepDrinkChecklist; label: string }> = [
+    { key: 'delayFirstDrink', label: 'Delay your first drink' },
+    { key: 'resistOneUrge', label: 'Log one urge to drink' },
+    { key: 'reviewWhy', label: 'Read your personal why' },
+  ];
+  const firstWeekDrinkDataIndex = weekDrinks.findIndex(d => d.count > 0);
+  const weekDrinksTotal = weekDrinks.reduce((sum, d) => sum + d.count, 0);
 
   // Format money without decimals for the main display
   const formatMoney = (amount: number): string => {
@@ -318,8 +368,8 @@ export default function HomeScreen() {
   };
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 100) return '#03045e';
-    if (progress >= 75) return '#03045e';
+    if (progress >= 100) return NIC_TEAL;
+    if (progress >= 75) return NIC_TEAL;
     if (progress >= 50) return '#FF9500';
     return '#FF6B47';
   };
@@ -367,36 +417,147 @@ export default function HomeScreen() {
           </Text>
         </View>
 
+        {isPreQuitMode && (
+          <View style={styles.section}>
+            <View style={styles.checkInHeaderBlock}>
+              <View style={styles.checkInHeaderRow}>
+                <View style={styles.checkInTitleCluster}>
+                  <View style={styles.checkInSectionHeader}>
+                    <BarChart2 size={20} color={NIC_TEAL} />
+                    <Text style={[styles.sectionTitle, styles.checkInSectionTitle]}>Drink Tracker</Text>
+                  </View>
+                  <View style={styles.checkInSubtitleLines}>
+                    <Text style={styles.checkInSectionSubtitleLine}>
+                      {"Log each drink today. We'll help you see the pattern before you quit."}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.streakBadgeCol}>
+                <View style={[styles.streakPill, styles.preQuitNicStreakPill]}>
+                  <View style={[styles.streakBadge, styles.vapeTrackerStreakBadge]}>
+                      <Text style={styles.streakCountBlack}>{todayDrinks}</Text>
+                    </View>
+                    <Text style={styles.streakCaption}>Drinks logged today</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View style={[styles.puffCard, styles.puffCardInSection]}>
+              <TouchableOpacity
+                style={styles.puffLogVapeCircle}
+                onPress={() => void addDrink()}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.puffLogVapeCircleText}>Log drink</Text>
+              </TouchableOpacity>
+              <View style={styles.puffUndoColumn}>
+                <TouchableOpacity
+                  style={styles.puffUndoButton}
+                  onPress={() => void removeDrink()}
+                  activeOpacity={0.9}
+                >
+                  <Text style={styles.puffUndoButtonText}>−</Text>
+                </TouchableOpacity>
+                <Text style={styles.puffUndoHint}>Tap if you need to undo.</Text>
+              </View>
+
+              <View style={styles.puffWeekRow}>
+                {weekDrinks.map((day, i) => {
+                  const prevCount = i > 0 ? weekDrinks[i - 1].count : null;
+                  const isFirstDataDayInWeek =
+                    firstWeekDrinkDataIndex !== -1 && i === firstWeekDrinkDataIndex;
+                  const isUpFromPriorDay =
+                    i > 0 &&
+                    prevCount != null &&
+                    !isFirstDataDayInWeek &&
+                    day.count > prevCount;
+                  const barGreen = !isUpFromPriorDay && day.count > 0;
+                  const countGreen = !isUpFromPriorDay && (day.count > 0 || day.isToday);
+                  return (
+                    <View key={day.key} style={styles.puffDayCell}>
+                      <View style={styles.puffBarTrack}>
+                        <View
+                          style={[
+                            styles.puffBarFill,
+                            isUpFromPriorDay
+                              ? styles.puffBarFillUp
+                              : barGreen
+                                ? styles.puffBarFillToday
+                                : null,
+                            {
+                              height: `${Math.max(8, (day.count / weekMaxDrinks) * 100)}%`,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          styles.puffDayCount,
+                          countGreen && styles.puffDayCountToday,
+                          isUpFromPriorDay && styles.puffDayCountUp,
+                        ]}
+                      >
+                        {day.count}
+                      </Text>
+                      <Text style={[styles.puffDayLabel, day.isToday && styles.puffDayLabelToday]}>
+                        {day.label}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <Text style={styles.vapeTrackerEaseBackHint}>
+                Try to ease back your drinking a little every day — it softens the shock when you quit.
+              </Text>
+              <Text style={styles.vapeTrackerWeekSummary}>
+                You have had {weekDrinksTotal} {weekDrinksTotal === 1 ? 'drink' : 'drinks'} this week.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Daily Check-in */}
         <View style={styles.section}>
           <View style={styles.checkInHeaderBlock}>
             <View style={styles.checkInHeaderRow}>
               <View style={styles.checkInTitleCluster}>
                 <View style={styles.checkInSectionHeader}>
-                  <Sun size={20} color="#03045e" />
-                  <Text style={[styles.sectionTitle, styles.checkInSectionTitle]}>Daily Check-in</Text>
+                  <Sun size={20} color={NIC_TEAL} />
+                  <Text style={[styles.sectionTitle, styles.checkInSectionTitle]}>
+                    {isPreQuitMode ? 'Quit Prep' : 'Daily Check-in'}
+                  </Text>
                 </View>
                 <View style={styles.checkInSubtitleLines}>
-                  <Text style={styles.checkInSectionSubtitleLine}>Keep your streak alive.</Text>
-                  <Text style={styles.checkInSectionSubtitleLine}>Check in before you forget.</Text>
+                  {isPreQuitMode ? (
+                    <>
+                      <Text style={styles.checkInSectionSubtitleLine}>Get ready before quit day.</Text>
+                      <Text style={styles.checkInSectionSubtitleLine}>Small daily wins build momentum.</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Text style={styles.checkInSectionSubtitleLine}>Keep your streak alive.</Text>
+                      <Text style={styles.checkInSectionSubtitleLine}>Check in before you forget.</Text>
+                    </>
+                  )}
                 </View>
               </View>
               <View style={styles.streakBadgeCol}>
-                <View style={styles.streakPill}>
+                <View style={[styles.streakPill, isPreQuitMode && styles.preQuitNicStreakPill]}>
                   <View style={styles.streakBadge}>
                     <Text style={styles.streakFire}>🔥</Text>
                     <Text style={styles.streakCountBlack}>
-                      {checkinHydrated ? currentWeekCheckedCount : '—'}
+                      {isPreQuitMode ? prepWeekDaysCompleted : checkinHydrated ? currentWeekCheckedCount : '—'}
                     </Text>
                     <Text style={styles.streakSlashOutOf}>/7</Text>
                   </View>
-                  <Text style={styles.streakCaption}>This week</Text>
+                  <Text style={styles.streakCaption}>{isPreQuitMode ? 'Prep streak' : 'This week'}</Text>
                 </View>
               </View>
             </View>
           </View>
 
-          {!todayCheckin ? (
+          {!isPreQuitMode ? (
+            !todayCheckin ? (
             <View style={styles.checkinFormSurface}>
               <Text style={styles.checkInQuestion}>How are you feeling today?</Text>
               <View style={styles.checkinSegmentTray}>
@@ -520,92 +681,220 @@ export default function HomeScreen() {
                 </Text>
               </Animated.View>
             </View>
+          )
+          ) : (
+            <View style={styles.preQuitCard}>
+              <Text style={styles.preQuitTitle}>
+                {quitDate
+                  ? `Your quit date is ${format(quitDate, 'MMMM d')}.`
+                  : 'Your quit date is coming up.'}
+              </Text>
+              <Text style={styles.preQuitSubtitle}>
+                {"Complete this checklist every day until quit day so you're ready."}
+              </Text>
+              <Text style={styles.preQuitProgress}>
+                {checklistCompletedCount}/{checklistTotalCount} complete today
+              </Text>
+              {checklistCompletedCount === checklistTotalCount && (
+                <View style={styles.preQuitCongratsBanner}>
+                  <View style={styles.preQuitCongratsRow}>
+                    <Text style={styles.preQuitCongratsText}>
+                      {
+                        "Congrats — you've completed today's tasks, you're one step closer to being alcohol free 💪"
+                      }
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.preQuitEditButton}
+                      onPress={() => setIsEditingPrepChecklist(prev => !prev)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.preQuitEditButtonText}>
+                        {isEditingPrepChecklist ? 'Done' : 'Edit'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {(checklistCompletedCount !== checklistTotalCount || isEditingPrepChecklist) && (
+                <View style={styles.preQuitChecklist}>
+                  {prepChecklistItems.map(item => {
+                    const done = checklist[item.key];
+                    return (
+                      <TouchableOpacity
+                        key={item.key}
+                        style={[styles.preQuitChecklistItem, done && styles.preQuitChecklistItemDone]}
+                        onPress={() => void toggleChecklistItem(item.key)}
+                        activeOpacity={0.85}
+                      >
+                        <View style={[styles.preQuitCheckbox, done && styles.preQuitCheckboxDone]}>
+                          {done ? <Text style={styles.preQuitCheckboxTick}>✓</Text> : null}
+                        </View>
+                        <Text style={[styles.preQuitChecklistLabel, done && styles.preQuitChecklistLabelDone]}>
+                          {item.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              <View style={[styles.checkinWeekPanel, styles.preQuitPrepStreakPanel]}>
+                <Text style={styles.checkinSubsectionTitle}>Prep streak this week</Text>
+                <View style={[styles.checkinWeekCard, styles.preQuitNicWeekCard]}>
+                  <View style={[styles.checkinDotRow, styles.preQuitNicDotRow]}>
+                    {prepWeekSlots.map((slot, i) => (
+                      <View key={slot.key} style={[styles.checkinDotCell, styles.preQuitNicDotCell]}>
+                        <View style={[styles.preQuitNicDotWrap, slot.isToday && styles.preQuitNicDotWrapToday]}>
+                          <View
+                            style={[
+                              styles.preQuitNicDot,
+                              !slot.completed && styles.preQuitNicDotEmpty,
+                              slot.completed && styles.preQuitNicDotComplete,
+                            ]}
+                          />
+                        </View>
+                        <Text style={[styles.checkinDotLabel, slot.isToday && styles.preQuitNicDotLabelToday]}>
+                          {WEEKDAY_LABELS[i]}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={[styles.checkinLegendRow, styles.preQuitPrepLegendRow]}>
+                    <View style={[styles.checkinLegendChip, styles.preQuitPrepLegendChip]}>
+                      <View style={[styles.checkinLegendDot, styles.preQuitNicLegendDotComplete]} />
+                      <Text style={[styles.checkinLegendChipText, styles.preQuitPrepLegendChipText]}>
+                        Tasks complete
+                      </Text>
+                    </View>
+                    <View style={[styles.checkinLegendChip, styles.preQuitPrepLegendChip]}>
+                      <View style={[styles.checkinLegendDot, styles.preQuitNicLegendDotEmpty]} />
+                      <Text style={[styles.checkinLegendChipText, styles.preQuitPrepLegendChipText]}>
+                        Not complete
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
           )}
 
-          <View style={styles.checkinWeekPanel}>
-            <Text style={styles.checkinSubsectionTitle}>This week</Text>
-            <View style={styles.checkinWeekCard}>
-              <View style={styles.checkinDotRow}>
-                {currentWeekSlots.map((slot, i) => (
-                  <View key={slot.key} style={styles.checkinDotCell}>
-                    <View style={[styles.checkinDotWrap, slot.isToday && styles.checkinDotWrapToday]}>
-                      <View
-                        style={[
-                          styles.checkinDot,
-                          !slot.status && styles.checkinDotEmpty,
-                          slot.status?.status === 'clean' && styles.checkinDotClean,
-                          slot.status?.status === 'drank' && styles.checkinDotDrank,
-                        ]}
-                      />
+          {!isPreQuitMode && (
+            <View style={styles.checkinWeekPanel}>
+              <Text style={styles.checkinSubsectionTitle}>This week</Text>
+              <View style={styles.checkinWeekCard}>
+                <View style={styles.checkinDotRow}>
+                  {currentWeekSlots.map((slot, i) => (
+                    <View key={slot.key} style={styles.checkinDotCell}>
+                      <View style={[styles.checkinDotWrap, slot.isToday && styles.checkinDotWrapToday]}>
+                        <View
+                          style={[
+                            styles.checkinDot,
+                            !slot.status && styles.checkinDotEmpty,
+                            slot.status?.status === 'clean' && styles.checkinDotClean,
+                            slot.status?.status === 'drank' && styles.checkinDotDrank,
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.checkinDotLabel, slot.isToday && styles.checkinDotLabelToday]}>
+                        {WEEKDAY_LABELS[i]}
+                      </Text>
                     </View>
-                    <Text style={[styles.checkinDotLabel, slot.isToday && styles.checkinDotLabelToday]}>
-                      {WEEKDAY_LABELS[i]}
-                    </Text>
+                  ))}
+                </View>
+                <View style={styles.checkinLegendRow}>
+                  <View style={styles.checkinLegendChip}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotClean]} />
+                    <Text style={styles.checkinLegendChipText}>Dry</Text>
                   </View>
-                ))}
-              </View>
-              <View style={styles.checkinLegendRow}>
-                <View style={styles.checkinLegendChip}>
-                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotClean]} />
-                  <Text style={styles.checkinLegendChipText}>Dry</Text>
-                </View>
-                <View style={styles.checkinLegendChip}>
-                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotDrank]} />
-                  <Text style={styles.checkinLegendChipText}>Slipped</Text>
-                </View>
-                <View style={styles.checkinLegendChip}>
-                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotEmpty]} />
-                  <Text style={styles.checkinLegendChipText}>No check-in</Text>
+                  <View style={styles.checkinLegendChip}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotDrank]} />
+                    <Text style={styles.checkinLegendChipText}>Slipped</Text>
+                  </View>
+                  <View style={styles.checkinLegendChip}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotEmpty]} />
+                    <Text style={styles.checkinLegendChipText}>No check-in</Text>
+                  </View>
                 </View>
               </View>
-            </View>
 
-            <View style={styles.checkinStatsGrid}>
-              <View style={styles.checkinStatsRow}>
-                <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
-                  <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
-                    <Calendar size={18} color="#03045e" />
-                  </View>
-                  <Text style={styles.checkinStatCardValue}>
-                    {thisWeekStats.checkins}
-                    <Text style={styles.checkinStatCardDenom}>/7</Text>
-                  </Text>
-                  <Text style={styles.checkinStatCardLabel}>Check-ins this week</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
-                  <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
-                    <Smile size={18} color="#03045e" />
-                  </View>
-                  <Text style={styles.checkinStatCardValue}>
-                    {thisWeekStats.avgMood != null
-                      ? moodLabelFromAverage(thisWeekStats.avgMood)
-                      : '—'}
-                  </Text>
-                  <Text style={styles.checkinStatCardLabel}>Avg. mood</Text>
-                </TouchableOpacity>
+              <View style={styles.checkinStatsGrid}>
+                <View style={styles.checkinStatsRow}>
+                  <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
+                    <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
+                      <Calendar size={18} color={NIC_TEAL} />
+                    </View>
+                    <Text style={styles.checkinStatCardValue}>
+                      {thisWeekStats.checkins}
+                      <Text style={styles.checkinStatCardDenom}>/7</Text>
+                    </Text>
+                    <Text style={styles.checkinStatCardLabel}>Check-ins this week</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
+                    <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
+                      <Smile size={18} color={NIC_TEAL} />
+                    </View>
+                    <Text style={styles.checkinStatCardValue}>
+                      {thisWeekStats.avgMood != null
+                        ? moodLabelFromAverage(thisWeekStats.avgMood)
+                        : '—'}
+                    </Text>
+                    <Text style={styles.checkinStatCardLabel}>Avg. mood</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
+          )}
         </View>
 
         {/* Money Saved Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <DollarSign size={20} color="#03045e" />
+            <DollarSign size={20} color={NIC_TEAL} />
             <Text style={styles.sectionTitle}>Money Saved</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Total savings so far.</Text>
-          <Text style={[
-            styles.moneyAmount,
-            displayTotalSaved >= 100000 && styles.moneyAmountLarge
-          ]}>
-            {displayCurrency}{formatMoneyDetailed(displayTotalSaved)}
+          <Text style={styles.sectionSubtitle}>
+            {isPreQuitMode
+              ? 'Nothing banked yet — real savings start after quit day.'
+              : 'Total savings so far.'}
           </Text>
+          <Text
+            style={[
+              styles.moneyAmount,
+              isPreQuitMode && styles.preQuitNicMoneyAmount,
+              displayTotalSaved >= 100000 && styles.moneyAmountLarge,
+            ]}
+          >
+            {displayCurrency}
+            {formatMoneyDetailed(displayTotalSaved)}
+          </Text>
+          {isPreQuitMode ? (
+            <Text style={styles.preQuitMoneyFootnote}>
+              {
+                "This stays at zero until you're alcohol-free; the breakdown below is what you're on track to keep."
+              }
+            </Text>
+          ) : null}
+
+          {isPreQuitMode ? (
+            <>
+              <View style={[styles.motivationBanner, styles.motivationBannerPreQuitMoney]}>
+                <Text style={[styles.motivationText, styles.moneyMotivationText, styles.preQuitNicMotivationText]}>
+                  {quitDate && projectedSavingsDate && projectedSavingsThirtyDays > 0
+                    ? `Your savings clock starts ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and by ${format(projectedSavingsDate, 'MMMM d')} you could have about ${displayCurrency}${formatMoneyDetailed(projectedSavingsThirtyDays)} more in your pocket than if you'd kept drinking.`
+                    : projectedSavingsThirtyDays > 0
+                      ? 'After quit day, every dry day adds real money here.'
+                      : 'Set your habit spend in settings to personalize this estimate.'}
+                </Text>
+              </View>
+              <Text style={styles.preQuitMoneyRatesHeading}>{"Here's what you'll save when you quit"}</Text>
+            </>
+          ) : null}
 
           <View style={styles.ratesContainer}>
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Weekly rate:</Text>
-              <Text style={styles.rateValue}>
+              <Text style={[styles.rateValue, isPreQuitMode && styles.preQuitNicRateValue]}>
                 {displayCurrency}
                 {formatMoneyDetailed(displayDailyRate * 7)}
               </Text>
@@ -613,7 +902,7 @@ export default function HomeScreen() {
             <View style={styles.rateDivider} />
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Daily rate:</Text>
-              <Text style={styles.rateValue}>
+              <Text style={[styles.rateValue, isPreQuitMode && styles.preQuitNicRateValue]}>
                 {displayCurrency}
                 {formatMoneyDetailed(displayDailyRate)}
               </Text>
@@ -621,37 +910,54 @@ export default function HomeScreen() {
             <View style={styles.rateDivider} />
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Hourly rate:</Text>
-              <Text style={styles.rateValue}>
+              <Text style={[styles.rateValue, isPreQuitMode && styles.preQuitNicRateValue]}>
                 {displayCurrency}
                 {formatMoneyDetailed(displayHourlyRate)}
               </Text>
             </View>
           </View>
 
-          <View style={styles.motivationBanner}>
-            <Text style={[styles.motivationText, styles.moneyMotivationText]}>
-              {savingsError
-                ? savingsError === 'future_quit_date'
-                  ? quitDate
-                    ? `Savings begin on ${format(quitDate, 'MMMM d, yyyy')}!`
-                    : 'Savings will start when you quit!'
-                  : 'Add your quit date in settings to see your results'
-                : displayTotalSaved > 0
-                  ? 'Every minute counts!'
-                  : 'Your savings will start growing once you quit!'}
-            </Text>
-          </View>
+          {!isPreQuitMode ? (
+            <View style={styles.motivationBanner}>
+              <Text style={[styles.motivationText, styles.moneyMotivationText]}>
+                {savingsError
+                  ? 'Add your quit date in settings to see your results'
+                  : displayTotalSaved > 0
+                    ? 'Every minute counts!'
+                    : 'Your savings will start growing once you quit!'}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Achievements Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Trophy size={20} color="#03045e" />
+            <Trophy size={20} color={NIC_TEAL} />
             <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Every milestone earned, forever.</Text>
 
-          {achievementsLoading ? (
+          {isPreQuitMode && achievements.length > 0 ? (
+            <View style={styles.achievementInfo}>
+              <View style={styles.preQuitAchievementsGrid}>
+                {achievements.slice(0, 4).map(achievement => (
+                  <View key={achievement.id} style={styles.preQuitAchievementCard}>
+                    <Text style={styles.preQuitAchievementEmoji}>{achievement.emoji}</Text>
+                    <Text style={styles.preQuitAchievementTitle}>{achievement.title}</Text>
+                    <Text style={styles.preQuitAchievementDays}>
+                      {achievement.daysToGo} {achievement.daysToGo === 1 ? 'day' : 'days'} to go
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.lockedAchievementContainer}>
+                <Text style={styles.lockedAchievementHint}>
+                  These unlock as soon as your quit journey starts.
+                </Text>
+              </View>
+            </View>
+          ) : achievementsLoading ? (
             <View style={styles.achievementInfo}>
               <Text style={styles.achievementName}>Loading...</Text>
               <Text style={styles.achievementDescription}>Please wait</Text>
@@ -745,7 +1051,7 @@ export default function HomeScreen() {
         {/* Financial Goals Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Target size={20} color="#03045e" />
+            <Target size={20} color={NIC_TEAL} />
             <Text style={styles.sectionTitle}>Financial Goals</Text>
           </View>
           <Text style={styles.sectionSubtitle}>{"What you're building towards."}</Text>
@@ -839,7 +1145,7 @@ export default function HomeScreen() {
         {/* Remember Your Why Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MessageCircle size={20} color="#03045e" />
+            <MessageCircle size={20} color={NIC_TEAL} />
             <Text style={styles.sectionTitle}>Remember Your Why</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
@@ -878,22 +1184,21 @@ export default function HomeScreen() {
         </View>
 
         {/* Health Recovery Timeline */}
-        <View style={styles.section}>
+        <View style={[styles.section, isPreQuitMode && styles.preQuitHealthSectionMuted]}>
           <View style={styles.sectionHeader}>
             <Heart size={20} color="#FF6B6B" />
             <Text style={styles.sectionTitle}>Health Recovery Timeline</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Based on WHO medical research</Text>
-          
+          <Text style={styles.sectionSubtitle}>
+            {isPreQuitMode
+              ? 'Preview — these unlock as time alcohol-free adds up after your quit date.'
+              : 'Based on WHO medical research'}
+          </Text>
+
           {healthError ? (
             <View style={styles.timelineContainer}>
               <Text style={styles.timelineDescription}>
-                {healthError === 'future_quit_date'
-                  ? quitDate 
-                    ? `Your health recovery begins ${format(quitDate, 'MMMM d, yyyy')}`
-                    : 'Your health recovery begins when you quit'
-                  : 'Add your quit date in settings to see your results'
-                }
+                {'Add your quit date in settings to see your results'}
               </Text>
             </View>
           ) : (
@@ -979,7 +1284,7 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   progressCard: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     marginHorizontal: 20,
     borderRadius: 16,
     paddingVertical: 40,
@@ -1126,7 +1431,7 @@ const styles = StyleSheet.create({
   streakCaption: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
-    color: '#03045e',
+    color: NIC_TEAL,
     fontWeight: '600',
     lineHeight: 20,
     marginTop: 6,
@@ -1203,7 +1508,7 @@ const styles = StyleSheet.create({
   
 },
   moodLabelSelected: {
-    color: '#03045e',
+    color: NIC_TEAL,
   },
   checkinDrinkButtonHalf: {
     flex: 1,
@@ -1223,7 +1528,7 @@ const styles = StyleSheet.create({
 },
   checkinDrinkButtonCleanOn: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#03045e',
+    shadowColor: NIC_TEAL,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -1246,7 +1551,7 @@ const styles = StyleSheet.create({
   
 },
   checkinDrinkButtonLabelCleanOn: {
-    color: '#03045e',
+    color: NIC_TEAL,
   },
   checkinDrinkButtonLabelDrankOn: {
     color: '#E85A3A',
@@ -1274,7 +1579,7 @@ const styles = StyleSheet.create({
   
 },
   badgeCleanText: {
-    color: '#03045e',
+    color: NIC_TEAL,
   },
   badgeDrankText: {
     color: '#FF6B47',
@@ -1306,7 +1611,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   checkInDoneRow: {
@@ -1329,7 +1634,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   checkInEncouragement: {
@@ -1357,7 +1662,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,107,71,0.26)',
   },
   checkInEncouragementClean: {
-    color: '#03045e',
+    color: NIC_TEAL,
   },
   checkInEncouragementDrank: {
     color: '#C24A32',
@@ -1411,7 +1716,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(60, 60, 67, 0.18)',
   },
   checkinDotClean: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
   },
   checkinDotDrank: {
     backgroundColor: '#FF6B47',
@@ -1424,7 +1729,7 @@ const styles = StyleSheet.create({
   
 },
   checkinDotLabelToday: {
-    color: '#03045e',
+    color: NIC_TEAL,
   },
   checkinLegendRow: {
     flexDirection: 'row',
@@ -1448,7 +1753,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   checkinLegendDotClean: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
   },
   checkinLegendDotDrank: {
     backgroundColor: '#FF6B47',
@@ -1558,7 +1863,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 36,
     fontWeight: '700',
-    color: '#03045e',
+    color: NIC_TEAL,
     marginBottom: 20,
   },
   moneyAmountLarge: {
@@ -1588,7 +1893,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   motivationBanner: {
@@ -1603,7 +1908,7 @@ const styles = StyleSheet.create({
   motivationText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
-    color: '#03045e',
+    color: NIC_TEAL,
     fontWeight: '600',
     lineHeight: 20,
     flex: 1,
@@ -1616,6 +1921,439 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   
 },
+  preQuitNicStreakPill: {
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
+    borderColor: 'rgba(3, 4, 94, 0.14)',
+  },
+  preQuitHealthSectionMuted: {
+    opacity: 0.72,
+  },
+  vapeTrackerStreakBadge: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+  },
+  preQuitNicMoneyAmount: {
+    color: NIC_TEAL,
+  },
+  preQuitNicRateValue: {
+    color: NIC_TEAL,
+  },
+  preQuitNicMotivationText: {
+    color: NIC_TEAL,
+  },
+  preQuitMoneyFootnote: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 13,
+    lineHeight: 18,
+    color: '#8E8E93',
+    fontWeight: '500',
+    marginTop: -8,
+    marginBottom: 18,
+  },
+  preQuitMoneyRatesHeading: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 4,
+    letterSpacing: -0.3,
+  },
+  motivationBannerPreQuitMoney: {
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    marginBottom: 16,
+  },
+  lockedAchievementContainer: {
+    marginTop: 8,
+  },
+  lockedAchievementHint: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 12,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  preQuitAchievementsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 10,
+  },
+  preQuitAchievementCard: {
+    width: '48.5%',
+    backgroundColor: '#F8F8F8',
+    borderWidth: 1,
+    borderColor: '#ECECEE',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    opacity: 0.72,
+  },
+  preQuitAchievementEmoji: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 22,
+    marginBottom: 8,
+  },
+  preQuitAchievementTitle: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#636366',
+    textAlign: 'center',
+    marginBottom: 3,
+  },
+  preQuitAchievementDays: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 13,
+    color: '#8E8E93',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  preQuitCard: {
+    marginTop: 14,
+    backgroundColor: 'rgba(3, 4, 94, 0.06)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.16)',
+    padding: 12,
+  },
+  preQuitTitle: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 4,
+  },
+  preQuitSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    color: '#636366',
+    marginBottom: 6,
+    lineHeight: 20,
+  },
+  preQuitProgress: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 12,
+    color: NIC_TEAL,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  preQuitCongratsBanner: {
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  preQuitCongratsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  preQuitCongratsText: {
+    flex: 1,
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    color: NIC_TEAL,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  preQuitEditButton: {
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.36)',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  preQuitEditButtonText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 12,
+    color: NIC_TEAL,
+    fontWeight: '700',
+  },
+  preQuitChecklist: {
+    gap: 8,
+  },
+  preQuitChecklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 13,
+    paddingHorizontal: 12,
+    minHeight: 52,
+  },
+  preQuitChecklistItemDone: {
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.32)',
+  },
+  preQuitCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: NIC_TEAL,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  preQuitCheckboxDone: {
+    backgroundColor: NIC_TEAL,
+  },
+  preQuitCheckboxTick: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 12,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  preQuitChecklistLabel: {
+    flex: 1,
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 13,
+    color: '#1C1C1E',
+    fontWeight: '500',
+  },
+  preQuitChecklistLabelDone: {
+    color: NIC_TEAL,
+    fontWeight: '600',
+  },
+  preQuitPrepStreakPanel: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(3, 4, 94, 0.18)',
+  },
+  preQuitPrepLegendRow: {
+    gap: 6,
+    marginTop: 10,
+    paddingTop: 10,
+  },
+  preQuitPrepLegendChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
+  },
+  preQuitPrepLegendChipText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: '600',
+  },
+  preQuitNicWeekCard: {
+    backgroundColor: '#F4F5F7',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  preQuitNicDotRow: {
+    paddingHorizontal: 4,
+    marginBottom: 4,
+  },
+  preQuitNicDotCell: {
+    gap: 10,
+  },
+  preQuitNicDotWrap: {
+    padding: 3,
+    borderRadius: 22,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  preQuitNicDotWrapToday: {
+    borderColor: 'rgba(3, 4, 94,0.5)',
+    backgroundColor: 'rgba(3, 4, 94,0.06)',
+  },
+  preQuitNicDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  preQuitNicDotEmpty: {
+    backgroundColor: '#D8D8DC',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  preQuitNicDotComplete: {
+    backgroundColor: NIC_TEAL,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  preQuitNicDotLabelToday: {
+    color: NIC_TEAL,
+  },
+  preQuitNicLegendDotComplete: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+    backgroundColor: NIC_TEAL,
+  },
+  preQuitNicLegendDotEmpty: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#C7C7CC',
+  },
+  puffCard: {
+    marginTop: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.22)',
+    backgroundColor: 'rgba(3, 4, 94, 0.06)',
+    padding: 12,
+  },
+  puffCardInSection: {
+    marginTop: 0,
+  },
+  vapeTrackerEaseBackHint: {
+    marginTop: 14,
+    marginBottom: 6,
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8E8E93',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  vapeTrackerWeekSummary: {
+    marginTop: 0,
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#636366',
+    lineHeight: 20,
+    textAlign: 'center',
+  },
+  puffLogVapeCircle: {
+    width: 196,
+    height: 196,
+    borderRadius: 98,
+    backgroundColor: NIC_TEAL,
+    alignSelf: 'center',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 14,
+    marginBottom: 4,
+    shadowColor: NIC_TEAL,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.32,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  puffLogVapeCircleText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    paddingHorizontal: 14,
+  },
+  puffUndoColumn: {
+    marginTop: 12,
+    marginBottom: 18,
+    alignItems: 'center',
+  },
+  puffUndoButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.28)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  puffUndoButtonText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 26,
+    lineHeight: 30,
+    fontWeight: '700',
+    color: NIC_TEAL,
+    marginTop: -2,
+  },
+  puffUndoHint: {
+    marginTop: 6,
+    textAlign: 'center',
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 11,
+    color: '#8E8E93',
+    fontWeight: '600',
+  },
+  puffWeekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 4,
+  },
+  puffDayCell: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  puffBarTrack: {
+    width: 14,
+    height: 46,
+    borderRadius: 7,
+    backgroundColor: '#F1F2F4',
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  puffBarFill: {
+    width: '100%',
+    borderRadius: 7,
+    backgroundColor: 'rgba(3, 4, 94,0.4)',
+    minHeight: 6,
+  },
+  puffBarFillToday: {
+    backgroundColor: NIC_TEAL,
+  },
+  puffBarFillUp: {
+    backgroundColor: '#E04D3D',
+  },
+  puffDayCount: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1C1C1E',
+  },
+  puffDayCountToday: {
+    color: NIC_TEAL,
+  },
+  puffDayCountUp: {
+    color: '#C23B2E',
+  },
+  puffDayLabel: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8E8E93',
+    marginTop: 2,
+  },
+  puffDayLabelToday: {
+    color: NIC_TEAL,
+  },
   rememberWhyBodyText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
@@ -1653,7 +2391,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
     lineHeight: 20,
     textAlign: 'left',
   
@@ -1713,7 +2451,7 @@ const styles = StyleSheet.create({
   daysToGoBox: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#03045e',
+    borderColor: NIC_TEAL,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
@@ -1724,7 +2462,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
-    color: '#03045e',
+    color: NIC_TEAL,
     marginBottom: 4,
   
 },
@@ -1755,7 +2493,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   achievementProgressBar: {
@@ -1765,7 +2503,7 @@ const styles = StyleSheet.create({
   },
   achievementProgressFill: {
     height: '100%',
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     borderRadius: 4,
   },
   goalItem: {
@@ -1791,7 +2529,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   progressBarContainer: {
@@ -1807,22 +2545,22 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     borderRadius: 4,
   },
   progressPercent: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   viewAllButton: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#03045e',
+    shadowColor: NIC_TEAL,
     shadowOffset: {
       width: 0,
       height: 8,
@@ -1856,7 +2594,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#03045e',
+    borderColor: NIC_TEAL,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -1869,7 +2607,7 @@ const styles = StyleSheet.create({
   timelineLine: {
     width: 2,
     flex: 1,
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
   },
   timelineContent: {
     flex: 1,
@@ -1884,7 +2622,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
     letterSpacing: 0.5,
   
 },
@@ -1892,7 +2630,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1979,7 +2717,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalTag: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -2016,7 +2754,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '700',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
 
@@ -2041,7 +2779,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
   remainingText: {
@@ -2065,7 +2803,7 @@ const styles = StyleSheet.create({
   goalEtaText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
-    color: '#03045e',
+    color: NIC_TEAL,
     textAlign: 'center',
     fontWeight: '600',
     lineHeight: 20,
@@ -2092,20 +2830,20 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
-    color: '#03045e',
+    color: NIC_TEAL,
   
 },
 
   // Test button styles
   testButton: {
-    backgroundColor: '#03045e',
+    backgroundColor: NIC_TEAL,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
-    shadowColor: '#03045e',
+    shadowColor: NIC_TEAL,
     shadowOffset: {
       width: 0,
       height: 4,

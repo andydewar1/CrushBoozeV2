@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Target, TrendingUp, Settings } from 'lucide-react
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { useGoals, type Goal, type CreateGoal, type UpdateGoal } from '@/hooks/useGoals';
+import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import AddEditGoalModal from '@/components/AddEditGoalModal';
@@ -26,6 +27,8 @@ export default function GoalsScreen() {
   } = useGoals();
   
   const { totalSaved, dailyRate, currency, loading: moneyLoading, error: savingsError } = useMoneySaved();
+  const { error: timerError } = useQuitTimer();
+  const isPreQuitMode = timerError === 'future_quit_date';
   const { financialGoal, loading: financialGoalLoading } = useFinancialGoals();
   
   const [modalVisible, setModalVisible] = useState(false);
@@ -41,10 +44,21 @@ export default function GoalsScreen() {
   );
   const availableSavings = Math.max(totalSaved - totalCommitted, 0);
 
-  const displayDailyRate = (moneyLoading || savingsError) ? 0 : dailyRate;
+  const savingsBlocked = moneyLoading || (!!savingsError && !isPreQuitMode);
+  const displayDailyRate = savingsBlocked ? 0 : dailyRate;
 
-  const getGoalEtaText = (remainingAmount: number): string | null => {
-    if (displayDailyRate <= 0 || remainingAmount <= 0) return null;
+  const getGoalEtaText = (remainingAmount: number, progress: number): string => {
+    if (progress >= 100) {
+      return "You're funded for this goal — mark it complete when you're ready.";
+    }
+    if (remainingAmount <= 0) {
+      return 'Savings have reached this target — nice work.';
+    }
+    if (displayDailyRate <= 0) {
+      return isPreQuitMode
+        ? 'After quit day, your daily savings rate will fill this in — add your weekly spend in Settings if needed.'
+        : 'Add your weekly alcohol spend in Settings to estimate how fast you will reach this goal.';
+    }
     const totalDays = Math.ceil(remainingAmount / displayDailyRate);
     const months = Math.floor(totalDays / 30);
     if (months > 0) {
@@ -253,7 +267,7 @@ export default function GoalsScreen() {
             {activeGoals.map((goal) => {
               const progress = getGoalProgress(goal);
               const remaining = getRemainingForGoal(goal);
-              const etaText = getGoalEtaText(remaining);
+              const etaText = getGoalEtaText(remaining, progress);
 
               return (
                 <View key={goal.id} style={styles.goalCard}>
@@ -303,11 +317,9 @@ export default function GoalsScreen() {
                         {formatCurrency(remaining)} to go
                       </Text>
                     )}
-                    {remaining > 0 && progress < 100 && etaText && (
-                      <View style={styles.goalEtaPill}>
-                        <Text style={styles.goalEtaText}>{etaText}</Text>
-                      </View>
-                    )}
+                    <View style={styles.goalEtaPill}>
+                      <Text style={styles.goalEtaText}>{etaText}</Text>
+                    </View>
                     {progress >= 100 && (
                       <TouchableOpacity 
                         style={styles.completeButton}
