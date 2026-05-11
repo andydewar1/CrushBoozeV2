@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
-import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle } from 'lucide-react-native';
+import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle, Sun, Calendar, Smile } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
-import { useCallback, useEffect } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import Header from '../../components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
@@ -14,6 +14,7 @@ import { useGoals, type Goal } from '@/hooks/useGoals';
 import { useQuitMotivation } from '@/hooks/useQuitMotivation';
 import { useHealthRecovery } from '@/hooks/useHealthRecovery';
 import { useAchievements } from '@/hooks/useAchievements';
+import { useCheckinHistory, moodLabelFromAverage } from '@/hooks/useCheckinHistory';
 import { useSettings } from '@/contexts/SettingsContext';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +23,21 @@ import RevenueCatService from '@/services/RevenueCatService';
 import { format } from 'date-fns';
 import { initializeFacebookSDK, logAppInstall } from '@/lib/facebook';
 
+const MOODS = [
+  { emoji: '😊', label: 'Great' },
+  { emoji: '😐', label: 'Okay' },
+  { emoji: '😔', label: 'Rough' },
+] as const;
+
+const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
+function moodEmojiForStoredLabel(label: string): string {
+  const hit = MOODS.find(m => m.label === label);
+  if (hit) return hit.emoji;
+  if (label === 'Strong' || label === 'Calm') return '😊';
+  if (label === 'Struggling') return '😐';
+  return '😐';
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -34,6 +50,24 @@ export default function HomeScreen() {
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
   const { milestones: healthMilestones, loading: healthLoading, error: healthError } = useHealthRecovery();
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
+
+  const moodPickRef = useRef<string | null>(null);
+  const drinkPickRef = useRef<'clean' | 'vaped' | null>(null);
+  const checkinFeedbackAnim = useRef(new Animated.Value(0)).current;
+  const [pickMood, setPickMood] = useState<string | null>(null);
+  const [pickDrink, setPickDrink] = useState<'clean' | 'vaped' | null>(null);
+  const {
+    hydrated: checkinHydrated,
+    todayKey,
+    todayCheckin,
+    recordCheckin,
+    clearTodayCheckin,
+    refresh: refreshCheckins,
+    currentWeekSlots,
+    currentWeekCheckedCount,
+    thisWeekStats,
+  } = useCheckinHistory();
+  const prevHadTodayCheckinRef = useRef(!!todayCheckin);
 
   // Calculate total committed to achieved goals and available savings
   const totalCommitted = achievedGoals.reduce(
@@ -123,6 +157,76 @@ export default function HomeScreen() {
       refetchGoals();
     }, [refetchGoals])
   );
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshCheckins();
+    }, [refreshCheckins])
+  );
+
+  useEffect(() => {
+    moodPickRef.current = null;
+    drinkPickRef.current = null;
+    setPickMood(null);
+    setPickDrink(null);
+  }, [todayKey]);
+
+  useEffect(() => {
+    const hasTodayCheckin = !!todayCheckin;
+    const hadTodayCheckin = prevHadTodayCheckinRef.current;
+    const isSuccessCheckin = todayCheckin?.status === 'clean';
+
+    if (hasTodayCheckin && !hadTodayCheckin && isSuccessCheckin) {
+      checkinFeedbackAnim.setValue(0);
+      Animated.sequence([
+        Animated.timing(checkinFeedbackAnim, {
+          toValue: 1.12,
+          duration: 170,
+          useNativeDriver: true,
+        }),
+        Animated.spring(checkinFeedbackAnim, {
+          toValue: 1,
+          friction: 5,
+          tension: 140,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else if (hasTodayCheckin) {
+      checkinFeedbackAnim.setValue(1);
+    }
+
+    if (!hasTodayCheckin) {
+      checkinFeedbackAnim.setValue(0);
+    }
+
+    prevHadTodayCheckinRef.current = hasTodayCheckin;
+  }, [todayCheckin, checkinFeedbackAnim]);
+
+  const onPickMood = async (label: string) => {
+    moodPickRef.current = label;
+    setPickMood(label);
+    const v = drinkPickRef.current;
+    if (v && !todayCheckin) {
+      await recordCheckin(v, label);
+    }
+  };
+
+  const onPickDrink = async (v: 'clean' | 'vaped') => {
+    drinkPickRef.current = v;
+    setPickDrink(v);
+    const m = moodPickRef.current;
+    if (m && !todayCheckin) {
+      await recordCheckin(v, m);
+    }
+  };
+
+  const onChangeTodayCheckin = () => {
+    moodPickRef.current = null;
+    drinkPickRef.current = null;
+    setPickMood(null);
+    setPickDrink(null);
+    clearTodayCheckin();
+  };
 
   // Show loading state if any data is loading - temporarily disabled
   // if (timerLoading || savingsLoading || goalLoading || motivationLoading || healthLoading || achievementsLoading) {
@@ -251,6 +355,227 @@ export default function HomeScreen() {
                   : 'Since you quit'
             }
           </Text>
+        </View>
+
+        {/* Daily Check-in */}
+        <View style={styles.section}>
+          <View style={styles.checkInHeaderBlock}>
+            <View style={styles.checkInHeaderRow}>
+              <View style={styles.checkInTitleCluster}>
+                <View style={styles.checkInSectionHeader}>
+                  <Sun size={20} color="#03045e" />
+                  <Text style={[styles.sectionTitle, styles.checkInSectionTitle]}>Daily Check-in</Text>
+                </View>
+                <View style={styles.checkInSubtitleLines}>
+                  <Text style={styles.checkInSectionSubtitleLine}>Keep your streak alive.</Text>
+                  <Text style={styles.checkInSectionSubtitleLine}>Check in before you forget.</Text>
+                </View>
+              </View>
+              <View style={styles.streakBadgeCol}>
+                <View style={styles.streakPill}>
+                  <View style={styles.streakBadge}>
+                    <Text style={styles.streakFire}>🔥</Text>
+                    <Text style={styles.streakCountBlack}>
+                      {checkinHydrated ? currentWeekCheckedCount : '—'}
+                    </Text>
+                    <Text style={styles.streakSlashOutOf}>/7</Text>
+                  </View>
+                  <Text style={styles.streakCaption}>This week</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {!todayCheckin ? (
+            <View style={styles.checkinFormSurface}>
+              <Text style={styles.checkInQuestion}>How are you feeling today?</Text>
+              <View style={styles.checkinSegmentTray}>
+                {MOODS.map((mood, i) => (
+                  <Fragment key={mood.label}>
+                    {i > 0 ? <View style={styles.checkinSegmentHairline} /> : null}
+                    <TouchableOpacity
+                      style={[styles.moodOptionInRow, pickMood === mood.label && styles.moodOptionSelected]}
+                      onPress={() => onPickMood(mood.label)}
+                      activeOpacity={0.92}
+                    >
+                      <Text style={[styles.moodEmoji, pickMood === mood.label && styles.moodEmojiSelected]}>
+                        {mood.emoji}
+                      </Text>
+                      <Text style={[styles.moodLabel, pickMood === mood.label && styles.moodLabelSelected]}>
+                        {mood.label}
+                      </Text>
+                    </TouchableOpacity>
+                  </Fragment>
+                ))}
+              </View>
+              <Text style={[styles.checkInQuestion, styles.checkInQuestionSecond]}>Have you had alcohol today?</Text>
+              <View style={styles.checkinSegmentTray}>
+                <TouchableOpacity
+                  style={[
+                    styles.checkinDrinkButtonHalf,
+                    pickDrink === 'clean' && styles.checkinDrinkButtonCleanOn,
+                  ]}
+                  onPress={() => onPickDrink('clean')}
+                  activeOpacity={0.92}
+                >
+                  <Text style={styles.checkinDrinkEmoji}>😊</Text>
+                  <Text
+                    style={[
+                      styles.checkinDrinkButtonLabel,
+                      pickDrink === 'clean' && styles.checkinDrinkButtonLabelCleanOn,
+                    ]}
+                  >
+                    Nope!
+                  </Text>
+                </TouchableOpacity>
+                <View style={styles.checkinSegmentHairline} />
+                <TouchableOpacity
+                  style={[
+                    styles.checkinDrinkButtonHalf,
+                    pickDrink === 'vaped' && styles.checkinDrinkButtonDrankOn,
+                  ]}
+                  onPress={() => onPickDrink('vaped')}
+                  activeOpacity={0.92}
+                >
+                  <Text style={styles.checkinDrinkEmoji}>😢</Text>
+                  <Text
+                    style={[
+                      styles.checkinDrinkButtonLabel,
+                      pickDrink === 'vaped' && styles.checkinDrinkButtonLabelDrankOn,
+                    ]}
+                  >
+                    Yes
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.checkinDoneCard}>
+              <View style={styles.checkinDoneTitleRow}>
+                <Text style={styles.checkinDoneTitle}>{"You're checked in for today."}</Text>
+                <TouchableOpacity onPress={onChangeTodayCheckin} hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}>
+                  <Text style={styles.checkinChangeLink}>Edit</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.checkInDoneRow}>
+                {todayCheckin.mood && (
+                  <View style={styles.checkInMoodBadge}>
+                    <Text style={styles.checkInMoodBadgeText}>
+                      {moodEmojiForStoredLabel(todayCheckin.mood)} {todayCheckin.mood}
+                    </Text>
+                  </View>
+                )}
+                <View style={[styles.checkInAnsweredBadge, todayCheckin.status === 'clean' ? styles.badgeClean : styles.badgeDrank]}>
+                  <Text style={[styles.checkInAnsweredText, todayCheckin.status === 'clean' ? styles.badgeCleanText : styles.badgeDrankText]}>
+                    {todayCheckin.status === 'clean' ? 'Dry today' : 'Slipped today'}
+                  </Text>
+                </View>
+              </View>
+              <Animated.View
+                style={[
+                  styles.checkinFeedbackBanner,
+                  todayCheckin.status === 'clean'
+                    ? styles.checkinFeedbackBannerClean
+                    : styles.checkinFeedbackBannerDrank,
+                  {
+                    opacity: checkinFeedbackAnim.interpolate({
+                      inputRange: [0, 0.25, 1],
+                      outputRange: [0, 1, 1],
+                      extrapolate: 'clamp',
+                    }),
+                    transform: [
+                      {
+                        translateY: checkinFeedbackAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [6, 0],
+                          extrapolate: 'clamp',
+                        }),
+                      },
+                      { scale: checkinFeedbackAnim },
+                    ],
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.checkInEncouragement,
+                    todayCheckin.status === 'clean'
+                      ? styles.checkInEncouragementClean
+                      : styles.checkInEncouragementDrank,
+                  ]}
+                >
+                  {todayCheckin.status === 'clean'
+                    ? "Another day you didn't let drinking win 💪"
+                    : "It's okay. Don't turn one slip into a spiral 💪"}
+                </Text>
+              </Animated.View>
+            </View>
+          )}
+
+          <View style={styles.checkinWeekPanel}>
+            <Text style={styles.checkinSubsectionTitle}>This week</Text>
+            <View style={styles.checkinWeekCard}>
+              <View style={styles.checkinDotRow}>
+                {currentWeekSlots.map((slot, i) => (
+                  <View key={slot.key} style={styles.checkinDotCell}>
+                    <View style={[styles.checkinDotWrap, slot.isToday && styles.checkinDotWrapToday]}>
+                      <View
+                        style={[
+                          styles.checkinDot,
+                          !slot.status && styles.checkinDotEmpty,
+                          slot.status?.status === 'clean' && styles.checkinDotClean,
+                          slot.status?.status === 'vaped' && styles.checkinDotDrank,
+                        ]}
+                      />
+                    </View>
+                    <Text style={[styles.checkinDotLabel, slot.isToday && styles.checkinDotLabelToday]}>
+                      {WEEKDAY_LABELS[i]}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+              <View style={styles.checkinLegendRow}>
+                <View style={styles.checkinLegendChip}>
+                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotClean]} />
+                  <Text style={styles.checkinLegendChipText}>Dry</Text>
+                </View>
+                <View style={styles.checkinLegendChip}>
+                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotDrank]} />
+                  <Text style={styles.checkinLegendChipText}>Slipped</Text>
+                </View>
+                <View style={styles.checkinLegendChip}>
+                  <View style={[styles.checkinLegendDot, styles.checkinLegendDotEmpty]} />
+                  <Text style={styles.checkinLegendChipText}>No check-in</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.checkinStatsGrid}>
+              <View style={styles.checkinStatsRow}>
+                <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
+                  <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
+                    <Calendar size={18} color="#03045e" />
+                  </View>
+                  <Text style={styles.checkinStatCardValue}>
+                    {thisWeekStats.checkins}
+                    <Text style={styles.checkinStatCardDenom}>/7</Text>
+                  </Text>
+                  <Text style={styles.checkinStatCardLabel}>Check-ins this week</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.checkinStatCard} activeOpacity={0.88}>
+                  <View style={[styles.checkinStatIconCircle, styles.checkinStatIconNavy]}>
+                    <Smile size={18} color="#03045e" />
+                  </View>
+                  <Text style={styles.checkinStatCardValue}>
+                    {thisWeekStats.avgMood != null
+                      ? moodLabelFromAverage(thisWeekStats.avgMood)
+                      : '—'}
+                  </Text>
+                  <Text style={styles.checkinStatCardLabel}>Avg. mood</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         </View>
 
         {/* Money Saved Section */}
@@ -692,6 +1017,438 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
   },
+
+  // --- Daily Check-in ---
+  checkInHeaderBlock: {
+    marginBottom: 14,
+  },
+  checkInHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  checkInTitleCluster: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: 12,
+  },
+  checkInSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkInSectionTitle: {
+    marginBottom: 0,
+  },
+  checkInSubtitleLines: {
+    marginTop: 6,
+    paddingLeft: 28,
+    paddingRight: 8,
+    alignSelf: 'stretch',
+    gap: 4,
+    flexShrink: 1,
+  },
+  checkInSectionSubtitleLine: {
+    fontSize: 14,
+    color: '#8E8E93',
+    lineHeight: 19,
+    fontWeight: '500',
+  },
+  streakBadgeCol: {
+    alignItems: 'flex-end',
+  },
+  streakPill: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.14)',
+  },
+  streakBadge: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: 2,
+  },
+  streakFire: {
+    fontSize: 28,
+    lineHeight: 32,
+    marginRight: 2,
+  },
+  streakCountBlack: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    letterSpacing: -0.8,
+    lineHeight: 30,
+  },
+  streakSlashOutOf: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#8E8E93',
+    paddingBottom: 1,
+    marginLeft: 1,
+  },
+  streakCaption: {
+    fontSize: 14,
+    color: '#03045e',
+    fontWeight: '600',
+    lineHeight: 20,
+    marginTop: 6,
+    letterSpacing: 0.2,
+  },
+  checkinFormSurface: {
+    backgroundColor: 'rgba(3, 4, 94, 0.055)',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.1)',
+  },
+  checkInQuestion: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1C1C1E',
+    marginBottom: 10,
+    letterSpacing: -0.2,
+  },
+  checkInQuestionSecond: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  checkinSegmentTray: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    backgroundColor: 'rgba(60, 60, 67, 0.07)',
+    borderRadius: 14,
+    padding: 4,
+  },
+  checkinSegmentHairline: {
+    width: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(60, 60, 67, 0.12)',
+    alignSelf: 'stretch',
+    marginVertical: 8,
+  },
+  moodOptionInRow: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderRadius: 11,
+    backgroundColor: 'transparent',
+  },
+  moodOptionSelected: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  moodEmoji: {
+    fontSize: 26,
+    marginBottom: 6,
+  },
+  moodEmojiSelected: {
+    transform: [{ scale: 1.06 }],
+  },
+  moodLabel: {
+    fontSize: 12,
+    color: '#636366',
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: -0.1,
+  },
+  moodLabelSelected: {
+    color: '#03045e',
+  },
+  checkinDrinkButtonHalf: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 11,
+    backgroundColor: 'transparent',
+  },
+  checkinDrinkEmoji: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  checkinDrinkButtonCleanOn: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#03045e',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  checkinDrinkButtonDrankOn: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#FF6B47',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  checkinDrinkButtonLabel: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#3A3A3C',
+    letterSpacing: -0.2,
+  },
+  checkinDrinkButtonLabelCleanOn: {
+    color: '#03045e',
+  },
+  checkinDrinkButtonLabelDrankOn: {
+    color: '#E85A3A',
+  },
+  checkInAnsweredBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+  },
+  badgeClean: {
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.28)',
+  },
+  badgeDrank: {
+    backgroundColor: 'rgba(255,107,71,0.1)',
+    borderColor: 'rgba(255,107,71,0.3)',
+  },
+  checkInAnsweredText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  badgeCleanText: {
+    color: '#03045e',
+  },
+  badgeDrankText: {
+    color: '#FF6B47',
+  },
+  checkinDoneCard: {
+    backgroundColor: 'rgba(3, 4, 94, 0.055)',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 2,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.12)',
+  },
+  checkinDoneTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
+  checkinDoneTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1C1C1E',
+  },
+  checkinChangeLink: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#03045e',
+  },
+  checkInDoneRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 0,
+    flexWrap: 'wrap',
+  },
+  checkInMoodBadge: {
+    alignSelf: 'flex-start',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    backgroundColor: 'rgba(3, 4, 94, 0.06)',
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+  },
+  checkInMoodBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+    color: '#03045e',
+  },
+  checkInEncouragement: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 0,
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  checkinFeedbackBanner: {
+    marginTop: 12,
+    borderRadius: 12,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+  },
+  checkinFeedbackBannerClean: {
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.26)',
+  },
+  checkinFeedbackBannerDrank: {
+    backgroundColor: 'rgba(255,107,71,0.1)',
+    borderColor: 'rgba(255,107,71,0.26)',
+  },
+  checkInEncouragementClean: {
+    color: '#03045e',
+  },
+  checkInEncouragementDrank: {
+    color: '#C24A32',
+  },
+  checkinWeekPanel: {
+    marginTop: 14,
+  },
+  checkinSubsectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 10,
+  },
+  checkinWeekCard: {
+    backgroundColor: 'rgba(3, 4, 94, 0.04)',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+  },
+  checkinDotRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  checkinDotCell: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  checkinDotWrap: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  checkinDotWrapToday: {
+    borderWidth: 2,
+    borderColor: 'rgba(3, 4, 94, 0.35)',
+  },
+  checkinDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  checkinDotEmpty: {
+    backgroundColor: 'rgba(60, 60, 67, 0.18)',
+  },
+  checkinDotClean: {
+    backgroundColor: '#03045e',
+  },
+  checkinDotDrank: {
+    backgroundColor: '#FF6B47',
+  },
+  checkinDotLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8E8E93',
+  },
+  checkinDotLabelToday: {
+    color: '#03045e',
+  },
+  checkinLegendRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+    justifyContent: 'center',
+  },
+  checkinLegendChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(60, 60, 67, 0.06)',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  checkinLegendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  checkinLegendDotClean: {
+    backgroundColor: '#03045e',
+  },
+  checkinLegendDotDrank: {
+    backgroundColor: '#FF6B47',
+  },
+  checkinLegendDotEmpty: {
+    backgroundColor: 'rgba(60, 60, 67, 0.22)',
+  },
+  checkinLegendChipText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#636366',
+  },
+  checkinStatsGrid: {
+    marginTop: 12,
+  },
+  checkinStatsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  checkinStatCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.1)',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: 'flex-start',
+  },
+  checkinStatIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  checkinStatIconNavy: {
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+  },
+  checkinStatCardValue: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1C1C1E',
+    letterSpacing: -0.4,
+  },
+  checkinStatCardDenom: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#8E8E93',
+  },
+  checkinStatCardLabel: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8E8E93',
+    lineHeight: 16,
+  },
+
   section: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,

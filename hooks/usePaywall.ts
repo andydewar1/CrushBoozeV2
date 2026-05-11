@@ -4,6 +4,7 @@ import { Alert } from 'react-native';
 import RevenueCatService from '@/services/RevenueCatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { initializeRevenueCatIfNeeded } from '@/lib/subscription';
+import { isDevPaywallBypassed } from '@/lib/devFlags';
 
 interface PaywallPackage {
   identifier: string;
@@ -36,6 +37,13 @@ export function usePaywall() {
   useEffect(() => {
     const loadPackages = async () => {
       if (!session) {
+        setLoading(false);
+        return;
+      }
+
+      if (isDevPaywallBypassed()) {
+        setPackages([]);
+        setError(null);
         setLoading(false);
         return;
       }

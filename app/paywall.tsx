@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
+import { isDevPaywallBypassed } from "@/lib/devFlags";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,6 +38,12 @@ export default function PaywallScreen() {
   const { data, yearlySpend: onboardingYearlySpend } = useOnboarding();
   const { profile } = useSettings();
   const router = useRouter();
+
+  useEffect(() => {
+    if (isDevPaywallBypassed()) {
+      router.replace("/(tabs)");
+    }
+  }, [router]);
   
   // Use onboarding context if available, otherwise fall back to saved profile
   // daily_cost in profile stores WEEKLY spend, so multiply by 52 for yearly

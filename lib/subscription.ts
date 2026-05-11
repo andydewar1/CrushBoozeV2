@@ -1,10 +1,16 @@
 import RevenueCatService from '@/services/RevenueCatService';
+import { isDevPaywallBypassed } from '@/lib/devFlags';
 
 /**
  * BULLETPROOF subscription check - ZERO bypass possibilities
  * TESTFLIGHT OPTIMIZED: Handles sandbox subscription edge cases
  */
 export async function checkSubscriptionStatus(): Promise<boolean> {
+  if (isDevPaywallBypassed()) {
+    console.warn('[Dev] DEV_BYPASS_PAYWALL: skipping RevenueCat, treating as subscribed');
+    return true;
+  }
+
   try {
     // CRITICAL: Fail fast if service not initialized
     if (!RevenueCatService.isInitialized()) {
@@ -156,6 +162,10 @@ export async function initializeRevenueCatIfNeeded(userId?: string): Promise<voi
  */
 export async function getPostOnboardingRoute(userId?: string): Promise<string> {
   try {
+    if (isDevPaywallBypassed()) {
+      console.warn('[Dev] DEV_BYPASS_PAYWALL: post-onboarding → main app');
+      return '/(tabs)';
+    }
     // CRITICAL SECURITY: New users completing onboarding should ALWAYS go to paywall
     // They need to subscribe before accessing the main app
     console.log('🎯 Post-onboarding route decision: Routing to paywall for subscription validation');

@@ -3,6 +3,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { checkSubscriptionStatus } from '@/lib/subscription';
+import { isDevPaywallBypassed } from '@/lib/devFlags';
 
 /**
  * BULLETPROOF subscription gate - prevents bypass and ensures constant validation
@@ -22,7 +23,7 @@ export function useSubscriptionGate() {
   useEffect(() => {
     const inTabsGroup = segments[0] === '(tabs)';
     
-    if (user && inTabsGroup && !intervalRef.current) {
+    if (user && inTabsGroup && !isDevPaywallBypassed() && !intervalRef.current) {
       console.log('🔄 Starting periodic subscription validation (every 5 minutes)');
       intervalRef.current = setInterval(() => {
         if (!isChecking) {
@@ -48,6 +49,10 @@ export function useSubscriptionGate() {
 
   // Prevent multiple simultaneous checks with timeout protection
   const checkSubscription = async (reason: string) => {
+    if (isDevPaywallBypassed()) {
+      return;
+    }
+
     // Clear any pending checks
     if (checkTimeoutRef.current) {
       clearTimeout(checkTimeoutRef.current);

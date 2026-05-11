@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
+import { isDevPaywallBypassed } from '@/lib/devFlags';
 
 const TOTAL_STEPS = 25;
 
@@ -37,7 +38,7 @@ export default function CommitmentScreen() {
     } catch (e) {
       console.error('❌ Failed to refresh profile:', e);
     }
-    router.replace('/paywall');
+    router.replace(isDevPaywallBypassed() ? '/(tabs)' : '/paywall');
   };
 
   return (
