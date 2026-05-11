@@ -596,6 +596,7 @@ export default function SettingsScreen() {
         supabase.from('goals').delete().eq('user_id', userId),
         supabase.from('financial_goals').delete().eq('user_id', userId),
         supabase.from('craving_logs').delete().eq('user_id', userId),
+        supabase.from('daily_checkins').delete().eq('user_id', userId),
       ];
 
       await Promise.all(deletePromises);

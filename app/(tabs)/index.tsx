@@ -52,10 +52,10 @@ export default function HomeScreen() {
   const { stats: achievementStats, loading: achievementsLoading, error: achievementsError } = useAchievements();
 
   const moodPickRef = useRef<string | null>(null);
-  const drinkPickRef = useRef<'clean' | 'vaped' | null>(null);
+  const drinkPickRef = useRef<'clean' | 'drank' | null>(null);
   const checkinFeedbackAnim = useRef(new Animated.Value(0)).current;
   const [pickMood, setPickMood] = useState<string | null>(null);
-  const [pickDrink, setPickDrink] = useState<'clean' | 'vaped' | null>(null);
+  const [pickDrink, setPickDrink] = useState<'clean' | 'drank' | null>(null);
   const {
     hydrated: checkinHydrated,
     todayKey,
@@ -211,7 +211,7 @@ export default function HomeScreen() {
     }
   };
 
-  const onPickDrink = async (v: 'clean' | 'vaped') => {
+  const onPickDrink = async (v: 'clean' | 'drank') => {
     drinkPickRef.current = v;
     setPickDrink(v);
     const m = moodPickRef.current;
@@ -432,16 +432,16 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   style={[
                     styles.checkinDrinkButtonHalf,
-                    pickDrink === 'vaped' && styles.checkinDrinkButtonDrankOn,
+                    pickDrink === 'drank' && styles.checkinDrinkButtonDrankOn,
                   ]}
-                  onPress={() => onPickDrink('vaped')}
+                  onPress={() => onPickDrink('drank')}
                   activeOpacity={0.92}
                 >
                   <Text style={styles.checkinDrinkEmoji}>😢</Text>
                   <Text
                     style={[
                       styles.checkinDrinkButtonLabel,
-                      pickDrink === 'vaped' && styles.checkinDrinkButtonLabelDrankOn,
+                      pickDrink === 'drank' && styles.checkinDrinkButtonLabelDrankOn,
                     ]}
                   >
                     Yes
@@ -524,7 +524,7 @@ export default function HomeScreen() {
                           styles.checkinDot,
                           !slot.status && styles.checkinDotEmpty,
                           slot.status?.status === 'clean' && styles.checkinDotClean,
-                          slot.status?.status === 'vaped' && styles.checkinDotDrank,
+                          slot.status?.status === 'drank' && styles.checkinDotDrank,
                         ]}
                       />
                     </View>
