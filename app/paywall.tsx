@@ -46,11 +46,12 @@ export default function PaywallScreen() {
     }
   }, [router]);
   
-  // Use onboarding context if available, otherwise fall back to saved profile
-  // daily_cost in profile stores WEEKLY spend, so multiply by 52 for yearly
-  const yearlySpend = onboardingYearlySpend > 0 
-    ? onboardingYearlySpend 
+  // Use onboarding context if available, otherwise fall back to saved profile.
+  // daily_cost in profile stores WEEKLY spend, so multiply by 52 for yearly.
+  const yearlySpend = onboardingYearlySpend > 0
+    ? onboardingYearlySpend
     : (profile?.daily_cost ? profile.daily_cost * 52 : 0);
+  const displayYearlyLoss = Math.round(yearlySpend);
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const testimonialAnim = useRef(new Animated.Value(1)).current;
 
@@ -155,12 +156,32 @@ export default function PaywallScreen() {
           </Text>
         </View>
 
-        {/* Spending stat */}
-        <View style={styles.spendCard}>
-          <Text style={[styles.spendText, { fontSize: compact ? 13 : 15 }]}>
-            You spend <Text style={styles.spendHighlight}>{getCurrencySymbol()}{yearlySpend.toLocaleString()}/yr</Text> on alcohol
-          </Text>
-        </View>
+        {yearlySpend > 0 ? (
+          <>
+            {/* Spending stat — loss-framed */}
+            <View style={styles.spendCard}>
+              <Text style={[styles.spendText, { fontSize: compact ? 14 : 16 }]}>
+                At this pace, you'll lose
+              </Text>
+              <Text
+                style={[
+                  styles.spendHighlight,
+                  styles.spendLossValue,
+                  { fontSize: compact ? 34 : 38 },
+                ]}
+              >
+                {getCurrencySymbol()}
+                {displayYearlyLoss.toLocaleString()}
+              </Text>
+              <Text style={[styles.spendText, { fontSize: compact ? 14 : 16 }]}>
+                to alcohol in the next 12 months.
+              </Text>
+              <Text style={[styles.spendRecoveryText, { fontSize: compact ? 14 : 15 }]}>
+                We'll help you take that back.
+              </Text>
+            </View>
+          </>
+        ) : null}
 
 
         {/* Testimonial */}
@@ -368,13 +389,25 @@ const styles = StyleSheet.create({
     color: NAVY,
     fontWeight: '500',
     textAlign: 'center',
-  
-},
+  },
   spendHighlight: {
     fontFamily: FONT_FAMILY_UI,
     fontWeight: '800',
-  
-},
+  },
+  spendLossValue: {
+    color: '#C62828',
+    lineHeight: 42,
+    marginTop: 2,
+    marginBottom: 2,
+    letterSpacing: -0.5,
+  },
+  spendRecoveryText: {
+    fontFamily: FONT_FAMILY_UI,
+    color: NAVY,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 8,
+  },
 
   // Testimonial
   testimonialSection: {

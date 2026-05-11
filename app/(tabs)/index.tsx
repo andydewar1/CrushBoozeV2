@@ -63,6 +63,22 @@ export default function HomeScreen() {
   } = useAchievements();
 
   const isPreQuitMode = timerError === 'future_quit_date';
+
+  // Home UX tweak:
+  // When a user is on their first sober day (day 0 -> day 1 transition) we want
+  // the "First Day" milestone to be visibly locked while progress builds smoothly.
+  const isLockedDay1OnHomePreview =
+    !isPreQuitMode &&
+    !achievementStats.currentAchievement &&
+    achievementStats.nextAchievement?.id === 'day1';
+
+  const day1ProgressPercent = Math.max(
+    0,
+    Math.min(100, Math.round(((hours * 60) + minutes) / (24 * 60) * 100))
+  );
+  const achievementProgressToNextForHome = isLockedDay1OnHomePreview
+    ? day1ProgressPercent
+    : achievementStats.progressToNext;
   const {
     checklist,
     checklistCompletedCount,
@@ -1002,36 +1018,84 @@ export default function HomeScreen() {
                 </>
               )}
 
+              {/* Locked day-1 achievement (to match Achievements page UI) */}
+              {!achievementStats.currentAchievement &&
+                achievementStats.nextAchievement?.id === 'day1' && (
+                  <View style={styles.achievementInfo}>
+                    <View style={[styles.achievementContainer, styles.lockedAchievementContainer]}>
+                      <Text style={[styles.achievementBadge, styles.lockedAchievementBadge]}>
+                        {achievementStats.nextAchievement.emoji}
+                      </Text>
+                      <View style={styles.achievementText}>
+                        <Text style={[styles.achievementName, styles.lockedAchievementName]}>
+                          {achievementStats.nextAchievement.title}
+                        </Text>
+                        <Text style={[styles.achievementDescription, styles.lockedAchievementDescription]}>
+                          {achievementStats.nextAchievement.daysToGo}{' '}
+                          {achievementStats.nextAchievement.daysToGo === 1 ? 'day' : 'days'} to go
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
               {/* Upcoming Achievement */}
               {achievementStats.nextAchievement ? (
                 <>
                   <View style={styles.upcomingSection}>
-                    <Text style={styles.upcomingTitle}>Upcoming Achievement</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.85}
+                      onPress={() => router.push('/achievements')}
+                      style={{ flex: 1 }}
+                    >
+                      <Text style={styles.upcomingTitle}>Upcoming Achievement</Text>
+                    </TouchableOpacity>
                     
                     <View style={styles.achievementProgressContainer}>
-                      <View style={styles.daysToGoBox}>
-                        <Text style={styles.daysToGoNumber}>{achievementStats.daysToNext}</Text>
+                      <View
+                        style={styles.daysToGoBox}
+                      >
+                        <Text style={styles.daysToGoNumber}>
+                          {achievementStats.daysToNext}
+                        </Text>
                         <Text style={styles.daysToGoLabel}>Days to go</Text>
                       </View>
                       
                       <View style={styles.progressSection}>
-                        <Text style={styles.upcomingAchievementName}>{achievementStats.nextAchievement.title}</Text>
-                        <Text style={styles.upcomingAchievementDescription}>{achievementStats.nextAchievement.description}</Text>
+                        <Text
+                          style={styles.upcomingAchievementName}
+                        >
+                          {achievementStats.nextAchievement.title}
+                        </Text>
+                        <Text
+                          style={styles.upcomingAchievementDescription}
+                        >
+                          {achievementStats.nextAchievement.description}
+                        </Text>
                         <View style={styles.progressHeader}>
                           <Text style={styles.progressLabel}>Progress</Text>
-                          <Text style={styles.progressPercentage}>{achievementStats.progressToNext}%</Text>
+                          <Text
+                            style={styles.progressPercentage}
+                          >
+                            {achievementProgressToNextForHome}%
+                          </Text>
                         </View>
                         <View style={styles.achievementProgressBar}>
-                          <View style={[styles.achievementProgressFill, { width: `${achievementStats.progressToNext}%` }]} />
+                          <View
+                            style={[
+                              styles.achievementProgressFill,
+                              { width: `${achievementProgressToNextForHome}%` },
+                            ]}
+                          />
                         </View>
                       </View>
                     </View>
                     
                     <View style={styles.goalEtaPill}>
                       <Text style={styles.goalEtaText}>
-                        {achievementStats.progressToNext >= 75
-                          ? `You're ${achievementStats.progressToNext}% there! Keep going strong!`
-                          : achievementStats.progressToNext >= 50
+                        {achievementProgressToNextForHome >= 75
+                          ? `You're ${achievementProgressToNextForHome}% there! Keep going strong!`
+                          : achievementProgressToNextForHome >= 50
                             ? `Halfway there! ${achievementStats.daysToNext} days to go!`
                             : `Every day counts! ${achievementStats.daysToNext} days to your next milestone!`}
                       </Text>
@@ -1967,6 +2031,10 @@ const styles = StyleSheet.create({
   },
   lockedAchievementContainer: {
     marginTop: 8,
+    opacity: 0.7,
+  },
+  lockedAchievementBadge: {
+    opacity: 0.5,
   },
   lockedAchievementHint: {
     fontFamily: FONT_FAMILY_UI,
@@ -2447,6 +2515,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  lockedAchievementName: {
+    color: '#8E8E93',
+  },
+  lockedAchievementDescription: {
+    color: '#AEAEB2',
+    marginBottom: 0,
   },
   daysToGoBox: {
     backgroundColor: '#FFFFFF',

@@ -10,8 +10,23 @@ import { useQuitTimer } from '@/hooks/useQuitTimer';
 export default function AchievementsScreen() {
   const router = useRouter();
   const { achievements, stats, loading, error } = useAchievements();
-  const { error: timerError } = useQuitTimer();
+  const { error: timerError, hours, minutes } = useQuitTimer();
   const isPreQuitMode = timerError === 'future_quit_date';
+
+  // UI-only day-1 motivation tweak:
+  // When "First Day" is the upcoming (locked) milestone, show progress based on
+  // the time elapsed within that first 24h period (day 0 -> day 1 ramp).
+  const isLockedDay1OnAchievementsPage =
+    !isPreQuitMode && !stats.currentAchievement && stats.nextAchievement?.id === 'day1';
+
+  const day1ProgressPercent = Math.max(
+    0,
+    Math.min(100, Math.round(((hours * 60) + minutes) / (24 * 60) * 100))
+  );
+
+  const progressToNextForUI = isLockedDay1OnAchievementsPage
+    ? day1ProgressPercent
+    : stats.progressToNext;
 
   return (
     <>
@@ -172,10 +187,10 @@ export default function AchievementsScreen() {
                         </Text>
                         <View style={styles.progressHeader}>
                           <Text style={styles.progressLabel}>Progress</Text>
-                          <Text style={styles.progressPercentage}>{stats.progressToNext}%</Text>
+                          <Text style={styles.progressPercentage}>{progressToNextForUI}%</Text>
                         </View>
                         <View style={styles.achievementProgressBar}>
-                          <View style={[styles.achievementProgressFill, { width: `${stats.progressToNext}%` }]} />
+                          <View style={[styles.achievementProgressFill, { width: `${progressToNextForUI}%` }]} />
                         </View>
                       </View>
                     </View>
@@ -186,9 +201,9 @@ export default function AchievementsScreen() {
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
-                        {stats.progressToNext >= 75
-                          ? `You're ${stats.progressToNext}% there! Keep going strong!`
-                          : stats.progressToNext >= 50
+                        {progressToNextForUI >= 75
+                          ? `You're ${progressToNextForUI}% there! Keep going strong!`
+                          : progressToNextForUI >= 50
                             ? `Halfway there! ${stats.daysToNext} days to go!`
                             : `Every day counts! ${stats.daysToNext} days to your next milestone!`}
                       </Text>
