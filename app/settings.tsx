@@ -753,7 +753,7 @@ export default function SettingsScreen() {
         goals: goalsResult.data || [],
         craving_logs: logsResult.data || [],
         exported_at: new Date().toISOString(),
-        app_version: '1.0.0',
+        app_version: '1.0.1',
         export_format: 'CrushBooze_Data_Export_v1'
       };
 
@@ -1107,7 +1107,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.settingValue}>1.0.0 (11)</Text>
+            <Text style={styles.settingValue}>1.0.1 (12)</Text>
           </View>
 
         </View>
