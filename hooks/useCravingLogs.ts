@@ -74,7 +74,7 @@ export function useCravingLogs() {
         setError(null);
       } catch (err) {
         console.error('Error fetching craving logs:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load craving logs');
+        setError(err instanceof Error ? err.message : 'Failed to load urge logs');
       } finally {
         setLoading(false);
       }
@@ -126,7 +126,7 @@ export function useCravingLogs() {
       return newLog;
     } catch (err) {
       console.error('Error adding craving log:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add craving log');
+      setError(err instanceof Error ? err.message : 'Failed to add urge log');
       return null;
     }
   };
@@ -181,7 +181,7 @@ export function useCravingLogs() {
       return updatedLog;
     } catch (err) {
       console.error('Error updating craving log:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update craving log');
+      setError(err instanceof Error ? err.message : 'Failed to update urge log');
       return null;
     }
   };
@@ -224,7 +224,7 @@ export function useCravingLogs() {
       return true;
     } catch (err) {
       console.error('Error deleting craving log:', err);
-      setError(err instanceof Error ? err.message : 'Failed to delete craving log');
+      setError(err instanceof Error ? err.message : 'Failed to delete urge log');
       return false;
     }
   };

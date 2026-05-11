@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff } from 'lucide-react-native';
@@ -167,10 +168,12 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   emoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 64,
     marginBottom: 24,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1A1A2E',
@@ -178,6 +181,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     color: '#6B7280',
     textAlign: 'center',
@@ -190,12 +194,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A2E',
     marginLeft: 4,
   },
   input: {
+    fontFamily: FONT_FAMILY_UI,
     backgroundColor: '#F5F5F5',
     borderRadius: 16,
     paddingHorizontal: 20,
@@ -210,6 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   passwordInput: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 18,
@@ -230,6 +237,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   buttonText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
@@ -239,11 +247,13 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   linkText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#6B7280',
     fontSize: 16,
     textAlign: 'center',
   },
   linkTextBold: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#03045e',
     fontWeight: '600',
   },

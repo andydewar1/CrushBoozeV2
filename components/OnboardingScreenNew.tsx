@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -305,11 +306,13 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     fontWeight: '700',
     lineHeight: 36,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     marginTop: 12,
     lineHeight: 30,
@@ -337,15 +340,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   optionEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     marginRight: 16,
   },
   optionText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     color: COLORS.black,
     flex: 1,
   },
   optionTextSelected: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '600',
   },
   checkIcon: {
@@ -371,6 +377,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   continueText: {
+    fontFamily: FONT_FAMILY_UI,
     color: COLORS.white,
     fontSize: 18,
     fontWeight: '600',

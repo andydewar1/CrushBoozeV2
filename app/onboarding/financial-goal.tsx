@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -83,11 +84,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   label: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     color: '#6B7280',
     fontWeight: '500',
   },
   input: {
+    fontFamily: FONT_FAMILY_UI,
     backgroundColor: '#F5F5F5',
     borderRadius: 16,
     paddingVertical: 18,
@@ -104,12 +107,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   currencySymbol: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     color: '#1A1A2E',
     fontWeight: '600',
     marginRight: 8,
   },
   amountInput: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     fontSize: 22,
     color: '#1A1A2E',

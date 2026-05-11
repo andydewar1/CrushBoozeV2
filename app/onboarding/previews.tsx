@@ -12,6 +12,7 @@ import {
   Image,
   ImageSourcePropType
 } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -171,12 +172,14 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#1A1A2E',
     marginBottom: 4,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#6B7280',
     fontWeight: '500',
@@ -224,6 +227,7 @@ const styles = StyleSheet.create({
     width: 24,
   },
   swipeHint: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#9CA3AF',
     fontWeight: '500',
@@ -237,6 +241,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   continueText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',

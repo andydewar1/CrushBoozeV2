@@ -8,6 +8,7 @@ import {
   Platform,
   SafeAreaView 
 } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { AlertTriangle, Heart, CheckCircle2 } from 'lucide-react-native';
 
 interface DisclaimerAcceptanceProps {
@@ -205,14 +206,14 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 8,
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   headerSubtitle: {
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 4,
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   scrollView: {
     flex: 1,
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333333',
     marginLeft: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   warningBox: {
     backgroundColor: '#FFF3CD',
@@ -248,13 +249,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#856404',
     marginBottom: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   warningText: {
     fontSize: 14,
     color: '#856404',
     lineHeight: 20,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   disclaimerSection: {
     marginBottom: 20,
@@ -267,15 +268,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333333',
     marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   disclaimerText: {
     fontSize: 14,
     color: '#555555',
     lineHeight: 20,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   bold: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '600',
     color: '#333333',
   },
@@ -292,13 +294,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#721C24',
     marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   emergencyText: {
     fontSize: 14,
     color: '#721C24',
     lineHeight: 20,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   finalNotice: {
     backgroundColor: '#D1ECF1',
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     fontWeight: '500',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   footer: {
     padding: 20,
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     marginBottom: 16,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     lineHeight: 20,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -370,7 +372,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   acceptButton: {
     flex: 1,
@@ -387,7 +389,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#03045e',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   acceptButtonTextDisabled: {
     color: 'rgba(255, 255, 255, 0.6)',

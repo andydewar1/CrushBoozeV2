@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { X, AlertCircle, CheckCircle, Info } from 'lucide-react-native';
 
 interface ToastAction {
@@ -164,12 +165,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   toastTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 2,
   },
   toastMessage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
   },
@@ -183,6 +186,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5EA',
   },
   actionText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',

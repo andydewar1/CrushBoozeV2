@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { X } from 'lucide-react-native';
 import { CravingLog } from '@/hooks/useCravingLogs';
 
@@ -258,6 +259,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     fontWeight: '700',
     color: '#1C1C1E',
@@ -281,12 +283,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginBottom: 20,
@@ -310,15 +314,18 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   intensityEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     marginBottom: 8,
   },
   intensityLevel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     marginBottom: 4,
   },
   intensityLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     fontWeight: '500',
@@ -351,6 +358,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   intensityButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -359,11 +367,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   intensityLabelText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     fontWeight: '500',
   },
   textInput: {
+    fontFamily: FONT_FAMILY_UI,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
@@ -401,6 +411,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '700',
     color: '#FFFFFF',

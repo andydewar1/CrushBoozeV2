@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -171,20 +172,20 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 40,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'left',
     marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
     letterSpacing: -1,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'left',
     lineHeight: 24,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   footer: {
     padding: 20,
@@ -202,9 +203,9 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   nextButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '600',
     color: '#03045e',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
 }); 

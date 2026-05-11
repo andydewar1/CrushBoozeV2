@@ -1,4 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { Check } from 'lucide-react-native';
 
 interface SelectionButtonProps {
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '500',
     color: '#1C1C1E',

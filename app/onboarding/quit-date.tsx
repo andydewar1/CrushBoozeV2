@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -145,11 +146,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cardLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#6B7280',
     fontWeight: '500',
   },
   cardValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1A1A2E',
     fontWeight: '600',
@@ -184,11 +187,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F0F0F0',
   },
   modalTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#1A1A2E',
   },
   doneButton: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '600',
     color: '#03045e',

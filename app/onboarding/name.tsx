@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -48,6 +49,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   input: {
+    fontFamily: FONT_FAMILY_UI,
     backgroundColor: '#F5F5F5',
     borderRadius: 16,
     paddingVertical: 18,

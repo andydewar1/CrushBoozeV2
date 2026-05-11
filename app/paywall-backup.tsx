@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
 import { useOnboarding } from "@/contexts/OnboardingContext";
@@ -123,7 +124,7 @@ export default function PaywallBackupScreen() {
             <View style={styles.benefitRow}>
               <Text style={[styles.tick, { fontSize: compact ? 16 : 18 }]}>✓</Text>
               <Text style={[styles.benefitText, { fontSize: compact ? 14 : 16 }]}>
-                Track days, cravings & money saved
+                Track days, urges & money saved
               </Text>
             </View>
             <View style={styles.benefitRow}>
@@ -248,6 +249,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headline: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE,
     fontWeight: "800",
   },
@@ -258,19 +260,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statLabel: {
+    fontFamily: FONT_FAMILY_UI,
     color: BRAND,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
   statValue: {
+    fontFamily: FONT_FAMILY_UI,
     color: BRAND,
     fontSize: 32,
     fontWeight: '800',
   },
   benefitRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
-  tick: { color: LIGHT_BLUE, lineHeight: 22, fontWeight: "bold" },
-  benefitText: { color: WHITE, lineHeight: 22, flexShrink: 1, fontWeight: "600" },
+  tick: {
+    fontFamily: FONT_FAMILY_UI, color: LIGHT_BLUE, lineHeight: 22, fontWeight: "bold" 
+},
+  benefitText: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE, lineHeight: 22, flexShrink: 1, fontWeight: "600" 
+},
   testimonialCard: {
     backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 12,
@@ -279,6 +287,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.2)",
   },
   testimonialText: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE_90,
     lineHeight: 18,
   },
@@ -304,9 +313,13 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 6,
   },
-  planTitle: { color: WHITE, fontWeight: "800" },
+  planTitle: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE, fontWeight: "800" 
+},
   planCopy: { marginLeft: 36 },
-  planTopLine: { color: WHITE, fontWeight: "600" },
+  planTopLine: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE, fontWeight: "600" 
+},
   planBottomLine: { color: WHITE_70, marginTop: 1 },
   badge: {
     backgroundColor: LIGHT_BLUE,
@@ -315,7 +328,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginLeft: 8,
   },
-  badgeText: { color: BRAND, fontWeight: "800", fontSize: 12 },
+  badgeText: {
+    fontFamily: FONT_FAMILY_UI, color: BRAND, fontWeight: "800", fontSize: 12 
+},
   radioOuter: {
     width: 26,
     height: 26,
@@ -350,10 +365,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   ctaText: {
+    fontFamily: FONT_FAMILY_UI,
     color: BRAND,
     fontWeight: "900",
   },
   ctaSub: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE_90,
     textAlign: "center",
     fontSize: 15,
@@ -364,7 +381,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  link: { color: WHITE, textDecorationLine: "underline", fontSize: 13 },
-  dot: { color: WHITE_70, fontSize: 16, marginHorizontal: 2 },
-  restore: { color: WHITE_55, fontSize: 14, textAlign: "center" },
+  link: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE, textDecorationLine: "underline", fontSize: 13 
+},
+  dot: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE_70, fontSize: 16, marginHorizontal: 2 
+},
+  restore: {
+    fontFamily: FONT_FAMILY_UI, color: WHITE_55, fontSize: 14, textAlign: "center" 
+},
 });

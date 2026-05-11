@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { Settings } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
@@ -42,14 +43,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginTop: 4,
+    lineHeight: 22,
   },
   settingsButton: {
     width: 32,

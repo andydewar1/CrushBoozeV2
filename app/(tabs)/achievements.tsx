@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
-import { Trophy, Target, TrendingUp, Crosshair, Settings } from 'lucide-react-native';
+import { Trophy, Target, TrendingUp, Settings } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAchievements } from '@/hooks/useAchievements';
 
@@ -26,46 +27,36 @@ export default function AchievementsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Trophy size={24} color="#03045e" />
-            <Text style={styles.statNumber}>
-              {loading ? '...' : error ? '0' : stats.totalEarned}
+        {/* Stats — same layout as Logs */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <View style={styles.statIconCircle}>
+              <Trophy size={18} color="#03045e" />
+            </View>
+            <Text style={styles.statNumberPremium}>
+              {loading ? '…' : error ? '0' : stats.totalEarned}
             </Text>
-            <Text 
-              style={styles.statLabel}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              Earned
-            </Text>
+            <Text style={styles.statLabelCaps}>Earned</Text>
           </View>
-          <View style={styles.statBox}>
-            <Target size={24} color="#FF6B47" />
-            <Text style={styles.statNumber}>
-              {loading ? '...' : error ? '0' : stats.daysFree.toLocaleString()}
+          <View style={styles.statDividerVert} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIconCircle, styles.statIconCircleWarm]}>
+              <Target size={18} color="#FF6B47" />
+            </View>
+            <Text style={styles.statNumberPremium}>
+              {loading ? '…' : error ? '0' : stats.daysFree.toLocaleString()}
             </Text>
-            <Text 
-              style={styles.statLabel}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              Days Free
-            </Text>
+            <Text style={styles.statLabelCaps}>Days free</Text>
           </View>
-          <View style={styles.statBox}>
-            <TrendingUp size={24} color="#03045e" />
-            <Text style={styles.statNumber}>
-              {loading ? '...' : error ? '0' : stats.totalToGo}
+          <View style={styles.statDividerVert} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIconCircle, styles.statIconCircleWarm]}>
+              <TrendingUp size={18} color="#FF6B47" />
+            </View>
+            <Text style={styles.statNumberPremium}>
+              {loading ? '…' : error ? '0' : stats.totalToGo}
             </Text>
-            <Text 
-              style={styles.statLabel}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              To Go
-            </Text>
+            <Text style={styles.statLabelCaps}>To go</Text>
           </View>
         </View>
 
@@ -75,7 +66,7 @@ export default function AchievementsScreen() {
             <Trophy size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your progress milestones</Text>
+          <Text style={styles.sectionSubtitle}>Every milestone earned, forever.</Text>
           
           {loading ? (
             <View style={styles.achievementInfo}>
@@ -124,13 +115,30 @@ export default function AchievementsScreen() {
                     </View>
                   </View>
                   
-                  <View style={styles.celebrationBanner}>
-                    <Text style={styles.celebrationEmoji}>🎉</Text>
-                    <Text style={styles.celebrationText}>
-                      Congratulations! You've achieved {stats.currentAchievement.title}!
+                  <View style={styles.achievementCongratsBanner}>
+                    <Text style={styles.achievementCongratsText}>
+                      {`Congratulations! You've achieved ${stats.currentAchievement.title} - keep up the good work! 💪`}
                     </Text>
                   </View>
                 </>
+              )}
+              {!stats.currentAchievement && stats.nextAchievement && (
+                <View style={styles.achievementInfo}>
+                  <View style={[styles.achievementContainer, styles.lockedAchievementContainer]}>
+                    <Text style={[styles.achievementBadge, styles.lockedAchievementBadge]}>
+                      {stats.nextAchievement.emoji}
+                    </Text>
+                    <View style={styles.achievementText}>
+                      <Text style={[styles.achievementName, styles.lockedAchievementName]}>
+                        {stats.nextAchievement.title}
+                      </Text>
+                      <Text style={[styles.achievementDescription, styles.lockedAchievementDescription]}>
+                        {stats.nextAchievement.daysToGo}{' '}
+                        {stats.nextAchievement.daysToGo === 1 ? 'day' : 'days'} to go
+                      </Text>
+                    </View>
+                  </View>
+                </View>
               )}
 
               {/* Upcoming Achievement */}
@@ -170,19 +178,17 @@ export default function AchievementsScreen() {
                       </View>
                     </View>
                     
-                    <View style={styles.motivationBanner}>
-                      <Text style={styles.motivationEmoji}>🎯</Text>
-                      <Text 
-                        style={styles.motivationText}
+                    <View style={styles.goalEtaPill}>
+                      <Text
+                        style={styles.goalEtaText}
                         numberOfLines={2}
                         ellipsizeMode="tail"
                       >
-                        {stats.progressToNext >= 75 
+                        {stats.progressToNext >= 75
                           ? `You're ${stats.progressToNext}% there! Keep going strong!`
                           : stats.progressToNext >= 50
-                          ? `Halfway there! ${stats.daysToNext} days to go!`
-                          : `Every day counts! ${stats.daysToNext} days to your next milestone!`
-                        }
+                            ? `Halfway there! ${stats.daysToNext} days to go!`
+                            : `Every day counts! ${stats.daysToNext} days to your next milestone!`}
                       </Text>
                     </View>
                   </View>
@@ -200,10 +206,10 @@ export default function AchievementsScreen() {
         {/* Milestones Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Crosshair size={20} color="#03045e" />
+            <Trophy size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Achievement Milestones</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your journey milestones and badges.</Text>
+          <Text style={styles.sectionSubtitle}>{"Proof of how far you've come."}</Text>
           
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -251,10 +257,9 @@ export default function AchievementsScreen() {
                     numberOfLines={3}
                     ellipsizeMode="tail"
                   >
-                    {achievement.achieved 
-                      ? achievement.description 
-                      : `${achievement.daysToGo} days to go`
-                    }
+                    {achievement.achieved
+                      ? achievement.description
+                      : `${achievement.daysToGo} ${achievement.daysToGo === 1 ? 'day' : 'days'} to go`}
                   </Text>
                   {achievement.achieved && (
                     <View style={styles.checkmarkContainer}>
@@ -298,14 +303,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginTop: 4,
+    lineHeight: 22,
   },
   settingsButton: {
     width: 32,
@@ -315,43 +324,61 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statsContainer: {
+  statsCard: {
     marginHorizontal: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
-  statBox: {
+    alignItems: 'stretch',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    flex: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.1)',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 8,
-    borderWidth: 0.5,
-    borderColor: 'rgba(3, 4, 94, 0.08)',
-    aspectRatio: 1,
-    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  statNumber: {
-    fontSize: 28,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  statIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statIconCircleWarm: {
+    backgroundColor: 'rgba(255, 107, 71, 0.08)',
+  },
+  statDividerVert: {
+    width: 1,
+    backgroundColor: '#F2F2F7',
+    marginVertical: 6,
+  },
+  statNumberPremium: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1C1C1E',
-    marginTop: 4,
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: -0.5,
   },
-  statLabel: {
-    fontSize: 12,
+  statLabelCaps: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 10,
     color: '#8E8E93',
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
     textAlign: 'center',
   },
   section: {
@@ -375,28 +402,33 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#1C1C1E',
     marginLeft: 8,
     marginBottom: 4,
+    letterSpacing: -0.35,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
-    marginLeft: 28,
+    lineHeight: 19,
   },
   achievementInfo: {
     marginBottom: 12,
   },
   achievementName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#1C1C1E',
     marginBottom: 8,
   },
   achievementDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginBottom: 20,
@@ -417,12 +449,14 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   daysToGoNumber: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#03045e',
     marginBottom: 4,
   },
   daysToGoLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
@@ -431,12 +465,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   upcomingAchievementName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 2,
   },
   upcomingAchievementDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: '#8E8E93',
     marginBottom: 8,
@@ -448,11 +484,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     fontWeight: '500',
   },
   progressPercentage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#03045e',
@@ -467,23 +505,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
     borderRadius: 4,
   },
-  motivationBanner: {
-    backgroundColor: '#F5F8FA',
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+  goalEtaPill: {
+    marginTop: 8,
+    alignSelf: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
-  motivationEmoji: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  motivationText: {
-    fontSize: 16,
+  goalEtaText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
     color: '#03045e',
-    fontWeight: '500',
-    flex: 1,
-    flexWrap: 'wrap',
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 20,
   },
   milestonesGrid: {
     flexDirection: 'row',
@@ -529,13 +567,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   badgeEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
   },
   badgeEmojiLocked: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     opacity: 0.5,
   },
   milestoneTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
@@ -548,6 +589,7 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
   },
   milestoneDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 16,
@@ -570,6 +612,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkmark: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#FFFFFF',
     fontWeight: '600',
@@ -583,11 +626,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',
   },
   errorText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',
@@ -598,6 +643,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyStateText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',
@@ -608,30 +654,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  lockedAchievementContainer: {
+    opacity: 0.7,
+  },
   achievementBadge: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     marginRight: 16,
+  },
+  lockedAchievementBadge: {
+    opacity: 0.5,
   },
   achievementText: {
     flex: 1,
   },
-  celebrationBanner: {
-    backgroundColor: '#F5F8FA',
+  lockedAchievementName: {
+    color: '#8E8E93',
+  },
+  lockedAchievementDescription: {
+    color: '#AEAEB2',
+    marginBottom: 0,
+  },
+  achievementCongratsBanner: {
+    marginTop: 12,
     borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.26)',
   },
-  celebrationEmoji: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  celebrationText: {
-    fontSize: 16,
-    color: '#03045e',
+  achievementCongratsText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
     fontWeight: '600',
-    flex: 1,
-    flexShrink: 1,
+    color: '#03045e',
+    lineHeight: 20,
+    textAlign: 'left',
   },
   upcomingSection: {
     marginTop: 16,
@@ -640,6 +699,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5EA',
   },
   upcomingTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#8E8E93',

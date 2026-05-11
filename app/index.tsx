@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
     lineHeight: 52,
   },
   subtitle: {
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
     textAlign: 'center',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
     marginTop: 12,
   },
   buttonContainer: {
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
     letterSpacing: 0.5,
   },
   linkButton: {
@@ -202,11 +203,13 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   linkText: {
+    fontFamily: FONT_FAMILY_UI,
     color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 16,
     textAlign: 'center',
   },
   linkTextBold: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FFFFFF',
     fontWeight: '600',
   },

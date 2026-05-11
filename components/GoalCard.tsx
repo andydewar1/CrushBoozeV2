@@ -1,4 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { Check } from 'lucide-react-native';
 
 interface GoalCardProps {
@@ -61,6 +62,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',

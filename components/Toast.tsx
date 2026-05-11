@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { AlertCircle, CheckCircle2, Info, XCircle } from 'lucide-react-native';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -169,12 +170,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
     marginBottom: 4,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   message: {
     fontSize: 14,
     color: '#4B5563',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   actionButton: {
     marginTop: 12,
@@ -185,7 +186,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#3B82F6',
     textTransform: 'uppercase',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
 });
 

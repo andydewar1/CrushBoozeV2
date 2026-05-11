@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -93,20 +94,24 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   emoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 64,
     marginBottom: 24,
   },
   text: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     color: '#FFFFFF',
     lineHeight: 40,
     fontWeight: '600',
   },
   highlight: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#caf0f8',
     fontWeight: '700',
   },
   subtext: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 24,

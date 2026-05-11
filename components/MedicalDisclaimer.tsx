@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { Heart, AlertTriangle } from 'lucide-react-native';
 
 interface MedicalDisclaimerProps {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   warningContainer: {
     flexDirection: 'row',
@@ -80,16 +81,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FF6B47',
     marginLeft: 6,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   disclaimer: {
     fontSize: 13,
     color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
     marginBottom: 12,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   bold: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '600',
     color: '#FFFFFF',
   },
@@ -99,6 +101,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 8,
     fontStyle: 'italic',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
 }); 

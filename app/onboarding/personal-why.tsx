@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   ScrollView
 } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -140,12 +141,14 @@ const styles = StyleSheet.create({
     paddingTop: 32,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     fontWeight: '700',
     color: '#1A1A2E',
     marginBottom: 12,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#6B7280',
     fontWeight: '500',
@@ -159,6 +162,7 @@ const styles = StyleSheet.create({
     minHeight: 150,
   },
   textInput: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#1A1A2E',
     lineHeight: 26,
@@ -166,12 +170,14 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   charCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#9CA3AF',
     textAlign: 'right',
     marginTop: 8,
   },
   hint: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     color: '#6B7280',
     marginTop: 20,
@@ -192,6 +198,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1D5DB',
   },
   continueText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',

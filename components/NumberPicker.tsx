@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { Minus, Plus } from 'lucide-react-native';
 
 interface NumberPickerProps {
@@ -68,7 +69,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
   pickerContainer: {
     flexDirection: 'row',
@@ -98,6 +99,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#FFFFFF',
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
+    fontFamily: FONT_FAMILY_UI,
   },
 }); 

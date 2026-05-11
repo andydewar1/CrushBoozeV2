@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, TextInput } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Brain, Music, Gamepad2, Phone, Settings, Play, MessageCircle, Plus, Flame } from 'lucide-react-native';
 import { useState, useEffect, useRef } from 'react';
@@ -509,14 +510,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginTop: 4,
+    lineHeight: 22,
   },
   settingsButton: {
     width: 32,
@@ -553,16 +558,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   breathingEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     marginRight: 8,
   },
   breathingTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   breathingSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 14,
@@ -602,6 +610,7 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   toolkitSegmentLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 11,
     fontWeight: '600',
     color: '#636366',
@@ -612,6 +621,7 @@ const styles = StyleSheet.create({
     color: '#03045e',
   },
   toolkitModeHint: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: '#8E8E93',
     textAlign: 'center',
@@ -624,6 +634,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   pauseCongratsTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     fontWeight: '700',
     color: '#03045e',
@@ -633,6 +644,7 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   pauseCongratsBody: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '500',
     color: '#1C1C1E',
@@ -657,6 +669,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   logUrgeButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
@@ -697,11 +710,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.45)',
   },
   popDotCheck: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#03045e',
   },
   popGridProgress: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: '#8E8E93',
@@ -729,12 +744,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
   },
   tapFiftyCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 52,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -1,
   },
   tapFiftySub: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.92)',
@@ -747,6 +764,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   tapFiftyResetText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: '#03045e',
@@ -793,17 +811,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   breathingPhaseText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 8,
   },
   breathingCountText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   breathingInstructions: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#8E8E93',
     textAlign: 'center',
@@ -827,6 +848,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
@@ -834,6 +856,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
@@ -858,6 +881,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.08)',
   },
   techniqueTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
@@ -865,6 +889,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   techniqueDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
@@ -878,12 +903,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.12)',
   },
   burnBoxHint: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     fontWeight: '600',
     marginBottom: 10,
   },
   burnBoxInput: {
+    fontFamily: FONT_FAMILY_UI,
     minHeight: 170,
     maxHeight: 260,
     borderRadius: 10,
@@ -903,6 +930,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   burnBoxCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     fontWeight: '600',
@@ -929,18 +957,21 @@ const styles = StyleSheet.create({
     elevation: 0,
   },
   burnCtaButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
   },
   burnedMessage: {
+    fontFamily: FONT_FAMILY_UI,
     marginTop: 10,
     fontSize: 13,
     color: '#03045e',
     fontWeight: '600',
   },
   burnedMessageAfterBurn: {
+    fontFamily: FONT_FAMILY_UI,
     alignSelf: 'center',
     marginBottom: 10,
     fontSize: 14,
@@ -959,6 +990,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   motivationText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#03045e',
     fontWeight: '500',
@@ -970,12 +1002,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   customReasonTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 8,
   },
   customReasonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     lineHeight: 24,
@@ -985,6 +1019,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   goalsTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
@@ -1002,6 +1037,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   goalTagText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '500',
     color: '#FFFFFF',

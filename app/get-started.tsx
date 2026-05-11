@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -53,7 +54,7 @@ export default function GetStartedScreen() {
               <Ionicons name="flash" size={24} color="#03045e" />
             </View>
             <View style={styles.featureText}>
-              <Text style={styles.featureTitle}>Craving Support</Text>
+              <Text style={styles.featureTitle}>Urge support</Text>
               <Text style={styles.featureDescription}>Tools to help when urges hit</Text>
             </View>
           </View>
@@ -96,10 +97,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 72,
     marginBottom: 24,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 40,
     fontWeight: '700',
     color: '#1A1A2E',
@@ -108,6 +111,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#6B7280',
     textAlign: 'center',
@@ -137,12 +141,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '600',
     color: '#1A1A2E',
     marginBottom: 4,
   },
   featureDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#6B7280',
   },
@@ -160,6 +166,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
@@ -169,6 +176,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   secondaryButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#6B7280',
     fontSize: 16,
     fontWeight: '500',

@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal, TextInput, Platform, KeyboardAvoidingView } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState, useEffect, useCallback } from 'react';
@@ -550,7 +551,7 @@ export default function SettingsScreen() {
   const handleDeleteAccount = async () => {
     Alert.alert(
       'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data including:\n\n• Your quit journey progress\n• All goals and achievements\n• Craving logs and statistics\n• Account settings and preferences',
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data including:\n\n• Your quit journey progress\n• All goals and achievements\n• Urge logs and statistics\n• Account settings and preferences',
       [
         {
           text: 'Cancel',
@@ -780,7 +781,7 @@ export default function SettingsScreen() {
         // Fallback - show file location
         showSuccess(
           'Export Complete',
-          `Your data has been exported successfully!\n\nFile saved to: ${filename}\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Financial Goals: ${financialGoalsResult.data?.length || 0}\n• Personal Goals: ${goalsResult.data?.length || 0}\n• Craving Logs: ${logsResult.data?.length || 0}`
+          `Your data has been exported successfully!\n\nFile saved to: ${filename}\n\nData includes:\n• Profile: ${profileResult.data ? 'Yes' : 'No'}\n• Financial Goals: ${financialGoalsResult.data?.length || 0}\n• Personal Goals: ${goalsResult.data?.length || 0}\n• Urge logs: ${logsResult.data?.length || 0}`
         );
       }
 
@@ -1813,6 +1814,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
@@ -1848,12 +1850,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
     marginLeft: 8,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 20,
@@ -1866,12 +1870,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   profileEmail: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   profileSubtext: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
   },
@@ -1887,11 +1893,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   settingLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     fontWeight: '500',
   },
   settingValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginTop: 2,
@@ -1911,15 +1919,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   dangerText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FF3B30',
     fontWeight: '600',
   },
   dangerSubtext: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#FF6B47',
     marginTop: 2,
   },
   warningText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#FF6B47',
     fontWeight: '500',
   },
@@ -1934,6 +1945,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   signOutText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FF3B30',
@@ -1972,19 +1984,23 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#1C1C1E',
-  },
+  
+},
   dateSection: {
     marginBottom: 20,
   },
   dateLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 12,
-  },
+  
+},
   currentDateDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1996,16 +2012,20 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
   },
   currentDateText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     marginLeft: 12,
     fontWeight: '500',
-  },
+  
+},
   dateInstructions: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 12,
-  },
+  
+},
   datePicker: {
     height: 120,
     backgroundColor: '#F8F9FA',
@@ -2021,11 +2041,13 @@ const styles = StyleSheet.create({
     borderColor: '#E5E5EA',
   },
   dateButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#03045e',
     marginLeft: 8,
     fontWeight: '500',
-  },
+  
+},
   timeButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2037,10 +2059,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   timeButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#03045e',
     fontWeight: '500',
-  },
+  
+},
   currentTimeDisplay: {
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
@@ -2051,10 +2075,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentTimeText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     fontWeight: '600',
-  },
+  
+},
   timePicker: {
     height: 120,
     backgroundColor: '#F8F9FA',
@@ -2069,11 +2095,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   androidTimeButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#03045e',
     fontWeight: '500',
-  },
+  
+},
   textInput: {
+    fontFamily: FONT_FAMILY_UI,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 12,
@@ -2083,8 +2112,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
     marginBottom: 20,
     minHeight: 100,
-  },
+  
+},
   nameInput: {
+    fontFamily: FONT_FAMILY_UI,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 12,
@@ -2093,8 +2124,10 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     backgroundColor: '#F8F9FA',
     marginBottom: 20,
-  },
+  
+},
   passwordInput: {
+    fontFamily: FONT_FAMILY_UI,
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 12,
@@ -2103,7 +2136,8 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     backgroundColor: '#F8F9FA',
     marginBottom: 16,
-  },
+  
+},
   currencyOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -2120,9 +2154,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.3)',
   },
   currencyText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
-  },
+  
+},
 
   goalOption: {
     flexDirection: 'row',
@@ -2140,18 +2176,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.3)',
   },
   goalText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
-  },
+  
+},
   costInputContainer: {
     marginBottom: 20,
   },
   costLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     marginBottom: 12,
     fontWeight: '500',
-  },
+  
+},
   costInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2162,17 +2202,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   currencySymbol: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#03045e',
     fontWeight: '600',
     marginRight: 8,
-  },
+  
+},
   costInput: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     fontSize: 16,
     color: '#1C1C1E',
     paddingVertical: 16,
-  },
+  
+},
   modalButtons: {
     flexDirection: 'row',
     gap: 12,
@@ -2193,15 +2237,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
   },
   cancelButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#8E8E93',
-  },
+  
+},
   saveButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
+  
+},
   currentEmailInfo: {
     marginBottom: 20,
     padding: 16,
@@ -2211,24 +2259,30 @@ const styles = StyleSheet.create({
     borderColor: '#E1E3E6',
   },
   currentEmailLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 4,
     fontWeight: '500',
-  },
+  
+},
   currentEmailText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     fontWeight: '600',
-  },
+  
+},
   emailChangeNotice: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
     marginBottom: 20,
     textAlign: 'center',
     paddingHorizontal: 10,
-  },
+  
+},
   faqContainer: {
     marginBottom: 20,
   },
@@ -2241,39 +2295,51 @@ const styles = StyleSheet.create({
     borderColor: '#E1E3E6',
   },
   faqQuestion: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 8,
-  },
+  
+},
   faqAnswer: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#3C3C43',
     lineHeight: 20,
-  },
+  
+},
   legalDocContainer: {
     marginBottom: 20,
   },
   legalDocText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#3C3C43',
     lineHeight: 22,
-  },
+  
+},
   legalDocHeader: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
-  },
+  
+},
   legalDocSubheader: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '500',
     color: '#1C1C1E',
-  },
+  
+},
   legalDocImportant: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '700',
     color: '#FF3B30',
-  },
+  
+},
   selectionButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -2290,10 +2356,12 @@ const styles = StyleSheet.create({
     borderColor: '#03045e',
   },
   selectionButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     fontWeight: '500',
-  },
+  
+},
   selectionButtonTextSelected: {
     color: '#FFFFFF',
   },
@@ -2306,22 +2374,26 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   disclaimerModalTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginLeft: 8,
-  },
+  
+},
   disclaimerWarningContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
   disclaimerWarningText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#FF6B47',
     marginLeft: 6,
-  },
+  
+},
   warningItem: {
     borderLeftWidth: 3,
     borderLeftColor: '#FF6B47',
@@ -2330,10 +2402,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     marginTop: 2,
-  },
+  
+},
   toggleSettingItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2371,4 +2445,4 @@ const styles = StyleSheet.create({
   toggleSliderActive: {
     transform: [{ translateX: 18 }],
   },
-}); 
+});

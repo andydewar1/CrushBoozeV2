@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, Pencil, Trash2, Target, TrendingUp, Settings } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
@@ -24,7 +25,7 @@ export default function GoalsScreen() {
     refetch
   } = useGoals();
   
-  const { totalSaved, currency, loading: moneyLoading } = useMoneySaved();
+  const { totalSaved, dailyRate, currency, loading: moneyLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: financialGoalLoading } = useFinancialGoals();
   
   const [modalVisible, setModalVisible] = useState(false);
@@ -39,6 +40,18 @@ export default function GoalsScreen() {
     0
   );
   const availableSavings = Math.max(totalSaved - totalCommitted, 0);
+
+  const displayDailyRate = (moneyLoading || savingsError) ? 0 : dailyRate;
+
+  const getGoalEtaText = (remainingAmount: number): string | null => {
+    if (displayDailyRate <= 0 || remainingAmount <= 0) return null;
+    const totalDays = Math.ceil(remainingAmount / displayDailyRate);
+    const months = Math.floor(totalDays / 30);
+    if (months > 0) {
+      return `You'll achieve your goal in ${months} month${months === 1 ? '' : 's'}`;
+    }
+    return `You'll achieve your goal in ${totalDays} day${totalDays === 1 ? '' : 's'}`;
+  };
 
   const getGoalProgress = (goal: Goal) => {
     if (goal.achieved_at) return 100;
@@ -240,7 +253,8 @@ export default function GoalsScreen() {
             {activeGoals.map((goal) => {
               const progress = getGoalProgress(goal);
               const remaining = getRemainingForGoal(goal);
-              
+              const etaText = getGoalEtaText(remaining);
+
               return (
                 <View key={goal.id} style={styles.goalCard}>
                   <View style={styles.goalHeader}>
@@ -288,6 +302,11 @@ export default function GoalsScreen() {
                       <Text style={styles.remainingText}>
                         {formatCurrency(remaining)} to go
                       </Text>
+                    )}
+                    {remaining > 0 && progress < 100 && etaText && (
+                      <View style={styles.goalEtaPill}>
+                        <Text style={styles.goalEtaText}>{etaText}</Text>
+                      </View>
                     )}
                     {progress >= 100 && (
                       <TouchableOpacity 
@@ -393,6 +412,7 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   loadingText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
   },
@@ -407,14 +427,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginTop: 4,
+    lineHeight: 22,
   },
   settingsButton: {
     width: 32,
@@ -447,12 +471,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#1C1C1E',
     marginLeft: 8,
   },
   progressSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 24,
@@ -462,12 +488,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   progressPercentage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     fontWeight: '700',
     color: '#03045e',
     marginBottom: 8,
   },
   progressGoalsCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     fontWeight: '500',
@@ -522,18 +550,21 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   addButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
@@ -570,17 +601,20 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   goalName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   goalTarget: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '700',
     color: '#03045e',
   },
   goalDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
@@ -610,11 +644,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     fontWeight: '500',
   },
   goalProgressPercentage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',
@@ -632,10 +668,29 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   remainingText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
     marginTop: 8,
+  },
+  goalEtaPill: {
+    marginTop: 8,
+    alignSelf: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  goalEtaText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    color: '#03045e',
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 20,
   },
   completeButton: {
     backgroundColor: '#03045e',
@@ -645,6 +700,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   completeButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
@@ -661,15 +717,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   achievedEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     marginRight: 8,
   },
   achievedText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',
   },
   emptyStateTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#1C1C1E',
@@ -677,6 +736,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   emptyStateSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',

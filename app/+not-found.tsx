@@ -1,5 +1,6 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 
 export default function NotFoundScreen() {
   return (
@@ -23,6 +24,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   text: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: 600,
   },

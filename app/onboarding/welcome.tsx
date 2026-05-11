@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -48,18 +49,21 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   greeting: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     fontWeight: '700',
     color: '#1A1A2E',
     marginBottom: 24,
   },
   text: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     color: '#1A1A2E',
     lineHeight: 32,
     marginBottom: 20,
   },
   textMuted: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#6B7280',
     lineHeight: 28,

@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
 import { isDevPaywallBypassed } from "@/lib/devFlags";
@@ -314,11 +315,13 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   loadingText: {
+    fontFamily: FONT_FAMILY_UI,
     marginTop: 16,
     fontSize: 16,
     color: GRAY,
   },
   errorText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: GRAY,
     textAlign: 'center',
@@ -331,6 +334,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   retryText: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE,
     fontSize: 16,
     fontWeight: '600',
@@ -342,11 +346,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   headline: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '700',
     color: '#1A1A2E',
     textAlign: 'center',
     lineHeight: 32,
-  },
+  
+},
 
   // Spend card
   spendCard: {
@@ -358,13 +364,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   spendText: {
+    fontFamily: FONT_FAMILY_UI,
     color: NAVY,
     fontWeight: '500',
     textAlign: 'center',
-  },
+  
+},
   spendHighlight: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '800',
-  },
+  
+},
 
   // Testimonial
   testimonialSection: {
@@ -379,17 +389,21 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   testimonialQuote: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#1A1A2E',
     fontStyle: 'italic',
     lineHeight: 18,
     textAlign: 'center',
-  },
+  
+},
   testimonialAuthor: {
+    fontFamily: FONT_FAMILY_UI,
     color: GRAY,
     fontSize: 11,
     marginTop: 4,
     textAlign: 'center',
-  },
+  
+},
   testimonialDots: {
     flexDirection: 'row',
     gap: 6,
@@ -443,11 +457,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   planBadgeText: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
-  },
+  
+},
   planContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,9 +499,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   planName: {
+    fontFamily: FONT_FAMILY_UI,
     fontWeight: '700',
     color: '#1A1A2E',
-  },
+  
+},
   saveBadge: {
     backgroundColor: '#22C55E',
     paddingHorizontal: 8,
@@ -493,20 +511,24 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   saveBadgeText: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE,
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.3,
-  },
+  
+},
   planPrice: {
     color: '#1A1A2E',
     marginTop: 1,
   },
   planSavings: {
+    fontFamily: FONT_FAMILY_UI,
     color: NAVY,
     fontWeight: '600',
     marginTop: 2,
-  },
+  
+},
   planSubtext: {
     color: GRAY,
     marginTop: 2,
@@ -526,15 +548,19 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   ctaText: {
+    fontFamily: FONT_FAMILY_UI,
     color: WHITE,
     fontWeight: '700',
-  },
+  
+},
   trialNote: {
+    fontFamily: FONT_FAMILY_UI,
     color: GRAY,
     textAlign: 'center',
     marginTop: 10,
     marginBottom: 12,
-  },
+  
+},
 
   // Footer
   footer: {
@@ -544,9 +570,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   footerLink: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: GRAY,
-  },
+  
+},
   footerDot: {
     color: GRAY,
   },

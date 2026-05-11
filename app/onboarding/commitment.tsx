@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useSettings } from '@/contexts/SettingsContext';
@@ -77,15 +78,18 @@ const styles = StyleSheet.create({
     paddingBottom: 60,
   },
   emoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 64,
     marginBottom: 24,
   },
   name: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     color: 'rgba(255,255,255,0.8)',
     marginBottom: 16,
   },
   question: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     color: '#FFFFFF',
     fontWeight: '700',

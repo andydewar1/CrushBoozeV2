@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, Alert, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { DollarSign, Heart, Target, Check, Trophy, Crosshair, TrendingUp, MessageCircle, Sun, Calendar, Smile } from 'lucide-react-native';
@@ -44,7 +45,7 @@ export default function HomeScreen() {
   const { signOut } = useAuth();
   const { settings } = useSettings();
   const { days, hours, minutes, quitDate, loading: timerLoading, error: timerError } = useQuitTimer();
-  const { totalSaved, dailyRate, hourlyRate, weeklyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
+  const { totalSaved, dailyRate, hourlyRate, currency, loading: savingsLoading, error: savingsError } = useMoneySaved();
   const { financialGoal, loading: goalLoading, error: goalError, getCurrencySymbol } = useFinancialGoals();
   const { activeGoals, achievedGoals, calculateGoalProgress, refetch: refetchGoals } = useGoals();
   const { motivation, loading: motivationLoading, error: motivationError } = useQuitMotivation();
@@ -88,6 +89,16 @@ export default function HomeScreen() {
 
     const progressAmount = Math.min(availableSavings, goal.target_amount);
     return Math.max(goal.target_amount - progressAmount, 0);
+  };
+
+  const getGoalEtaText = (remainingAmount: number): string | null => {
+    if (displayDailyRate <= 0 || remainingAmount <= 0) return null;
+    const totalDays = Math.ceil(remainingAmount / displayDailyRate);
+    const months = Math.floor(totalDays / 30);
+    if (months > 0) {
+      return `You'll achieve your goal in ${months} month${months === 1 ? '' : 's'}`;
+    }
+    return `You'll achieve your goal in ${totalDays} day${totalDays === 1 ? '' : 's'}`;
   };
 
   // Initialize Facebook SDK once on mount
@@ -267,7 +278,6 @@ export default function HomeScreen() {
 
   // Show loading or error state for savings
   const displayTotalSaved = (savingsLoading || savingsError) ? 0 : totalSaved;
-  const displayWeeklyRate = (savingsLoading || savingsError) ? 0 : weeklyRate;
   const displayDailyRate = (savingsLoading || savingsError) ? 0 : dailyRate;
   const displayHourlyRate = (savingsLoading || savingsError) ? 0 : hourlyRate;
   const displayCurrency = currency || '$';
@@ -584,43 +594,51 @@ export default function HomeScreen() {
             <DollarSign size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Money Saved</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Total savings so far</Text>
+          <Text style={styles.sectionSubtitle}>Total savings so far.</Text>
           <Text style={[
             styles.moneyAmount,
-            // Reduce font size for very large amounts
             displayTotalSaved >= 100000 && styles.moneyAmountLarge
           ]}>
             {displayCurrency}{formatMoneyDetailed(displayTotalSaved)}
           </Text>
-          
+
           <View style={styles.ratesContainer}>
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Weekly rate:</Text>
-              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayWeeklyRate)}</Text>
+              <Text style={styles.rateValue}>
+                {displayCurrency}
+                {formatMoneyDetailed(displayDailyRate * 7)}
+              </Text>
             </View>
+            <View style={styles.rateDivider} />
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Daily rate:</Text>
-              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayDailyRate)}</Text>
+              <Text style={styles.rateValue}>
+                {displayCurrency}
+                {formatMoneyDetailed(displayDailyRate)}
+              </Text>
             </View>
+            <View style={styles.rateDivider} />
             <View style={styles.rateRow}>
               <Text style={styles.rateLabel}>Hourly rate:</Text>
-              <Text style={styles.rateValue}>{displayCurrency}{formatMoneyDetailed(displayHourlyRate)}</Text>
+              <Text style={styles.rateValue}>
+                {displayCurrency}
+                {formatMoneyDetailed(displayHourlyRate)}
+              </Text>
             </View>
           </View>
 
           <View style={styles.motivationBanner}>
-            <Text style={styles.motivationEmoji}>💰</Text>
-            <Text style={styles.motivationText}>
-              {savingsError 
+            <Text style={[styles.motivationText, styles.moneyMotivationText]}>
+              {savingsError
                 ? savingsError === 'future_quit_date'
-                  ? quitDate 
+                  ? quitDate
                     ? `Savings begin on ${format(quitDate, 'MMMM d, yyyy')}!`
                     : 'Savings will start when you quit!'
-                  : 'Add your quit date in settings to see your results' 
-                : displayTotalSaved > 0 
-                  ? 'Every minute counts!' 
-                  : 'Your savings will start growing once you quit!'
-              }
+                  : 'Add your quit date in settings to see your results'
+                : displayTotalSaved > 0
+                  ? 'Every minute counts!'
+                  : 'Your savings will start growing once you quit!'}
             </Text>
           </View>
         </View>
@@ -631,8 +649,8 @@ export default function HomeScreen() {
             <Trophy size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Achievements</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your progress milestones</Text>
-          
+          <Text style={styles.sectionSubtitle}>Every milestone earned, forever.</Text>
+
           {achievementsLoading ? (
             <View style={styles.achievementInfo}>
               <Text style={styles.achievementName}>Loading...</Text>
@@ -670,10 +688,9 @@ export default function HomeScreen() {
                     </View>
                   </View>
                   
-                  <View style={styles.celebrationBanner}>
-                    <Text style={styles.celebrationEmoji}>🎉</Text>
-                    <Text style={styles.celebrationText}>
-                      Congratulations! You've achieved {achievementStats.currentAchievement.title}!
+                  <View style={styles.achievementCongratsBanner}>
+                    <Text style={styles.achievementCongratsText}>
+                      {`Congratulations! You've achieved ${achievementStats.currentAchievement.title} - keep up the good work! 💪`}
                     </Text>
                   </View>
                 </>
@@ -704,15 +721,13 @@ export default function HomeScreen() {
                       </View>
                     </View>
                     
-                    <View style={styles.motivationBanner}>
-                      <Text style={styles.motivationEmoji}>🎯</Text>
-                      <Text style={styles.motivationText}>
-                        {achievementStats.progressToNext >= 75 
+                    <View style={styles.goalEtaPill}>
+                      <Text style={styles.goalEtaText}>
+                        {achievementStats.progressToNext >= 75
                           ? `You're ${achievementStats.progressToNext}% there! Keep going strong!`
                           : achievementStats.progressToNext >= 50
-                          ? `Halfway there! ${achievementStats.daysToNext} days to go!`
-                          : `Every day counts! ${achievementStats.daysToNext} days to your next milestone!`
-                        }
+                            ? `Halfway there! ${achievementStats.daysToNext} days to go!`
+                            : `Every day counts! ${achievementStats.daysToNext} days to your next milestone!`}
                       </Text>
                     </View>
                   </View>
@@ -733,7 +748,7 @@ export default function HomeScreen() {
             <Target size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Financial Goals</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your savings goals</Text>
+          <Text style={styles.sectionSubtitle}>{"What you're building towards."}</Text>
           
           {activeGoals.length === 0 ? (
             <View style={styles.goalCard}>
@@ -796,6 +811,11 @@ export default function HomeScreen() {
                         {formatCurrency(remaining)} to go
                       </Text>
                     )}
+                    {remaining > 0 && progress < 100 && getGoalEtaText(remaining) && (
+                      <View style={styles.goalEtaPill}>
+                        <Text style={styles.goalEtaText}>{getGoalEtaText(remaining)}</Text>
+                      </View>
+                    )}
                     {progress >= 100 && (
                       <View style={styles.achievedBanner}>
                         <Text style={styles.achievedEmoji}>🎯</Text>
@@ -826,7 +846,7 @@ export default function HomeScreen() {
           
           {motivationError || !motivation ? (
             <View style={styles.motivationContainer}>
-              <Text style={styles.motivationText}>
+              <Text style={[styles.motivationText, styles.rememberWhyBodyText]}>
                 {motivationError ? 'Add your quit date in settings to see your results' : 'No motivation set yet'}
               </Text>
             </View>
@@ -994,25 +1014,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   daysNumber: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 72,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   daysNumberLarge: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 56,
   },
   daysText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     color: 'rgba(255, 255, 255, 0.9)',
     marginTop: 4,
     fontWeight: '600',
   },
   timeText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 4,
   },
   sinceText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: 'rgba(255, 255, 255, 0.9)',
     fontWeight: '500',
@@ -1048,11 +1073,13 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   checkInSectionSubtitleLine: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 19,
     fontWeight: '500',
-  },
+  
+},
   streakBadgeCol: {
     alignItems: 'flex-end',
   },
@@ -1072,32 +1099,40 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   streakFire: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     lineHeight: 32,
     marginRight: 2,
-  },
+  
+},
   streakCountBlack: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 26,
     fontWeight: '700',
     color: '#1C1C1E',
     letterSpacing: -0.8,
     lineHeight: 30,
-  },
+  
+},
   streakSlashOutOf: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: '#8E8E93',
     paddingBottom: 1,
     marginLeft: 1,
-  },
+  
+},
   streakCaption: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#03045e',
     fontWeight: '600',
     lineHeight: 20,
     marginTop: 6,
     letterSpacing: 0.2,
-  },
+  
+},
   checkinFormSurface: {
     backgroundColor: 'rgba(3, 4, 94, 0.055)',
     borderRadius: 18,
@@ -1107,12 +1142,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   checkInQuestion: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 10,
     letterSpacing: -0.2,
-  },
+  
+},
   checkInQuestionSecond: {
     marginTop: 20,
     marginBottom: 10,
@@ -1148,19 +1185,23 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   moodEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 26,
     marginBottom: 6,
-  },
+  
+},
   moodEmojiSelected: {
     transform: [{ scale: 1.06 }],
   },
   moodLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#636366',
     fontWeight: '600',
     textAlign: 'center',
     letterSpacing: -0.1,
-  },
+  
+},
   moodLabelSelected: {
     color: '#03045e',
   },
@@ -1175,9 +1216,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   checkinDrinkEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     marginRight: 8,
-  },
+  
+},
   checkinDrinkButtonCleanOn: {
     backgroundColor: '#FFFFFF',
     shadowColor: '#03045e',
@@ -1195,11 +1238,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   checkinDrinkButtonLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '700',
     color: '#3A3A3C',
     letterSpacing: -0.2,
-  },
+  
+},
   checkinDrinkButtonLabelCleanOn: {
     color: '#03045e',
   },
@@ -1222,10 +1267,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,107,71,0.3)',
   },
   checkInAnsweredText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
-  },
+  
+},
   badgeCleanText: {
     color: '#03045e',
   },
@@ -1248,16 +1295,20 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   checkinDoneTitle: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
     color: '#1C1C1E',
-  },
+  
+},
   checkinChangeLink: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 15,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   checkInDoneRow: {
     flexDirection: 'row',
     gap: 8,
@@ -1274,18 +1325,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.2)',
   },
   checkInMoodBadgeText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
     color: '#03045e',
-  },
+  
+},
   checkInEncouragement: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 0,
     lineHeight: 20,
     textAlign: 'left',
-  },
+  
+},
   checkinFeedbackBanner: {
     marginTop: 12,
     borderRadius: 12,
@@ -1311,10 +1366,12 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   checkinSubsectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#1C1C1E',
-    marginBottom: 10,
+    marginBottom: 12,
+    letterSpacing: -0.3,
   },
   checkinWeekCard: {
     backgroundColor: 'rgba(3, 4, 94, 0.04)',
@@ -1360,10 +1417,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B47',
   },
   checkinDotLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 11,
     fontWeight: '600',
     color: '#8E8E93',
-  },
+  
+},
   checkinDotLabelToday: {
     color: '#03045e',
   },
@@ -1398,10 +1457,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(60, 60, 67, 0.22)',
   },
   checkinLegendChipText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '600',
     color: '#636366',
-  },
+  
+},
   checkinStatsGrid: {
     marginTop: 12,
   },
@@ -1431,23 +1492,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(3, 4, 94, 0.1)',
   },
   checkinStatCardValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '800',
     color: '#1C1C1E',
     letterSpacing: -0.4,
-  },
+  
+},
   checkinStatCardDenom: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '700',
     color: '#8E8E93',
-  },
+  
+},
   checkinStatCardLabel: {
+    fontFamily: FONT_FAMILY_UI,
     marginTop: 4,
     fontSize: 12,
     fontWeight: '600',
     color: '#8E8E93',
     lineHeight: 16,
-  },
+  
+},
 
   section: {
     backgroundColor: '#FFFFFF',
@@ -1472,60 +1539,90 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
     marginLeft: 8,
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
+    lineHeight: 20,
   },
   moneyAmount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 36,
     fontWeight: '700',
     color: '#03045e',
     marginBottom: 20,
   },
   moneyAmountLarge: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
-  },
+  
+},
   ratesContainer: {
     marginBottom: 20,
   },
   rateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    paddingVertical: 10,
+  },
+  rateDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
   },
   rateLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
-  },
+  
+},
   rateValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   motivationBanner: {
-    backgroundColor: '#F5F8FA',
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
   },
-  motivationEmoji: {
-    fontSize: 20,
-    marginRight: 12,
-  },
   motivationText: {
-    fontSize: 16,
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
     color: '#03045e',
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 20,
     flex: 1,
-  },
+  
+},
+  moneyMotivationText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '600',
+  
+},
+  rememberWhyBodyText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 16,
+    fontWeight: '500',
+    lineHeight: 22,
+  
+},
   achievementInfo: {
     marginBottom: 12,
   },
@@ -1535,29 +1632,32 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   achievementBadge: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     marginRight: 16,
-  },
+  
+},
   achievementText: {
     flex: 1,
   },
-  celebrationBanner: {
-    backgroundColor: '#F5F8FA',
+  achievementCongratsBanner: {
+    marginTop: 12,
     borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    borderColor: 'rgba(3, 4, 94, 0.26)',
   },
-  celebrationEmoji: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  celebrationText: {
-    fontSize: 16,
-    color: '#03045e',
+  achievementCongratsText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
     fontWeight: '600',
-    flex: 1,
-  },
+    color: '#03045e',
+    lineHeight: 20,
+    textAlign: 'left',
+  
+},
   upcomingSection: {
     marginTop: 16,
     paddingTop: 16,
@@ -1565,36 +1665,46 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E5EA',
   },
   upcomingTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#8E8E93',
     marginBottom: 12,
-  },
+  
+},
   upcomingAchievementLabels: {
     marginBottom: 12,
   },
   upcomingAchievementName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 2,
-  },
+  
+},
   upcomingAchievementDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: '#8E8E93',
     marginBottom: 8,
-  },
+  
+},
   achievementName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#1C1C1E',
     marginBottom: 8,
-  },
+  
+},
   achievementDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginBottom: 20,
-  },
+  
+},
   achievementProgressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1611,16 +1721,20 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   daysToGoNumber: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: '700',
     color: '#03045e',
     marginBottom: 4,
-  },
+  
+},
   daysToGoLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
-  },
+  
+},
   progressSection: {
     flex: 1,
   },
@@ -1631,15 +1745,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     fontWeight: '500',
-  },
+  
+},
   progressPercentage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   achievementProgressBar: {
     height: 8,
     backgroundColor: '#E5E5EA',
@@ -1663,15 +1781,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   goalName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
-  },
+  
+},
   goalAmount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   progressBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1689,10 +1811,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   progressPercent: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   viewAllButton: {
     backgroundColor: '#03045e',
     borderRadius: 12,
@@ -1709,10 +1833,12 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1 }],
   },
   viewAllText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
+  
+},
   timelineContainer: {
     marginTop: 16,
   },
@@ -1736,8 +1862,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   timelineEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
-  },
+  
+},
   timelineLine: {
     width: 2,
     flex: 1,
@@ -1753,11 +1881,13 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   timelineTime: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '600',
     color: '#03045e',
     letterSpacing: 0.5,
-  },
+  
+},
   checkmark: {
     width: 24,
     height: 24,
@@ -1767,16 +1897,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timelineTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
-  },
+  
+},
   timelineDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
-  },
+  
+},
   // Inactive timeline styles
   timelineIconInactive: {
     borderColor: '#E5E5EA',
@@ -1813,26 +1947,32 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   customReasonTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 8,
-  },
+  
+},
   customReasonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1C1C1E',
     lineHeight: 24,
     fontStyle: 'italic',
-  },
+  
+},
   goalsContainer: {
     marginBottom: 16,
   },
   goalsTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 12,
-  },
+  
+},
   goalsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1845,10 +1985,12 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   goalTagText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '500',
     color: '#FFFFFF',
-  },
+  
+},
 
   goalCard: {
     backgroundColor: '#F8FBFF',
@@ -1871,17 +2013,21 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   goalTarget: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '700',
     color: '#03045e',
-  },
+  
+},
 
   goalDescription: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
     marginBottom: 12,
-  },
+  
+},
   progressContainer: {
     marginTop: 8,
   },
@@ -1892,16 +2038,39 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   goalProgressPercentage: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
   remainingText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: '#8E8E93',
     textAlign: 'center',
     marginTop: 8,
+  
+},
+  goalEtaPill: {
+    marginTop: 8,
+    alignSelf: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
   },
+  goalEtaText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 14,
+    color: '#03045e',
+    textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 20,
+  
+},
   achievedBanner: {
     backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderRadius: 8,
@@ -1914,14 +2083,18 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.15)',
   },
   achievedEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     marginRight: 8,
-  },
+  
+},
   achievedText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#03045e',
-  },
+  
+},
 
   // Test button styles
   testButton: {
@@ -1942,17 +2115,21 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   testButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
-  },
+  
+},
   testButtonHelper: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     textAlign: 'center',
     marginTop: 12,
     lineHeight: 20,
-  },
+  
+},
 
 });

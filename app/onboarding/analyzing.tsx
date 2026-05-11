@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -182,6 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#caf0f8',
   },
   stepText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: 'rgba(255,255,255,0.4)',
     flex: 1,

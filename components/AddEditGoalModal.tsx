@@ -11,6 +11,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { X } from 'lucide-react-native';
 import { Goal, CreateGoal, UpdateGoal } from '@/hooks/useGoals';
 
@@ -210,6 +211,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     fontWeight: '700',
     color: '#1C1C1E',
@@ -233,17 +235,20 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginBottom: 20,
   },
   textInput: {
+    fontFamily: FONT_FAMILY_UI,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
@@ -267,12 +272,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currencySymbol: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '700',
     color: '#03045e',
     marginRight: 12,
   },
   amountInput: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     fontSize: 17,
     color: '#1C1C1E',
@@ -298,6 +305,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   saveButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '700',
     color: '#FFFFFF',

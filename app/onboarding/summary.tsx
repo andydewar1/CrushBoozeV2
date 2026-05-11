@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -127,10 +128,12 @@ const styles = StyleSheet.create({
     marginTop: -50,
   },
   emoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 48,
     marginBottom: 12,
   },
   intro: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 22,
     color: '#FFFFFF',
     marginBottom: 16,
@@ -143,6 +146,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cardLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     color: 'rgba(255,255,255,0.7)',
     marginBottom: 6,
@@ -150,11 +154,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   cardValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     color: '#FFFFFF',
     fontWeight: '600',
   },
   cardValueLarge: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     color: '#caf0f8',
     fontWeight: '700',
@@ -172,6 +178,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   reasonText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#caf0f8',
     fontSize: 13,
     fontWeight: '500',
@@ -185,12 +192,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(202, 240, 248, 0.3)',
   },
   whyText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#FFFFFF',
     fontStyle: 'italic',
     lineHeight: 24,
   },
   disclaimerText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 11,
     color: 'rgba(255,255,255,0.5)',
     lineHeight: 16,

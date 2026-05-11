@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Plus, Pencil, Trash2, Clock, TrendingDown, Star, Settings, BarChart2, Lock, Zap } from 'lucide-react-native';
@@ -166,7 +167,7 @@ export default function LogsScreen() {
         <View style={styles.pageHeader}>
           <View style={styles.titleContainer}>
             <Text style={styles.pageTitle}>Logs</Text>
-            <Text style={styles.pageSubtitle}>Your journey in your own words.</Text>
+            <Text style={styles.pageSubtitle}>Know your triggers and beat them.</Text>
           </View>
           <TouchableOpacity 
             style={styles.settingsButton}
@@ -176,41 +177,48 @@ export default function LogsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stats Section */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Clock size={24} color="#03045e" />
-            <Text style={styles.statNumber}>{stats.totalLogs}</Text>
-            <Text style={styles.statLabel}>Total Logs</Text>
+        {/* Stats — single premium card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <View style={styles.statIconCircle}>
+              <Clock size={18} color="#03045e" />
+            </View>
+            <Text style={styles.statNumberPremium}>{stats.totalLogs}</Text>
+            <Text style={styles.statLabelCaps}>Total logs</Text>
           </View>
-          <View style={styles.statBox}>
-            <TrendingDown size={24} color="#FF6B47" />
-            <Text style={styles.statNumber}>{stats.averageIntensity.toFixed(1)}</Text>
-            <Text style={styles.statLabel}>Avg Intensity</Text>
+          <View style={styles.statDividerVert} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIconCircle, styles.statIconCircleWarm]}>
+              <TrendingDown size={18} color="#FF6B47" />
+            </View>
+            <Text style={styles.statNumberPremium}>{stats.averageIntensity.toFixed(1)}</Text>
+            <Text style={styles.statLabelCaps}>Avg intensity</Text>
           </View>
-          <View style={styles.statBox}>
-            <Star size={24} color="#FF6B47" />
-            <Text style={styles.statNumber}>{stats.highIntensityCount}</Text>
-            <Text style={styles.statLabel}>High Intensity</Text>
+          <View style={styles.statDividerVert} />
+          <View style={styles.statItem}>
+            <View style={[styles.statIconCircle, styles.statIconCircleWarm]}>
+              <Star size={18} color="#FF6B47" />
+            </View>
+            <Text style={styles.statNumberPremium}>{stats.highIntensityCount}</Text>
+            <Text style={styles.statLabelCaps}>High intensity</Text>
           </View>
         </View>
 
-        {/* Add New Log Button */}
-        <View style={styles.section}>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddLog}>
+        <View style={styles.logButtonWrap}>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddLog} activeOpacity={0.88}>
             <Plus size={20} color="#FFFFFF" />
-            <Text style={styles.addButtonText}>Log New Urge</Text>
+            <Text style={styles.addButtonText}>Log an urge</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Craving patterns — same visual language as Home Daily Check-in */}
+        {/* Urge patterns — same visual language as Home daily check-in */}
         <View style={styles.section}>
           <View style={styles.patternsHeaderBlock}>
             <View style={styles.patternsHeaderRow}>
               <View style={styles.patternsTitleCluster}>
                 <View style={styles.patternsSectionHeader}>
                   <BarChart2 size={20} color="#03045e" />
-                  <Text style={[styles.sectionTitle, styles.patternsSectionTitle]}>Your Craving Patterns</Text>
+                  <Text style={[styles.sectionTitle, styles.patternsSectionTitle]}>Your Urge Patterns</Text>
                 </View>
                 <View style={styles.patternsSubtitleLines}>
                   <Text style={styles.patternsSubtitleLine}>See when urges hit hardest.</Text>
@@ -261,7 +269,7 @@ export default function LogsScreen() {
                 Based on your {logs.length} logged urge{logs.length !== 1 ? 's' : ''}.
               </Text>
 
-              <Text style={styles.patternsSubsectionTitle}>When do you crave most?</Text>
+              <Text style={styles.patternsSubsectionTitle}>When do urges hit hardest?</Text>
               {peakSlotIndex >= 0 && (
                 <View style={styles.peakTimeChip}>
                   <Text style={styles.peakTimeChipText}>
@@ -324,7 +332,9 @@ export default function LogsScreen() {
         {/* Logs List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Logs</Text>
-          <Text style={styles.sectionSubtitle}>Track your urges and how you handled them.</Text>
+          <Text style={styles.sectionSubtitle}>
+            Every urge you log is data that helps you drink less.
+          </Text>
           
           {logs.length === 0 ? (
             <View style={styles.emptyState}>
@@ -409,6 +419,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   loadingText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
   },
@@ -419,12 +430,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   errorText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#FF6B47',
     marginBottom: 8,
   },
   errorSubtext: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     textAlign: 'center',
@@ -447,14 +460,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   pageTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 32,
     fontWeight: '700',
     color: '#1C1C1E',
+    letterSpacing: -0.8,
   },
   pageSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#8E8E93',
     marginTop: 4,
+    lineHeight: 22,
   },
   settingsButton: {
     width: 32,
@@ -464,44 +481,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statsContainer: {
+  statsCard: {
     marginHorizontal: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    gap: 12,
-  },
-  statBox: {
+    alignItems: 'stretch',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    flex: 1,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.1)',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 8,
-    borderWidth: 0.5,
-    borderColor: 'rgba(3, 4, 94, 0.08)',
-    aspectRatio: 1,
-    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  statNumber: {
-    fontSize: 28,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  statIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(3, 4, 94, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  statIconCircleWarm: {
+    backgroundColor: 'rgba(255, 107, 71, 0.08)',
+  },
+  statDividerVert: {
+    width: 1,
+    backgroundColor: '#F2F2F7',
+    marginVertical: 6,
+  },
+  statNumberPremium: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 24,
     fontWeight: '700',
     color: '#1C1C1E',
-    marginTop: 4,
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: -0.5,
   },
-  statLabel: {
-    fontSize: 12,
+  statLabelCaps: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 10,
     color: '#8E8E93',
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
     textAlign: 'center',
+  },
+  logButtonWrap: {
+    marginHorizontal: 20,
+    marginBottom: 16,
   },
   section: {
     backgroundColor: '#FFFFFF',
@@ -535,33 +574,40 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   addButtonText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
     marginLeft: 8,
   },
   sectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   sectionSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
+    lineHeight: 19,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
   },
   emptyStateTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 18,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 8,
   },
   emptyStateSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     textAlign: 'center',
@@ -594,6 +640,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timestampText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginLeft: 6,
@@ -622,12 +669,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 4,
   },
   logValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 20,
@@ -638,10 +687,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   logIntensityEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     marginRight: 8,
   },
   logIntensityText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
   },
@@ -676,11 +727,13 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   patternsSubtitleLine: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     lineHeight: 19,
     fontWeight: '500',
-  },
+  
+},
   patternsBadgeCol: {
     alignItems: 'flex-end',
     flexShrink: 0,
@@ -704,24 +757,30 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   patternsStreakCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '700',
     color: '#1C1C1E',
     letterSpacing: -0.45,
     lineHeight: 19,
-  },
+  
+},
   patternsStreakSlash: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 12,
     fontWeight: '600',
     color: '#8E8E93',
-  },
+  
+},
   patternsStreakCaptionInline: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#03045e',
     fontWeight: '600',
     lineHeight: 20,
     letterSpacing: -0.05,
-  },
+  
+},
   patternsLockedSurface: {
     alignItems: 'center',
     backgroundColor: 'rgba(3, 4, 94, 0.055)',
@@ -743,6 +802,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.18)',
   },
   patternsLockedTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '700',
     color: '#1C1C1E',
@@ -750,8 +810,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: -0.35,
     maxWidth: 300,
-  },
+  
+},
   patternsLockedSubtitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     textAlign: 'center',
@@ -759,7 +821,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 22,
     fontWeight: '500',
-  },
+  
+},
   lockedDots: {
     flexDirection: 'row',
     gap: 8,
@@ -775,10 +838,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
   },
   lockedProgress: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: '#8E8E93',
     fontWeight: '600',
-  },
+  
+},
   patternsContentSurface: {
     backgroundColor: 'rgba(3, 4, 94, 0.055)',
     borderRadius: 18,
@@ -787,19 +852,23 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.1)',
   },
   patternsContextLine: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#636366',
     fontWeight: '500',
     marginBottom: 18,
     lineHeight: 19,
-  },
+  
+},
   patternsSubsectionTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
     marginBottom: 12,
     letterSpacing: -0.3,
-  },
+  
+},
   patternsInnerCard: {
     backgroundColor: '#F4F5F7',
     borderRadius: 16,
@@ -826,12 +895,14 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(3, 4, 94, 0.2)',
   },
   peakTimeChipText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 20,
     color: '#03045e',
     letterSpacing: -0.1,
-  },
+  
+},
   patternsTriggerCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -862,12 +933,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   patternsTriggerValue: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
     fontWeight: '600',
     color: '#1C1C1E',
     letterSpacing: -0.35,
     lineHeight: 22,
-  },
+  
+},
   chart: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -910,29 +983,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(3, 4, 94, 0.08)',
   },
   chartBarEmoji: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 17,
-  },
+  
+},
   chartBarLabel: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 11,
     color: '#8E8E93',
     fontWeight: '500',
     textAlign: 'center',
-  },
+  
+},
   chartBarLabelPeak: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#03045e',
     fontWeight: '700',
-  },
+  
+},
   chartBarCount: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     fontWeight: '600',
     color: '#AEAEB2',
     marginBottom: 6,
     height: 18,
-  },
+  
+},
   chartBarCountPeak: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#03045e',
     fontWeight: '700',
-  },
+  
+},
 
   bottomSpacing: {
     height: 100,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity, Modal, FlatList, SafeAreaView } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   currencySelectorText: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#1A1A2E',
     fontWeight: '500',
@@ -156,18 +158,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   currencySymbol: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 28,
     color: '#1A1A2E',
     fontWeight: '600',
     marginRight: 8,
   },
   input: {
+    fontFamily: FONT_FAMILY_UI,
     flex: 1,
     fontSize: 28,
     color: '#1A1A2E',
     fontWeight: '600',
   },
   perWeek: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: '#6B7280',
     marginLeft: 8,
@@ -194,10 +199,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1A1A2E',
-  },
+  
+},
   currencyOption: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,23 +217,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9FF',
   },
   currencyOptionSymbol: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 20,
     fontWeight: '600',
     color: '#1A1A2E',
     width: 40,
-  },
+  
+},
   currencyOptionText: {
     flex: 1,
     marginLeft: 12,
   },
   currencyOptionCode: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A2E',
-  },
+  
+},
   currencyOptionName: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#6B7280',
     marginTop: 2,
-  },
+  
+},
 });

@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { FONT_FAMILY_UI } from '@/lib/typography';
 
 interface Props {
   children: ReactNode;
@@ -66,6 +67,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#03045e',
   },
   title: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
@@ -73,6 +75,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   message: {
+    fontFamily: FONT_FAMILY_UI,
     fontSize: 16,
     color: 'white',
     textAlign: 'center',
@@ -86,6 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
+    fontFamily: FONT_FAMILY_UI,
     color: '#03045e',
     fontSize: 16,
     fontWeight: '600',
