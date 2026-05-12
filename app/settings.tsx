@@ -1107,7 +1107,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingItem}>
             <Text style={styles.settingLabel}>App Version</Text>
-            <Text style={styles.settingValue}>1.0.1 (13)</Text>
+            <Text style={styles.settingValue}>1.0.1 (14)</Text>
           </View>
 
         </View>

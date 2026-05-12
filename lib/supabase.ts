@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
+import { AppState, type AppStateStatus, Platform } from 'react-native';
 
 // Supabase configuration - hardcoded to avoid any env var issues
 // CrushBooze project: lkfimuzzujgwcfcxbuhl.supabase.co
@@ -20,6 +20,60 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     schema: 'public'
   }
 });
+
+/** Proactive refresh window so access token is renewed before PostgREST returns PGRST303. */
+const ACCESS_TOKEN_REFRESH_LEEWAY_MS = 5 * 60 * 1000;
+let lastForegroundSessionSync = 0;
+const FOREGROUND_SESSION_SYNC_MIN_INTERVAL_MS = 2500;
+
+async function refreshSessionIfStale(): Promise<void> {
+  const now = Date.now();
+  if (now - lastForegroundSessionSync < FOREGROUND_SESSION_SYNC_MIN_INTERVAL_MS) {
+    return;
+  }
+  lastForegroundSessionSync = now;
+
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session) return;
+
+    const expMs = session.expires_at ? session.expires_at * 1000 : 0;
+    if (expMs && expMs > now + ACCESS_TOKEN_REFRESH_LEEWAY_MS) {
+      return;
+    }
+
+    const { error } = await supabase.auth.refreshSession();
+    if (error) {
+      console.warn('[supabase] refreshSession after foreground:', error.message);
+    }
+  } catch (e) {
+    console.warn('[supabase] refreshSessionIfStale', e);
+  }
+}
+
+function registerNativeAuthAutoRefresh(): void {
+  const handleAppState = (next: AppStateStatus) => {
+    if (next === 'active') {
+      supabase.auth.startAutoRefresh();
+      void refreshSessionIfStale();
+    } else {
+      supabase.auth.stopAutoRefresh();
+    }
+  };
+
+  if (AppState.currentState === 'active') {
+    supabase.auth.startAutoRefresh();
+    void refreshSessionIfStale();
+  }
+
+  AppState.addEventListener('change', handleAppState);
+}
+
+if (Platform.OS !== 'web') {
+  registerNativeAuthAutoRefresh();
+}
 
 // Function to check if user should be logged out due to inactivity
 export const checkInactivityLogout = async () => {
