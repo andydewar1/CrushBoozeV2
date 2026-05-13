@@ -408,7 +408,7 @@ export default function SOSScreen() {
             <MessageCircle size={20} color="#03045e" />
             <Text style={styles.sectionTitle}>Remember Your Why</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
+          <Text style={styles.sectionSubtitle}>{"Why you started. Don't forget it."}</Text>
 
           {motivationError || !motivation ? (
             <View style={styles.motivationContainer}>
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 11,
-    paddingHorizontal: 2,
+    paddingHorizontal: 4,
     borderRadius: 11,
     minWidth: 0,
   },
@@ -611,7 +611,7 @@ const styles = StyleSheet.create({
   },
   toolkitSegmentLabel: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
     color: '#636366',
     letterSpacing: -0.2,
@@ -854,12 +854,14 @@ const styles = StyleSheet.create({
     color: '#1C1C1E',
     marginLeft: 8,
     marginBottom: 4,
+    letterSpacing: -0.5,
   },
   sectionSubtitle: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#8E8E93',
     marginBottom: 32,
+    lineHeight: 19,
   },
   techniquesGrid: {
     gap: 12,
@@ -991,9 +993,10 @@ const styles = StyleSheet.create({
   },
   motivationText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 16,
+    fontSize: 14,
     color: '#03045e',
-    fontWeight: '500',
+    fontWeight: '600',
+    lineHeight: 20,
   },
   customReasonContainer: {
     backgroundColor: '#F8F9FA',

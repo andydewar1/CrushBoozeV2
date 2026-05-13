@@ -136,12 +136,17 @@ export default function HomeScreen() {
 
   const getGoalEtaText = (remainingAmount: number): string | null => {
     if (displayDailyRate <= 0 || remainingAmount <= 0) return null;
-    const totalDays = Math.ceil(remainingAmount / displayDailyRate);
-    const months = Math.floor(totalDays / 30);
-    if (months > 0) {
-      return `You'll achieve your goal in ${months} month${months === 1 ? '' : 's'}`;
+    const savingsDays = Math.ceil(remainingAmount / displayDailyRate);
+    const months = Math.floor(savingsDays / 30);
+    const duration = savingsDays >= 30
+      ? `about ${months} month${months === 1 ? '' : 's'}`
+      : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
+
+    if (isPreQuitMode && quitDate) {
+      return `Your goals unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and ${duration} after quitting, you'll achieve this goal.`;
     }
-    return `You'll achieve your goal in ${totalDays} day${totalDays === 1 ? '' : 's'}`;
+
+    return `If you stay alcohol-free, you're set to achieve this goal in ${duration}. Keep up the good work!`;
   };
 
   // Initialize Facebook SDK once on mount
@@ -347,6 +352,11 @@ export default function HomeScreen() {
   ];
   const firstWeekDrinkDataIndex = weekDrinks.findIndex(d => d.count > 0);
   const weekDrinksTotal = weekDrinks.reduce((sum, d) => sum + d.count, 0);
+  const nextAchievementTitle = achievementStats.nextAchievement?.title || 'your next achievement';
+  const achievementMotivationText = `You're ${achievementProgressToNextForHome}% of the way to ${nextAchievementTitle}. Stay alcohol-free and you're one step closer to unlocking your next achievement!`;
+  const currentAchievementMotivationText = achievementStats.currentAchievement
+    ? `Congratulations! You've unlocked ${achievementStats.currentAchievement.title}. That's proof your alcohol-free time is adding up, and every day you keep going makes the next milestone easier to reach.`
+    : '';
 
   // Format money without decimals for the main display
   const formatMoney = (amount: number): string => {
@@ -939,7 +949,7 @@ export default function HomeScreen() {
                 {savingsError
                   ? 'Add your quit date in settings to see your results'
                   : displayTotalSaved > 0
-                    ? 'Every minute counts!'
+                    ? 'Every minute counts! Every alcohol-free day is money back in your bank account. Keep it up!'
                     : 'Your savings will start growing once you quit!'}
               </Text>
             </View>
@@ -967,9 +977,11 @@ export default function HomeScreen() {
                   </View>
                 ))}
               </View>
-              <View style={styles.lockedAchievementContainer}>
-                <Text style={styles.lockedAchievementHint}>
-                  These unlock as soon as your quit journey starts.
+              <View style={[styles.motivationBanner, styles.preQuitExplainerBanner]}>
+                <Text style={[styles.motivationText, styles.moneyMotivationText]}>
+                  {quitDate
+                    ? `Your achievements unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and each milestone will mark a real alcohol-free win.`
+                    : 'Your achievements unlock when your alcohol-free journey begins. Stay on track and each milestone will mark a real alcohol-free win.'}
                 </Text>
               </View>
             </View>
@@ -1012,7 +1024,7 @@ export default function HomeScreen() {
                   
                   <View style={styles.achievementCongratsBanner}>
                     <Text style={styles.achievementCongratsText}>
-                      {`Congratulations! You've achieved ${achievementStats.currentAchievement.title} - keep up the good work! 💪`}
+                      {currentAchievementMotivationText}
                     </Text>
                   </View>
                 </>
@@ -1093,11 +1105,7 @@ export default function HomeScreen() {
                     
                     <View style={styles.goalEtaPill}>
                       <Text style={styles.goalEtaText}>
-                        {achievementProgressToNextForHome >= 75
-                          ? `You're ${achievementProgressToNextForHome}% there! Keep going strong!`
-                          : achievementProgressToNextForHome >= 50
-                            ? `Halfway there! ${achievementStats.daysToNext} days to go!`
-                            : `Every day counts! ${achievementStats.daysToNext} days to your next milestone!`}
+                        {achievementMotivationText}
                       </Text>
                     </View>
                   </View>
@@ -1146,6 +1154,9 @@ export default function HomeScreen() {
             activeGoals.slice(0, 2).map((goal) => {
               const progress = getGoalProgress(goal);
               const remaining = getRemainingForGoal(goal);
+              const hasGoalDescription =
+                !!goal.description &&
+                goal.description.trim().toLowerCase() !== goal.name.trim().toLowerCase();
               
               return (
                 <View key={goal.id} style={styles.goalCard}>
@@ -1156,7 +1167,7 @@ export default function HomeScreen() {
                     </View>
                   </View>
 
-                  {goal.description && (
+                  {hasGoalDescription && (
                     <Text style={styles.goalDescription}>{goal.description}</Text>
                   )}
 
@@ -1212,7 +1223,7 @@ export default function HomeScreen() {
             <MessageCircle size={20} color={NIC_TEAL} />
             <Text style={styles.sectionTitle}>Remember Your Why</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Your personal motivation</Text>
+          <Text style={styles.sectionSubtitle}>{"Why you started. Don't forget it."}</Text>
           
           {motivationError || !motivation ? (
             <View style={styles.motivationContainer}>
@@ -1248,15 +1259,13 @@ export default function HomeScreen() {
         </View>
 
         {/* Health Recovery Timeline */}
-        <View style={[styles.section, isPreQuitMode && styles.preQuitHealthSectionMuted]}>
+        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Heart size={20} color="#FF6B6B" />
             <Text style={styles.sectionTitle}>Health Recovery Timeline</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>
-            {isPreQuitMode
-              ? 'Preview — these unlock as time alcohol-free adds up after your quit date.'
-              : 'Based on WHO medical research'}
+          <Text style={[styles.sectionSubtitle, isPreQuitMode && styles.healthSectionSubtitle]}>
+            Based on WHO medical research.
           </Text>
 
           {healthError ? (
@@ -1266,7 +1275,16 @@ export default function HomeScreen() {
               </Text>
             </View>
           ) : (
-            <View style={styles.timelineContainer}>
+            <View style={[styles.timelineContainer, isPreQuitMode && styles.timelineContainerPreQuit]}>
+              {isPreQuitMode && (
+                <View style={[styles.motivationBanner, styles.healthExplainerBanner]}>
+                  <Text style={[styles.motivationText, styles.moneyMotivationText]}>
+                    {quitDate
+                      ? `Your health recovery begins when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and your body can start healing from the first alcohol-free hours.`
+                      : 'Your health recovery begins when your alcohol-free journey starts. Stay on track and your body can start healing from the first alcohol-free hours.'}
+                  </Text>
+                </View>
+              )}
               {healthMilestones.map((milestone, index) => (
                 <View key={milestone.id} style={styles.timelineItem}>
                   <View style={styles.timelineIconContainer}>
@@ -1453,11 +1471,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   streakPill: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: 'rgba(3, 4, 94, 0.08)',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.14)',
   },
@@ -1622,9 +1640,9 @@ const styles = StyleSheet.create({
   },
   checkInAnsweredBadge: {
     alignSelf: 'flex-start',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderWidth: 1,
   },
   badgeClean: {
@@ -1686,9 +1704,9 @@ const styles = StyleSheet.create({
   },
   checkInMoodBadge: {
     alignSelf: 'flex-start',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderWidth: 1,
     backgroundColor: 'rgba(3, 4, 94, 0.06)',
     borderColor: 'rgba(3, 4, 94, 0.2)',
@@ -1807,9 +1825,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(60, 60, 67, 0.06)',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(60, 60, 67, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   checkinLegendDot: {
     width: 8,
@@ -1923,6 +1943,9 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 20,
   },
+  healthSectionSubtitle: {
+    marginBottom: 12,
+  },
   moneyAmount: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 36,
@@ -1976,6 +1999,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 20,
     flex: 1,
+    textAlign: 'left',
   
 },
   moneyMotivationText: {
@@ -2027,6 +2051,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.2)',
+    marginBottom: 16,
+  },
+  preQuitExplainerBanner: {
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  healthExplainerBanner: {
+    marginTop: 0,
     marginBottom: 16,
   },
   lockedAchievementContainer: {
@@ -2131,12 +2163,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   preQuitEditButton: {
-    borderRadius: 999,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.36)',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
   },
   preQuitEditButtonText: {
     fontFamily: FONT_FAMILY_UI,
@@ -2208,6 +2240,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 14,
+    borderWidth: 0,
   },
   preQuitPrepLegendChipText: {
     fontFamily: FONT_FAMILY_UI,
@@ -2655,6 +2688,9 @@ const styles = StyleSheet.create({
   timelineContainer: {
     marginTop: 16,
   },
+  timelineContainerPreQuit: {
+    marginTop: 0,
+  },
   timelineItem: {
     flexDirection: 'row',
     marginBottom: 24,
@@ -2756,8 +2792,11 @@ const styles = StyleSheet.create({
   customReasonContainer: {
     backgroundColor: '#F8F9FA',
     borderRadius: 12,
-    padding: 16,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.08)',
   },
   customReasonTitle: {
     fontFamily: FONT_FAMILY_UI,
@@ -2859,29 +2898,32 @@ const styles = StyleSheet.create({
 },
   remainingText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 12,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: NIC_TEAL,
+    fontWeight: '600',
     textAlign: 'center',
     marginTop: 8,
   
 },
   goalEtaPill: {
     marginTop: 8,
-    alignSelf: 'center',
-    borderRadius: 999,
-    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(3, 4, 94, 0.24)',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   goalEtaText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: NIC_TEAL,
-    textAlign: 'center',
+    textAlign: 'left',
     fontWeight: '600',
     lineHeight: 20,
+    flex: 1,
+    flexWrap: 'wrap',
   
 },
   achievedBanner: {

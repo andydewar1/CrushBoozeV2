@@ -6,12 +6,17 @@ import { Trophy, Target, TrendingUp, Settings } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useAchievements } from '@/hooks/useAchievements';
 import { useQuitTimer } from '@/hooks/useQuitTimer';
+import { format } from 'date-fns';
 
 export default function AchievementsScreen() {
   const router = useRouter();
   const { achievements, stats, loading, error } = useAchievements();
-  const { error: timerError, hours, minutes } = useQuitTimer();
+  const { error: timerError, hours, minutes, quitDate } = useQuitTimer();
   const isPreQuitMode = timerError === 'future_quit_date';
+  const nextAchievementTitle = stats.nextAchievement?.title || 'your next achievement';
+  const preQuitAchievementText = quitDate
+    ? `Your achievements unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and each milestone will mark a real alcohol-free win.`
+    : 'Your achievements unlock when your alcohol-free journey begins. Stay on track and each milestone will mark a real alcohol-free win.';
 
   // UI-only day-1 motivation tweak:
   // When "First Day" is the upcoming (locked) milestone, show progress based on
@@ -27,6 +32,12 @@ export default function AchievementsScreen() {
   const progressToNextForUI = isLockedDay1OnAchievementsPage
     ? day1ProgressPercent
     : stats.progressToNext;
+  const achievementMotivationText = isPreQuitMode
+    ? preQuitAchievementText
+    : `You're ${progressToNextForUI}% of the way to ${nextAchievementTitle}. Stay alcohol-free and you're one step closer to unlocking your next achievement!`;
+  const currentAchievementMotivationText = stats.currentAchievement
+    ? `Congratulations! You've unlocked ${stats.currentAchievement.title}. That's proof your alcohol-free time is adding up, and every day you keep going makes the next milestone easier to reach.`
+    : '';
 
   return (
     <>
@@ -34,7 +45,7 @@ export default function AchievementsScreen() {
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, isPreQuitMode && styles.preQuitScreenMuted]}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Page Header */}
         <View style={styles.pageHeader}>
@@ -134,7 +145,7 @@ export default function AchievementsScreen() {
                   
                   <View style={styles.achievementCongratsBanner}>
                     <Text style={styles.achievementCongratsText}>
-                      {`Congratulations! You've achieved ${stats.currentAchievement.title} - keep up the good work! 💪`}
+                      {currentAchievementMotivationText}
                     </Text>
                   </View>
                 </>
@@ -196,16 +207,8 @@ export default function AchievementsScreen() {
                     </View>
                     
                     <View style={styles.goalEtaPill}>
-                      <Text
-                        style={styles.goalEtaText}
-                        numberOfLines={2}
-                        ellipsizeMode="tail"
-                      >
-                        {progressToNextForUI >= 75
-                          ? `You're ${progressToNextForUI}% there! Keep going strong!`
-                          : progressToNextForUI >= 50
-                            ? `Halfway there! ${stats.daysToNext} days to go!`
-                            : `Every day counts! ${stats.daysToNext} days to your next milestone!`}
+                      <Text style={styles.goalEtaText}>
+                        {achievementMotivationText}
                       </Text>
                     </View>
                   </View>
@@ -303,9 +306,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 30,
     paddingBottom: 90,
-  },
-  preQuitScreenMuted: {
-    opacity: 0.72,
   },
   pageHeader: {
     flexDirection: 'row',
@@ -522,21 +522,23 @@ const styles = StyleSheet.create({
   },
   goalEtaPill: {
     marginTop: 8,
-    alignSelf: 'center',
-    borderRadius: 999,
-    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(3, 4, 94, 0.24)',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   goalEtaText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 14,
     color: '#03045e',
     fontWeight: '600',
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 20,
+    flex: 1,
+    flexWrap: 'wrap',
   },
   milestonesGrid: {
     flexDirection: 'row',

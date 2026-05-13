@@ -9,6 +9,7 @@ import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import AddEditGoalModal from '@/components/AddEditGoalModal';
+import { format } from 'date-fns';
 
 export default function GoalsScreen() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function GoalsScreen() {
   } = useGoals();
   
   const { totalSaved, dailyRate, currency, loading: moneyLoading, error: savingsError } = useMoneySaved();
-  const { error: timerError } = useQuitTimer();
+  const { error: timerError, quitDate } = useQuitTimer();
   const isPreQuitMode = timerError === 'future_quit_date';
   const { financialGoal, loading: financialGoalLoading } = useFinancialGoals();
   
@@ -59,12 +60,17 @@ export default function GoalsScreen() {
         ? 'After quit day, your daily savings rate will fill this in — add your weekly spend in Settings if needed.'
         : 'Add your weekly alcohol spend in Settings to estimate how fast you will reach this goal.';
     }
-    const totalDays = Math.ceil(remainingAmount / displayDailyRate);
-    const months = Math.floor(totalDays / 30);
-    if (months > 0) {
-      return `You'll achieve your goal in ${months} month${months === 1 ? '' : 's'}`;
+    const savingsDays = Math.ceil(remainingAmount / displayDailyRate);
+    const months = Math.floor(savingsDays / 30);
+    const duration = savingsDays >= 30
+      ? `about ${months} month${months === 1 ? '' : 's'}`
+      : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
+
+    if (isPreQuitMode && quitDate) {
+      return `Your goals unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and ${duration} after quitting, you'll achieve this goal.`;
     }
-    return `You'll achieve your goal in ${totalDays} day${totalDays === 1 ? '' : 's'}`;
+
+    return `If you stay alcohol-free, you're set to achieve this goal in ${duration}. Keep up the good work!`;
   };
 
   const getGoalProgress = (goal: Goal) => {
@@ -268,6 +274,9 @@ export default function GoalsScreen() {
               const progress = getGoalProgress(goal);
               const remaining = getRemainingForGoal(goal);
               const etaText = getGoalEtaText(remaining, progress);
+              const hasGoalDescription =
+                !!goal.description &&
+                goal.description.trim().toLowerCase() !== goal.name.trim().toLowerCase();
 
               return (
                 <View key={goal.id} style={styles.goalCard}>
@@ -292,7 +301,7 @@ export default function GoalsScreen() {
                     </View>
                   </View>
 
-                  {goal.description && (
+                  {hasGoalDescription && (
                     <Text style={styles.goalDescription}>{goal.description}</Text>
                   )}
 
@@ -341,39 +350,45 @@ export default function GoalsScreen() {
             <Text style={styles.sectionTitle}>Achieved Goals 🎉</Text>
             <Text style={styles.sectionSubtitle}>Goals you've successfully completed.</Text>
             
-            {achievedGoals.map((goal) => (
-              <View key={goal.id} style={[styles.goalCard, styles.achievedGoalCard]}>
-                <View style={styles.goalHeader}>
-                  <View style={styles.goalInfo}>
-                    <Text style={styles.goalName}>{goal.name}</Text>
-                    <Text style={styles.goalTarget}>{formatCurrency(goal.target_amount)}</Text>
+            {achievedGoals.map((goal) => {
+              const hasGoalDescription =
+                !!goal.description &&
+                goal.description.trim().toLowerCase() !== goal.name.trim().toLowerCase();
+
+              return (
+                <View key={goal.id} style={[styles.goalCard, styles.achievedGoalCard]}>
+                  <View style={styles.goalHeader}>
+                    <View style={styles.goalInfo}>
+                      <Text style={styles.goalName}>{goal.name}</Text>
+                      <Text style={styles.goalTarget}>{formatCurrency(goal.target_amount)}</Text>
+                    </View>
+                    <View style={styles.goalActions}>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleEditGoal(goal)}
+                      >
+                        <Pencil size={16} color="#03045e" />
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.actionButton}
+                        onPress={() => handleDeleteGoal(goal)}
+                      >
+                        <Trash2 size={16} color="#FF6B47" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={styles.goalActions}>
-                    <TouchableOpacity 
-                      style={styles.actionButton}
-                      onPress={() => handleEditGoal(goal)}
-                    >
-                      <Pencil size={16} color="#03045e" />
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.actionButton}
-                      onPress={() => handleDeleteGoal(goal)}
-                    >
-                      <Trash2 size={16} color="#FF6B47" />
-                    </TouchableOpacity>
+
+                  {hasGoalDescription && (
+                    <Text style={styles.goalDescription}>{goal.description}</Text>
+                  )}
+
+                  <View style={styles.achievedBanner}>
+                    <Text style={styles.achievedEmoji}>🎯</Text>
+                    <Text style={styles.achievedText}>Goal Achieved!</Text>
                   </View>
                 </View>
-
-                {goal.description && (
-                  <Text style={styles.goalDescription}>{goal.description}</Text>
-                )}
-
-                <View style={styles.achievedBanner}>
-                  <Text style={styles.achievedEmoji}>🎯</Text>
-                  <Text style={styles.achievedText}>Goal Achieved!</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -681,28 +696,27 @@ const styles = StyleSheet.create({
   },
   remainingText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 12,
-    color: '#8E8E93',
+    fontSize: 13,
+    color: '#03045e',
+    fontWeight: '600',
     textAlign: 'center',
     marginTop: 8,
   },
   goalEtaPill: {
-    marginTop: 8,
-    alignSelf: 'center',
-    borderRadius: 999,
+    marginTop: 12,
+    borderRadius: 12,
     backgroundColor: 'rgba(3, 4, 94, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(3, 4, 94, 0.24)',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    padding: 16,
   },
   goalEtaText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 14,
+    fontSize: 13,
     color: '#03045e',
-    textAlign: 'center',
+    textAlign: 'left',
     fontWeight: '600',
-    lineHeight: 20,
+    lineHeight: 19,
   },
   completeButton: {
     backgroundColor: '#03045e',
