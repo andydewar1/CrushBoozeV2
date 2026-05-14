@@ -1,5 +1,5 @@
-import { supabase } from './supabase';
-import { Session, User, AuthError } from '@supabase/supabase-js';
+import { clearStoredAuthSession, isInvalidRefreshTokenError, supabase } from './supabase';
+import { Session, User } from '@supabase/supabase-js';
 
 export interface AuthResult {
   success: boolean;
@@ -211,6 +211,13 @@ export async function signOut(): Promise<SignOutResult> {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
+      if (isInvalidRefreshTokenError(error)) {
+        await clearStoredAuthSession();
+        return {
+          success: true
+        };
+      }
+
       return {
         success: false,
         error: error.message || 'Failed to sign out'
@@ -221,6 +228,13 @@ export async function signOut(): Promise<SignOutResult> {
       success: true
     };
   } catch (error) {
+    if (isInvalidRefreshTokenError(error)) {
+      await clearStoredAuthSession();
+      return {
+        success: true
+      };
+    }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'An unexpected error occurred during sign out'
@@ -236,6 +250,14 @@ export async function getCurrentSession() {
     const { data, error } = await supabase.auth.getSession();
     
     if (error) {
+      if (isInvalidRefreshTokenError(error)) {
+        await clearStoredAuthSession();
+        return {
+          session: null,
+          error: null
+        };
+      }
+
       return {
         session: null,
         error: error.message || 'Failed to get current session'
@@ -247,6 +269,14 @@ export async function getCurrentSession() {
       error: null
     };
   } catch (error) {
+    if (isInvalidRefreshTokenError(error)) {
+      await clearStoredAuthSession();
+      return {
+        session: null,
+        error: null
+      };
+    }
+
     return {
       session: null,
       error: error instanceof Error ? error.message : 'Failed to get current session'

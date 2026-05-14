@@ -7,6 +7,24 @@ import { AppState, type AppStateStatus, Platform } from 'react-native';
 // CrushBooze project: lkfimuzzujgwcfcxbuhl.supabase.co
 const SUPABASE_URL = 'https://lkfimuzzujgwcfcxbuhl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrZmltdXp6dWpnd2NmY3hidWhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMzI0NjIsImV4cCI6MjA4ODkwODQ2Mn0.mjdvpoCkkU_joSWWLTb3tDz_ULRDFgQsJ6Eni9JoJaY';
+export const SUPABASE_AUTH_STORAGE_KEY = 'crushbooze-auth-token';
+
+export function isInvalidRefreshTokenError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'string'
+        ? error
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: unknown }).message)
+          : '';
+
+  return /invalid refresh token|refresh token not found/i.test(message);
+}
+
+export async function clearStoredAuthSession(): Promise<void> {
+  await AsyncStorage.multiRemove([SUPABASE_AUTH_STORAGE_KEY, 'last_activity']);
+}
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
@@ -14,7 +32,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    storageKey: 'crushbooze-auth-token',
+    storageKey: SUPABASE_AUTH_STORAGE_KEY,
   },
   db: {
     schema: 'public'
@@ -86,8 +104,12 @@ export const checkInactivityLogout = async () => {
       const timeSinceActivity = now - parseInt(lastActivity);
       if (timeSinceActivity > thirtyDaysInMs) {
         // User has been inactive for 30+ days, log them out
-        await supabase.auth.signOut();
-        await AsyncStorage.removeItem('last_activity');
+        const { error } = await supabase.auth.signOut();
+        if (error && !isInvalidRefreshTokenError(error)) {
+          return false;
+        }
+
+        await clearStoredAuthSession();
         return true; // Should log out
       }
     }
@@ -96,6 +118,11 @@ export const checkInactivityLogout = async () => {
     await AsyncStorage.setItem('last_activity', now.toString());
     return false; // Don't log out
   } catch (error) {
+    if (isInvalidRefreshTokenError(error)) {
+      await clearStoredAuthSession();
+      return true;
+    }
+
     return false; // Don't log out on error
   }
 }; 
