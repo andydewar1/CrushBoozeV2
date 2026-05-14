@@ -62,14 +62,14 @@ export default function GoalsScreen() {
     const savingsDays = Math.ceil(remainingAmount / displayDailyRate);
     const months = Math.floor(savingsDays / 30);
     const duration = savingsDays >= 30
-      ? `about ${months} month${months === 1 ? '' : 's'}`
+      ? `${months} month${months === 1 ? '' : 's'}`
       : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
 
     if (isPreQuitMode) {
       return `You're on track to achieve this goal ${duration} after quitting.`;
     }
 
-    return `You'll unlock this goal in ${duration}.`;
+    return `Unlocks in ${duration}.`;
   };
 
   const getGoalProgress = (goal: Goal) => {
@@ -325,15 +325,13 @@ export default function GoalsScreen() {
                         {formatCurrency(remaining)} to go
                       </Text>
                     )}
-                    <View style={isPreQuitMode ? styles.goalEtaBox : styles.goalEtaPill}>
-                      {isPreQuitMode ? (
+                    <View style={isPreQuitMode || progress >= 100 ? styles.goalEtaBox : styles.goalEtaPill}>
+                      {isPreQuitMode || progress >= 100 ? (
                         <Text style={styles.goalEtaBoxText}>{etaText}</Text>
                       ) : (
                         <Text
                           style={styles.goalEtaPillText}
                           numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.9}
                         >
                           {etaText}
                         </Text>

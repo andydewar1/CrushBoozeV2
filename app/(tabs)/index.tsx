@@ -139,14 +139,14 @@ export default function HomeScreen() {
     const savingsDays = Math.ceil(remainingAmount / displayDailyRate);
     const months = Math.floor(savingsDays / 30);
     const duration = savingsDays >= 30
-      ? `about ${months} month${months === 1 ? '' : 's'}`
+      ? `${months} month${months === 1 ? '' : 's'}`
       : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
 
     if (isPreQuitMode) {
       return `You're on track to achieve this goal ${duration} after quitting.`;
     }
 
-    return `You'll unlock this goal in ${duration}.`;
+    return `Unlocks in ${duration}.`;
   };
 
   // Initialize Facebook SDK once on mount
@@ -1194,9 +1194,18 @@ export default function HomeScreen() {
                     )}
                     {remaining > 0 && progress < 100 && getGoalEtaText(remaining) && (
                       <View style={isPreQuitMode ? [styles.motivationBanner, styles.preQuitGoalEtaBox] : styles.goalEtaPill}>
-                        <Text style={isPreQuitMode ? [styles.motivationText, styles.moneyMotivationText] : styles.goalEtaPillText}>
-                          {getGoalEtaText(remaining)}
-                        </Text>
+                        {isPreQuitMode ? (
+                          <Text style={[styles.motivationText, styles.moneyMotivationText]}>
+                            {getGoalEtaText(remaining)}
+                          </Text>
+                        ) : (
+                          <Text
+                            style={styles.goalEtaPillText}
+                            numberOfLines={1}
+                          >
+                            {getGoalEtaText(remaining)}
+                          </Text>
+                        )}
                       </View>
                     )}
                     {progress >= 100 && (
