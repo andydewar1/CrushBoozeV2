@@ -15,8 +15,8 @@ export default function AchievementsScreen() {
   const isPreQuitMode = timerError === 'future_quit_date';
   const nextAchievementTitle = stats.nextAchievement?.title || 'your next achievement';
   const preQuitAchievementText = quitDate
-    ? `Your achievements unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and each milestone will mark a real alcohol-free win.`
-    : 'Your achievements unlock when your alcohol-free journey begins. Stay on track and each milestone will mark a real alcohol-free win.';
+    ? `Unlocks ${format(quitDate, 'MMMM d, yyyy')}. Each milestone marks a real alcohol-free win.`
+    : 'Unlocks when your alcohol-free journey begins. Each milestone marks a real win.';
 
   // UI-only day-1 motivation tweak:
   // When "First Day" is the upcoming (locked) milestone, show progress based on
@@ -34,9 +34,9 @@ export default function AchievementsScreen() {
     : stats.progressToNext;
   const achievementMotivationText = isPreQuitMode
     ? preQuitAchievementText
-    : `You're ${progressToNextForUI}% of the way to ${nextAchievementTitle}. Stay alcohol-free and you're one step closer to unlocking your next achievement!`;
+    : `You're ${progressToNextForUI}% of the way to ${nextAchievementTitle}. Stay alcohol-free today and you're one step closer.`;
   const currentAchievementMotivationText = stats.currentAchievement
-    ? `Congratulations! You've unlocked ${stats.currentAchievement.title}. That's proof your alcohol-free time is adding up, and every day you keep going makes the next milestone easier to reach.`
+    ? `${stats.currentAchievement.title} unlocked. Every alcohol-free day adds up. Keep going.`
     : '';
 
   return (

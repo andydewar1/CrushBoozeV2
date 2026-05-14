@@ -142,11 +142,11 @@ export default function HomeScreen() {
       ? `about ${months} month${months === 1 ? '' : 's'}`
       : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
 
-    if (isPreQuitMode && quitDate) {
-      return `Your goals unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and ${duration} after quitting, you'll achieve this goal.`;
+    if (isPreQuitMode) {
+      return `You're on track to achieve this goal ${duration} after quitting.`;
     }
 
-    return `If you stay alcohol-free, you're set to achieve this goal in ${duration}. Keep up the good work!`;
+    return `You'll unlock this goal in ${duration}.`;
   };
 
   // Initialize Facebook SDK once on mount
@@ -353,9 +353,9 @@ export default function HomeScreen() {
   const firstWeekDrinkDataIndex = weekDrinks.findIndex(d => d.count > 0);
   const weekDrinksTotal = weekDrinks.reduce((sum, d) => sum + d.count, 0);
   const nextAchievementTitle = achievementStats.nextAchievement?.title || 'your next achievement';
-  const achievementMotivationText = `You're ${achievementProgressToNextForHome}% of the way to ${nextAchievementTitle}. Stay alcohol-free and you're one step closer to unlocking your next achievement!`;
+  const achievementMotivationText = `You're ${achievementProgressToNextForHome}% of the way to ${nextAchievementTitle}. Stay alcohol-free today and you're one step closer.`;
   const currentAchievementMotivationText = achievementStats.currentAchievement
-    ? `Congratulations! You've unlocked ${achievementStats.currentAchievement.title}. That's proof your alcohol-free time is adding up, and every day you keep going makes the next milestone easier to reach.`
+    ? `${achievementStats.currentAchievement.title} unlocked. Every alcohol-free day adds up. Keep going.`
     : '';
 
   // Format money without decimals for the main display
@@ -726,7 +726,7 @@ export default function HomeScreen() {
                   <View style={styles.preQuitCongratsRow}>
                     <Text style={styles.preQuitCongratsText}>
                       {
-                        "Congrats — you've completed today's tasks, you're one step closer to being alcohol free 💪"
+                        "Congrats - today's tasks are complete. One step closer to alcohol free 💪"
                       }
                     </Text>
                     <TouchableOpacity
@@ -828,18 +828,18 @@ export default function HomeScreen() {
                     </View>
                   ))}
                 </View>
-                <View style={styles.checkinLegendRow}>
-                  <View style={styles.checkinLegendChip}>
-                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotClean]} />
-                    <Text style={styles.checkinLegendChipText}>Dry</Text>
+                <View style={[styles.checkinLegendRow, styles.preQuitPrepLegendRow]}>
+                  <View style={[styles.checkinLegendChip, styles.preQuitPrepLegendChip]}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotClean, styles.preQuitPrepLegendDot]} />
+                    <Text style={[styles.checkinLegendChipText, styles.preQuitPrepLegendChipText]}>Dry</Text>
                   </View>
-                  <View style={styles.checkinLegendChip}>
-                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotDrank]} />
-                    <Text style={styles.checkinLegendChipText}>Slipped</Text>
+                  <View style={[styles.checkinLegendChip, styles.preQuitPrepLegendChip]}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotDrank, styles.preQuitPrepLegendDot]} />
+                    <Text style={[styles.checkinLegendChipText, styles.preQuitPrepLegendChipText]}>Slipped</Text>
                   </View>
-                  <View style={styles.checkinLegendChip}>
-                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotEmpty]} />
-                    <Text style={styles.checkinLegendChipText}>No check-in</Text>
+                  <View style={[styles.checkinLegendChip, styles.preQuitPrepLegendChip]}>
+                    <View style={[styles.checkinLegendDot, styles.checkinLegendDotEmpty, styles.preQuitPrepLegendDot]} />
+                    <Text style={[styles.checkinLegendChipText, styles.preQuitPrepLegendChipText]}>No check-in</Text>
                   </View>
                 </View>
               </View>
@@ -907,7 +907,7 @@ export default function HomeScreen() {
               <View style={[styles.motivationBanner, styles.motivationBannerPreQuitMoney]}>
                 <Text style={[styles.motivationText, styles.moneyMotivationText, styles.preQuitNicMotivationText]}>
                   {quitDate && projectedSavingsDate && projectedSavingsThirtyDays > 0
-                    ? `Your savings clock starts ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and by ${format(projectedSavingsDate, 'MMMM d')} you could have about ${displayCurrency}${formatMoneyDetailed(projectedSavingsThirtyDays)} more in your pocket than if you'd kept drinking.`
+                    ? `Quit for just 30 days and you're on track to save ${displayCurrency}${formatMoneyDetailed(projectedSavingsThirtyDays)}.`
                     : projectedSavingsThirtyDays > 0
                       ? 'After quit day, every dry day adds real money here.'
                       : 'Set your habit spend in settings to personalize this estimate.'}
@@ -949,7 +949,7 @@ export default function HomeScreen() {
                 {savingsError
                   ? 'Add your quit date in settings to see your results'
                   : displayTotalSaved > 0
-                    ? 'Every minute counts! Every alcohol-free day is money back in your bank account. Keep it up!'
+                    ? 'Every alcohol-free day puts money back in your pocket.'
                     : 'Your savings will start growing once you quit!'}
               </Text>
             </View>
@@ -980,8 +980,8 @@ export default function HomeScreen() {
               <View style={[styles.motivationBanner, styles.preQuitExplainerBanner]}>
                 <Text style={[styles.motivationText, styles.moneyMotivationText]}>
                   {quitDate
-                    ? `Your achievements unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and each milestone will mark a real alcohol-free win.`
-                    : 'Your achievements unlock when your alcohol-free journey begins. Stay on track and each milestone will mark a real alcohol-free win.'}
+                    ? `Unlocks ${format(quitDate, 'MMMM d, yyyy')}. Each milestone marks a real alcohol-free win.`
+                    : 'Unlocks when your alcohol-free journey begins. Each milestone marks a real win.'}
                 </Text>
               </View>
             </View>
@@ -1103,8 +1103,8 @@ export default function HomeScreen() {
                       </View>
                     </View>
                     
-                    <View style={styles.goalEtaPill}>
-                      <Text style={styles.goalEtaText}>
+                    <View style={styles.motivationBanner}>
+                      <Text style={[styles.motivationText, styles.moneyMotivationText]}>
                         {achievementMotivationText}
                       </Text>
                     </View>
@@ -1193,8 +1193,10 @@ export default function HomeScreen() {
                       </Text>
                     )}
                     {remaining > 0 && progress < 100 && getGoalEtaText(remaining) && (
-                      <View style={styles.goalEtaPill}>
-                        <Text style={styles.goalEtaText}>{getGoalEtaText(remaining)}</Text>
+                      <View style={isPreQuitMode ? [styles.motivationBanner, styles.preQuitGoalEtaBox] : styles.goalEtaPill}>
+                        <Text style={isPreQuitMode ? [styles.motivationText, styles.moneyMotivationText] : styles.goalEtaPillText}>
+                          {getGoalEtaText(remaining)}
+                        </Text>
                       </View>
                     )}
                     {progress >= 100 && (
@@ -1280,8 +1282,8 @@ export default function HomeScreen() {
                 <View style={[styles.motivationBanner, styles.healthExplainerBanner]}>
                   <Text style={[styles.motivationText, styles.moneyMotivationText]}>
                     {quitDate
-                      ? `Your health recovery begins when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and your body can start healing from the first alcohol-free hours.`
-                      : 'Your health recovery begins when your alcohol-free journey starts. Stay on track and your body can start healing from the first alcohol-free hours.'}
+                      ? `Recovery starts ${format(quitDate, 'MMMM d, yyyy')}. Your body can begin healing from the first alcohol-free hours.`
+                      : 'Recovery starts with your first alcohol-free hours.'}
                   </Text>
                 </View>
               )}
@@ -1823,18 +1825,18 @@ const styles = StyleSheet.create({
   checkinLegendChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(60, 60, 67, 0.06)',
-    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(60, 60, 67, 0.12)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   checkinLegendDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    marginRight: 6,
   },
   checkinLegendDotClean: {
     backgroundColor: NIC_TEAL,
@@ -1843,13 +1845,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6B47',
   },
   checkinLegendDotEmpty: {
-    backgroundColor: 'rgba(60, 60, 67, 0.22)',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: '#C7C7CC',
   },
   checkinLegendChipText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 14,
     color: '#636366',
+    fontWeight: '600',
+    lineHeight: 20,
   
 },
   checkinStatsGrid: {
@@ -2061,6 +2066,9 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 16,
   },
+  preQuitGoalEtaBox: {
+    marginTop: 12,
+  },
   lockedAchievementContainer: {
     marginTop: 8,
     opacity: 0.7,
@@ -2241,6 +2249,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 14,
     borderWidth: 0,
+  },
+  preQuitPrepLegendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
   },
   preQuitPrepLegendChipText: {
     fontFamily: FONT_FAMILY_UI,
@@ -2906,26 +2920,23 @@ const styles = StyleSheet.create({
   
 },
   goalEtaPill: {
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(3, 4, 94, 0.08)',
+    marginTop: 12,
+    alignSelf: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(3, 4, 94, 0.2)',
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
   },
-  goalEtaText: {
+  goalEtaPillText: {
     fontFamily: FONT_FAMILY_UI,
-    fontSize: 14,
+    fontSize: 13,
     color: NIC_TEAL,
-    textAlign: 'left',
     fontWeight: '600',
-    lineHeight: 20,
-    flex: 1,
-    flexWrap: 'wrap',
-  
-},
+    textAlign: 'center',
+    lineHeight: 18,
+  },
   achievedBanner: {
     backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderRadius: 8,

@@ -9,7 +9,6 @@ import { useQuitTimer } from '@/hooks/useQuitTimer';
 import { useMoneySaved } from '@/hooks/useMoneySaved';
 import { useFinancialGoals } from '@/hooks/useFinancialGoals';
 import AddEditGoalModal from '@/components/AddEditGoalModal';
-import { format } from 'date-fns';
 
 export default function GoalsScreen() {
   const router = useRouter();
@@ -28,7 +27,7 @@ export default function GoalsScreen() {
   } = useGoals();
   
   const { totalSaved, dailyRate, currency, loading: moneyLoading, error: savingsError } = useMoneySaved();
-  const { error: timerError, quitDate } = useQuitTimer();
+  const { error: timerError } = useQuitTimer();
   const isPreQuitMode = timerError === 'future_quit_date';
   const { financialGoal, loading: financialGoalLoading } = useFinancialGoals();
   
@@ -66,11 +65,11 @@ export default function GoalsScreen() {
       ? `about ${months} month${months === 1 ? '' : 's'}`
       : `${savingsDays} day${savingsDays === 1 ? '' : 's'}`;
 
-    if (isPreQuitMode && quitDate) {
-      return `Your goals unlock when you quit on ${format(quitDate, 'MMMM d, yyyy')}. Stay on track and ${duration} after quitting, you'll achieve this goal.`;
+    if (isPreQuitMode) {
+      return `You're on track to achieve this goal ${duration} after quitting.`;
     }
 
-    return `If you stay alcohol-free, you're set to achieve this goal in ${duration}. Keep up the good work!`;
+    return `You'll unlock this goal in ${duration}.`;
   };
 
   const getGoalProgress = (goal: Goal) => {
@@ -326,8 +325,8 @@ export default function GoalsScreen() {
                         {formatCurrency(remaining)} to go
                       </Text>
                     )}
-                    <View style={styles.goalEtaPill}>
-                      <Text style={styles.goalEtaText}>{etaText}</Text>
+                    <View style={isPreQuitMode ? styles.goalEtaBox : styles.goalEtaPill}>
+                      <Text style={isPreQuitMode ? styles.goalEtaBoxText : styles.goalEtaPillText}>{etaText}</Text>
                     </View>
                     {progress >= 100 && (
                       <TouchableOpacity 
@@ -702,21 +701,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
   },
-  goalEtaPill: {
+  goalEtaBox: {
     marginTop: 12,
     borderRadius: 12,
-    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    backgroundColor: 'rgba(3, 4, 94, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(3, 4, 94, 0.24)',
-    padding: 16,
+    borderColor: 'rgba(3, 4, 94, 0.2)',
+    padding: 12,
   },
-  goalEtaText: {
+  goalEtaBoxText: {
     fontFamily: FONT_FAMILY_UI,
     fontSize: 13,
     color: '#03045e',
-    textAlign: 'left',
     fontWeight: '600',
     lineHeight: 19,
+  },
+  goalEtaPill: {
+    marginTop: 12,
+    alignSelf: 'center',
+    borderRadius: 999,
+    backgroundColor: 'rgba(3, 4, 94, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(3, 4, 94, 0.24)',
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  goalEtaPillText: {
+    fontFamily: FONT_FAMILY_UI,
+    fontSize: 13,
+    color: '#03045e',
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 18,
   },
   completeButton: {
     backgroundColor: '#03045e',
