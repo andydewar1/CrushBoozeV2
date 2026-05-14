@@ -459,11 +459,11 @@ export default function HomeScreen() {
                   </View>
                 </View>
                 <View style={styles.streakBadgeCol}>
-                <View style={[styles.streakPill, styles.preQuitNicStreakPill]}>
-                  <View style={[styles.streakBadge, styles.vapeTrackerStreakBadge]}>
+                  <View style={[styles.streakPill, styles.preQuitNicStreakPill]}>
+                    <View style={[styles.streakBadge, styles.vapeTrackerStreakBadge]}>
                       <Text style={styles.streakCountBlack}>{todayDrinks}</Text>
                     </View>
-                    <Text style={styles.streakCaption}>Drinks logged today</Text>
+                    <Text style={styles.streakCaption}>Drinks today</Text>
                   </View>
                 </View>
               </View>
