@@ -326,7 +326,18 @@ export default function GoalsScreen() {
                       </Text>
                     )}
                     <View style={isPreQuitMode ? styles.goalEtaBox : styles.goalEtaPill}>
-                      <Text style={isPreQuitMode ? styles.goalEtaBoxText : styles.goalEtaPillText}>{etaText}</Text>
+                      {isPreQuitMode ? (
+                        <Text style={styles.goalEtaBoxText}>{etaText}</Text>
+                      ) : (
+                        <Text
+                          style={styles.goalEtaPillText}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.9}
+                        >
+                          {etaText}
+                        </Text>
+                      )}
                     </View>
                     {progress >= 100 && (
                       <TouchableOpacity 
