@@ -116,6 +116,27 @@ export class RevenueCatService {
   }
 
   /**
+   * Link the anonymous RC customer to the Supabase user id.
+   * Web funnel subscribers (join.crushbooze.com) pay via Stripe with app_user_id = Supabase UUID.
+   */
+  public async logInToRevenueCat(userId: string): Promise<CustomerInfo | null> {
+    if (!this.isConfigured) {
+      throw new Error('RevenueCat not configured. Call initialize() first.');
+    }
+
+    try {
+      const { customerInfo } = await Purchases.logIn(userId);
+      await Purchases.invalidateCustomerInfoCache();
+      const freshCustomerInfo = await Purchases.getCustomerInfo();
+      const resolved = freshCustomerInfo ?? customerInfo;
+      logWebFunnelDebug(userId, resolved);
+      return resolved;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Get current customer information
    */
   public async getCustomerInfo(): Promise<CustomerInfo | null> {
@@ -478,7 +499,30 @@ export class RevenueCatService {
   }
 }
 
-  // Export singleton instance
+  /** Dev / TestFlight: trace web-funnel identity and routing (filter logs by [WebFunnel]). */
+export function logWebFunnelDebug(
+  supabaseUserId: string,
+  customerInfo: CustomerInfo | null,
+  routingDecision?: string
+): void {
+  console.log('[WebFunnel]', {
+    supabaseUserId,
+    rcOriginalAppUserId: customerInfo?.originalAppUserId ?? null,
+    activeEntitlements: customerInfo
+      ? Object.keys(customerInfo.entitlements.active)
+      : [],
+    routingDecision,
+  });
+}
+
+export function logWebFunnelRouting(
+  decision: string,
+  details?: Record<string, unknown>
+): void {
+  console.log('[WebFunnel] routing:', decision, details ?? {});
+}
+
+// Export singleton instance
 export default RevenueCatService.getInstance();
 
 // Export class for static method access

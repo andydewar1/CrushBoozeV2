@@ -4,6 +4,7 @@ import { useRouter, useSegments } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { checkSubscriptionStatus } from '@/lib/subscription';
 import { isDevPaywallBypassed } from '@/lib/devFlags';
+import RevenueCatService from '@/services/RevenueCatService';
 
 /**
  * BULLETPROOF subscription gate - prevents bypass and ensures constant validation
@@ -69,6 +70,10 @@ export function useSubscriptionGate() {
     setLastCheckTime(Date.now());
 
     try {
+      if (user?.id && RevenueCatService.isInitialized()) {
+        await RevenueCatService.logInToRevenueCat(user.id);
+      }
+
       // CRITICAL: Force fresh data every time - no caching bypass
       const isSubscribed = await checkSubscriptionStatus();
       

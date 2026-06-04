@@ -2,7 +2,7 @@
   "expo": {
     "name": "CrushBooze",
     "slug": "crushbooze",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "crushbooze",
@@ -21,7 +21,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.quitdrinking.crushbooze",
-      "buildNumber": "18",
+      "buildNumber": "19",
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera only if you choose to upload a photo or use visual tracking features",
         "ITSAppUsesNonExemptEncryption": false,

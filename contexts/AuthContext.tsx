@@ -65,7 +65,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (currentSession?.user) {
           console.log('✅ Found existing session for user:', currentSession.user.id);
-          
+
+          if (RevenueCatService.isInitialized()) {
+            await RevenueCatService.logInToRevenueCat(currentSession.user.id);
+          }
+
           if (mounted) {
             setUser(currentSession.user);
             setSession(currentSession);
@@ -93,6 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('🔄 Auth state changed:', event, session?.user?.id);
+
+      if (session?.user?.id && RevenueCatService.isInitialized()) {
+        await RevenueCatService.logInToRevenueCat(session.user.id);
+      }
 
       if (mounted) {
         setUser(session?.user || null);

@@ -15,6 +15,9 @@ import { FONT_FAMILY_UI } from '@/lib/typography';
 import { usePaywall } from "@/hooks/usePaywall";
 import { useRouter } from "expo-router";
 import { isDevPaywallBypassed } from "@/lib/devFlags";
+import { checkSubscriptionStatus } from "@/lib/subscription";
+import RevenueCatService from "@/services/RevenueCatService";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOnboarding } from "@/contexts/OnboardingContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,6 +41,7 @@ export default function PaywallScreen() {
   const { packages, loading, purchasing, error, purchasePackage, restorePurchases, getPackageByType } = usePaywall();
   const { data, yearlySpend: onboardingYearlySpend } = useOnboarding();
   const { profile } = useSettings();
+  const { session } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +49,25 @@ export default function PaywallScreen() {
       router.replace("/(tabs)");
     }
   }, [router]);
+
+  useEffect(() => {
+    const redirectIfSubscribed = async () => {
+      if (isDevPaywallBypassed()) {
+        return;
+      }
+
+      if (session?.user?.id && RevenueCatService.isInitialized()) {
+        await RevenueCatService.logInToRevenueCat(session.user.id);
+      }
+
+      const isSubscribed = await checkSubscriptionStatus();
+      if (isSubscribed) {
+        router.replace("/(tabs)");
+      }
+    };
+
+    redirectIfSubscribed();
+  }, [session?.user?.id, router]);
   
   // Use onboarding context if available, otherwise fall back to saved profile.
   // daily_cost in profile stores WEEKLY spend, so multiply by 52 for yearly.
