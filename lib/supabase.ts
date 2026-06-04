@@ -19,7 +19,16 @@ export function isInvalidRefreshTokenError(error: unknown): boolean {
           ? String((error as { message?: unknown }).message)
           : '';
 
-  return /invalid refresh token|refresh token not found/i.test(message);
+  return /invalid refresh token|refresh token not found|refresh_token_not_found/i.test(message);
+}
+
+export async function purgeInvalidRefreshToken(): Promise<void> {
+  await clearStoredAuthSession();
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+  } catch {
+    // Storage already cleared
+  }
 }
 
 export async function clearStoredAuthSession(): Promise<void> {
@@ -64,9 +73,17 @@ async function refreshSessionIfStale(): Promise<void> {
 
     const { error } = await supabase.auth.refreshSession();
     if (error) {
+      if (isInvalidRefreshTokenError(error)) {
+        await purgeInvalidRefreshToken();
+        return;
+      }
       console.warn('[supabase] refreshSession after foreground:', error.message);
     }
   } catch (e) {
+    if (isInvalidRefreshTokenError(e)) {
+      await purgeInvalidRefreshToken();
+      return;
+    }
     console.warn('[supabase] refreshSessionIfStale', e);
   }
 }

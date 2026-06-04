@@ -67,7 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('✅ Found existing session for user:', currentSession.user.id);
 
           if (RevenueCatService.isInitialized()) {
-            await RevenueCatService.logInToRevenueCat(currentSession.user.id);
+            void RevenueCatService.logInToRevenueCat(currentSession.user.id).catch((err) => {
+              console.error('❌ RevenueCat logIn failed:', err);
+            });
           }
 
           if (mounted) {
@@ -99,7 +101,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔄 Auth state changed:', event, session?.user?.id);
 
       if (session?.user?.id && RevenueCatService.isInitialized()) {
-        await RevenueCatService.logInToRevenueCat(session.user.id);
+        void RevenueCatService.logInToRevenueCat(session.user.id).catch((err) => {
+          console.error('❌ RevenueCat logIn failed:', err);
+        });
       }
 
       if (mounted) {

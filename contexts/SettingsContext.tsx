@@ -88,13 +88,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session?.user?.id]);
 
-  // Initial fetch — mark loading as soon as we have a session (avoids stale loading:false gap)
+  // Initial fetch
   useEffect(() => {
-    if (session?.user?.id) {
-      setLoading(true);
-    }
     fetchProfile();
-  }, [fetchProfile, session?.user?.id]);
+  }, [fetchProfile]);
 
   const updateProfile = useCallback(async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
     if (!session?.user?.id) {

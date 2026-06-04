@@ -3,10 +3,6 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { FONT_FAMILY_UI } from '@/lib/typography';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSettings } from '@/contexts/SettingsContext';
-import RevenueCatService, { logWebFunnelRouting } from '@/services/RevenueCatService';
-import { checkSubscriptionStatus } from '@/lib/subscription';
-import { supabase } from '@/lib/supabase';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,7 +13,6 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { signIn } = useAuth();
-  const { refetchProfile } = useSettings();
   const router = useRouter();
 
   const handleLogin = async () => {
@@ -36,44 +31,15 @@ export default function LoginScreen() {
         return;
       }
 
-      // Clear the form
-      setEmail('');
-      setPassword('');
-      
       // Save timestamp for auto-logout
       await AsyncStorage.setItem('last_activity', Date.now().toString());
+      
+      console.log('✅ Login successful - redirecting to secure routing');
+      router.replace('/');
 
-      await refetchProfile();
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      const userId = currentSession?.user?.id;
-
-      if (userId && RevenueCatService.isInitialized()) {
-        await RevenueCatService.logInToRevenueCat(userId);
-      }
-
-      const { data: freshProfile } = userId
-        ? await supabase
-            .from('profiles')
-            .select('onboarding_completed')
-            .eq('id', userId)
-            .maybeSingle()
-        : { data: null };
-
-      if (!freshProfile || !freshProfile.onboarding_completed) {
-        logWebFunnelRouting('onboarding', { userId, source: 'login' });
-        router.replace('/onboarding/name');
-        return;
-      }
-
-      const isSubscribed = await checkSubscriptionStatus();
-      if (isSubscribed) {
-        logWebFunnelRouting('tabs', { userId, source: 'login' });
-        router.replace('/(tabs)');
-      } else {
-        logWebFunnelRouting('paywall', { userId, source: 'login' });
-        router.replace('/paywall');
-      }
-
+      // Clear the form after navigation (same as before, avoids empty fields while still on this screen)
+      setEmail('');
+      setPassword('');
     } catch (error) {
       console.error('❌ Login error:', error);
       Alert.alert('Login Error', 'An unexpected error occurred. Please try again.');

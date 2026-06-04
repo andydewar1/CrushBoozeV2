@@ -1,100 +1,51 @@
 import { View, Text, StyleSheet, ImageBackground, TouchableOpacity, Platform } from 'react-native';
 import { FONT_FAMILY_UI } from '@/lib/typography';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { supabase } from '@/lib/supabase';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSettings } from '@/contexts/SettingsContext';
 
-import { useCallback } from 'react';
-import RevenueCatService, { logWebFunnelRouting } from '@/services/RevenueCatService';
-import { checkSubscriptionStatus } from '@/lib/subscription';
+import { useEffect } from 'react';
 
 export default function LandingScreen() {
   const router = useRouter();
   const { session, loading: authLoading } = useAuth();
   const { profile, loading: profileLoading } = useSettings();
 
-  const routeAuthenticatedUser = useCallback(async () => {
-    if (!session) {
-      logWebFunnelRouting('landing', { hasSession: false });
-      return;
-    }
-
-    const userId = session.user.id;
-
-    let onboardingCompleted = profile?.onboarding_completed === true;
-    if (!onboardingCompleted) {
-      const { data: freshProfile } = await supabase
-        .from('profiles')
-        .select('onboarding_completed')
-        .eq('id', userId)
-        .maybeSingle();
-      onboardingCompleted = freshProfile?.onboarding_completed === true;
-    }
-
-    if (!onboardingCompleted) {
-      logWebFunnelRouting('onboarding', {
-        userId,
+  useEffect(() => {
+    const autoRoute = async () => {
+      console.log('🔍 [LANDING] Auto-route check:', {
+        authLoading,
+        profileLoading,
+        hasSession: !!session,
         hasProfile: !!profile,
-        onboarding_completed: false,
+        sessionId: session?.user?.id,
       });
-      router.replace('/onboarding/name');
-      return;
-    }
 
-    for (let i = 0; i < 50 && !RevenueCatService.isInitialized(); i += 1) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    if (RevenueCatService.isInitialized()) {
-      await RevenueCatService.logInToRevenueCat(userId);
-    }
+      if (authLoading || profileLoading) {
+        console.log('⏳ [LANDING] Still loading, waiting...');
+        return;
+      }
 
-    const isSubscribed = await checkSubscriptionStatus();
-    if (isSubscribed) {
-      logWebFunnelRouting('tabs', { userId });
-      router.replace('/(tabs)');
-    } else {
-      logWebFunnelRouting('paywall', { userId });
-      router.replace('/paywall');
-    }
-  }, [session, profile, router]);
+      if (session && profile) {
+        console.log('🔄 Auto-routing existing user to main app (subscription gate will validate)');
+        router.replace('/(tabs)');
+      } else if (session && !profile) {
+        console.log('⚠️ [LANDING] User is authenticated but has no profile (onboarding incomplete)');
+      } else {
+        console.log('ℹ️ [LANDING] No session - staying on landing page');
+      }
+    };
 
-  // Only auto-route when landing is focused (avoids flash while /auth/login is on screen)
-  useFocusEffect(
-    useCallback(() => {
-      const autoRoute = async () => {
-        console.log('🔍 [LANDING] Auto-route check:', {
-          authLoading,
-          profileLoading,
-          hasSession: !!session,
-          hasProfile: !!profile,
-          onboarding_completed: profile?.onboarding_completed,
-          sessionId: session?.user?.id,
-        });
-
-        if (authLoading || (session && profileLoading)) {
-          console.log('⏳ [LANDING] Still loading, waiting...');
-          return;
-        }
-
-        if (session) {
-          await routeAuthenticatedUser();
-        } else {
-          logWebFunnelRouting('landing', { hasSession: false });
-        }
-      };
-
-      autoRoute();
-    }, [session, profile, authLoading, profileLoading, routeAuthenticatedUser])
-  );
+    autoRoute();
+  }, [session, profile, authLoading, profileLoading, router]);
 
   // SECURITY FIX: Removed automatic background routing - all users must go through paywall validation
 
   const handleGetStarted = async () => {
     // Don't redirect if still loading auth or profile data
-    if (authLoading || (session && profileLoading)) {
+    if (authLoading || profileLoading) {
       console.log('⏳ [GET STARTED] Still loading, ignoring button press');
       return;
     }
@@ -105,7 +56,13 @@ export default function LandingScreen() {
     });
     
     if (session) {
-      await routeAuthenticatedUser();
+      if (profile) {
+        console.log('🔄 Routing existing user to main app (subscription gate will validate)');
+        router.replace('/(tabs)');
+      } else {
+        console.log('🎯 Routing to onboarding (no profile found)');
+        router.push('/onboarding/name');
+      }
     } else {
       console.log('🆕 No session - routing to signup');
       router.push('/auth/signup');
@@ -256,4 +213,4 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
   },
-}); 
+});

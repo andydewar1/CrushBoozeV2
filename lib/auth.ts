@@ -1,4 +1,9 @@
-import { clearStoredAuthSession, isInvalidRefreshTokenError, supabase } from './supabase';
+import {
+  clearStoredAuthSession,
+  isInvalidRefreshTokenError,
+  purgeInvalidRefreshToken,
+  supabase,
+} from './supabase';
 import { Session, User } from '@supabase/supabase-js';
 
 export interface AuthResult {
@@ -212,7 +217,7 @@ export async function signOut(): Promise<SignOutResult> {
 
     if (error) {
       if (isInvalidRefreshTokenError(error)) {
-        await clearStoredAuthSession();
+        await purgeInvalidRefreshToken();
         return {
           success: true
         };
@@ -229,7 +234,7 @@ export async function signOut(): Promise<SignOutResult> {
     };
   } catch (error) {
     if (isInvalidRefreshTokenError(error)) {
-      await clearStoredAuthSession();
+      await purgeInvalidRefreshToken();
       return {
         success: true
       };
@@ -251,7 +256,7 @@ export async function getCurrentSession() {
     
     if (error) {
       if (isInvalidRefreshTokenError(error)) {
-        await clearStoredAuthSession();
+        await purgeInvalidRefreshToken();
         return {
           session: null,
           error: null
@@ -270,7 +275,7 @@ export async function getCurrentSession() {
     };
   } catch (error) {
     if (isInvalidRefreshTokenError(error)) {
-      await clearStoredAuthSession();
+      await purgeInvalidRefreshToken();
       return {
         session: null,
         error: null

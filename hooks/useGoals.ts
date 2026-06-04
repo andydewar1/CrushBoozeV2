@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -55,7 +55,7 @@ export function useGoals(): UseGoalsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
     if (!session?.user?.id) {
       setLoading(false);
       return;
@@ -107,7 +107,7 @@ export function useGoals(): UseGoalsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.user?.id]);
 
   const createGoal = async (goal: CreateGoal) => {
     if (!session?.user?.id) {
@@ -287,7 +287,7 @@ export function useGoals(): UseGoalsReturn {
 
   useEffect(() => {
     fetchGoals();
-  }, [session?.user?.id]);
+  }, [fetchGoals]);
 
   const activeGoals = goals.filter(goal => !goal.achieved_at);
   const achievedGoals = goals.filter(goal => goal.achieved_at);
