@@ -6,7 +6,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 import { Ionicons } from '@expo/vector-icons';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 const CURRENCIES = [
   { symbol: '£', code: 'GBP', name: 'British Pound' },
@@ -50,7 +50,7 @@ export default function WeeklySpendScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={11}
+      currentStep={3}
       totalSteps={TOTAL_STEPS}
       title={`${data.name}, roughly how much do you spend on alcohol in a typical week?`}
       subtitle="Drinks out, bottles at home, rounds at the pub – include it all."

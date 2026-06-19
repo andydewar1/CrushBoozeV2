@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 const OPTIONS = [
   { emoji: '🔄', text: 'I drink pretty much every day', value: 'daily' },
@@ -19,12 +19,12 @@ export default function FrequencyScreen() {
 
   const handleContinue = () => {
     updateData({ drinkingFrequency: selected });
-    router.push('/onboarding/drinks-per-session');
+    router.push('/onboarding/weekly-spend');
   };
 
   return (
     <OnboardingScreen
-      currentStep={3}
+      currentStep={2}
       totalSteps={TOTAL_STEPS}
       title={`How often are you drinking right now, ${data.name}?`}
       subtitle="No judgement."

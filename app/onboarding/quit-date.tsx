@@ -7,7 +7,7 @@ import OnboardingScreen from '@/components/OnboardingScreenNew';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 // Get today's date at current time
 const getToday = () => new Date();
@@ -21,7 +21,7 @@ export default function QuitDateScreen() {
 
   const handleContinue = () => {
     updateData({ quitDate: date });
-    router.push('/onboarding/previews');
+    router.push('/onboarding/analyzing');
   };
 
   const onPickerChange = (event: any, selectedValue?: Date) => {
@@ -53,7 +53,7 @@ export default function QuitDateScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={18}
+      currentStep={10}
       totalSteps={TOTAL_STEPS}
       title={`When do you want to start, ${data.name}?`}
       subtitle="Pick your quit date and time."

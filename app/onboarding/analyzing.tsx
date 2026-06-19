@@ -7,7 +7,7 @@ import { useOnboarding } from '@/contexts/OnboardingContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveOnboardingData } from '@/lib/onboarding';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 const STEPS = [
   'Analysing your drinking pattern...',
@@ -106,7 +106,7 @@ export default function AnalyzingScreen() {
     }, STEPS.length * stepDuration + 500);
   }, []);
 
-  // Navigate when BOTH animation and save are complete
+  // Navigate to summary when BOTH animation and save are complete
   useEffect(() => {
     if (animationComplete && saveComplete) {
       router.push('/onboarding/summary');
@@ -120,7 +120,7 @@ export default function AnalyzingScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={22}
+      currentStep={11}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

@@ -15,7 +15,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import { Ionicons } from '@expo/vector-icons';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 // Non-linear progress: starts at ~25%, moves fast early, slows down later
 const calculateProgress = (current: number, total: number): number => {
@@ -29,11 +29,11 @@ export default function PersonalWhyScreen() {
 
   const handleContinue = () => {
     updateData({ personalWhy });
-    router.push('/onboarding/reasons-validation');
+    router.push('/onboarding/financial-goal');
   };
 
   // Progress calculation (non-linear)
-  const progress = calculateProgress(14, TOTAL_STEPS);
+  const progress = calculateProgress(7, TOTAL_STEPS);
 
   return (
     <SafeAreaView style={styles.safeArea}>

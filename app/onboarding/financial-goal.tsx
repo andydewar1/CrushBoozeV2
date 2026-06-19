@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 export default function FinancialGoalScreen() {
   const { data, updateData } = useOnboarding();
@@ -35,7 +35,7 @@ export default function FinancialGoalScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={16}
+      currentStep={8}
       totalSteps={TOTAL_STEPS}
       title="If you weren't spending money on alcohol, what would you actually do with it?"
       subtitle="Let's create a goal that we can help you achieve."

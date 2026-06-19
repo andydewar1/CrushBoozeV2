@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 export default function GoalTimelineScreen() {
   const { data } = useOnboarding();
@@ -63,7 +63,7 @@ export default function GoalTimelineScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={17}
+      currentStep={9}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

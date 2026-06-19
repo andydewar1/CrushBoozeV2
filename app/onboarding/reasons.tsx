@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 const OPTIONS = [
   { emoji: '💰', text: 'Save money', value: 'money' },
@@ -33,7 +33,7 @@ export default function ReasonsScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={13}
+      currentStep={6}
       totalSteps={TOTAL_STEPS}
       title="So, why do you want to stop drinking?"
       subtitle="Pick everything that's true for you."

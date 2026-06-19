@@ -8,6 +8,7 @@ interface OnboardingData {
   // Drinking habits (for flow only, not stored long-term)
   drinkingFrequency: string;
   drinksPerSession: string;
+  mentalHealth: string;
   
   // Financial
   weeklySpend: number;
@@ -48,6 +49,7 @@ const defaultData: OnboardingData = {
   name: '',
   drinkingFrequency: '',
   drinksPerSession: '',
+  mentalHealth: '',
   weeklySpend: 0,
   currency: 'GBP',
   quitReasons: [],
@@ -101,6 +103,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       }
       if (typeof newData.drinksPerSession === 'string') {
         updatedData.drinksPerSession = newData.drinksPerSession;
+      }
+      if (typeof newData.mentalHealth === 'string') {
+        updatedData.mentalHealth = newData.mentalHealth;
       }
       if (typeof newData.currency === 'string') {
         updatedData.currency = newData.currency;

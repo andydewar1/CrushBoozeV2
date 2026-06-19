@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 export default function YearlyProjectionScreen() {
   const { data, yearlySpend, fiveYearSpend } = useOnboarding();
@@ -29,7 +29,7 @@ export default function YearlyProjectionScreen() {
   }, []);
 
   const handleContinue = () => {
-    router.push('/onboarding/reasons');
+    router.push('/onboarding/mental-health');
   };
 
   const getCurrencySymbol = () => {
@@ -47,7 +47,7 @@ export default function YearlyProjectionScreen() {
 
   return (
     <OnboardingScreen
-      currentStep={12}
+      currentStep={4}
       totalSteps={TOTAL_STEPS}
       title=""
       variant="dark"

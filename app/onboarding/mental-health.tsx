@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 const OPTIONS = [
   { emoji: '😰', text: 'Pretty anxious or low', value: 'anxious' },
@@ -13,17 +13,17 @@ const OPTIONS = [
 ];
 
 export default function MentalHealthScreen() {
-  const { data } = useOnboarding();
-  const [selected, setSelected] = useState('');
+  const { data, updateData } = useOnboarding();
+  const [selected, setSelected] = useState(data.mentalHealth);
 
   const handleContinue = () => {
-    // Not storing this - just for flow
-    router.push('/onboarding/habit');
+    updateData({ mentalHealth: selected });
+    router.push('/onboarding/reasons');
   };
 
   return (
     <OnboardingScreen
-      currentStep={8}
+      currentStep={5}
       totalSteps={TOTAL_STEPS}
       title={`What about mentally, ${data.name}?`}
       subtitle="Do you feel anxiety, low mood, or just 'feel off' after drinking?"

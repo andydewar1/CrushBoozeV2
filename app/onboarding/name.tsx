@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useOnboarding } from '@/contexts/OnboardingContext';
 import OnboardingScreen from '@/components/OnboardingScreenNew';
 
-const TOTAL_STEPS = 25;
+const TOTAL_STEPS = 12;
 
 export default function NameScreen() {
   const { data, updateData } = useOnboarding();
@@ -13,7 +13,7 @@ export default function NameScreen() {
 
   const handleContinue = () => {
     updateData({ name: name.trim() });
-    router.push('/onboarding/welcome');
+    router.push('/onboarding/frequency');
   };
 
   return (
